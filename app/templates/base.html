@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>{{ title or "NFL Team Compare" }}</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <header class="container">
+      <h1><a href="/">NFL Regular Season Comparisons</a></h1>
+      <p class="muted">Season {{ season }}</p>
+    </header>
+    <main class="container">
+      {% if error %}
+        <div class="error">Error: {{ error }}</div>
+      {% endif %}
+      {% block content %}{% endblock %}
+    </main>
+  </body>
+</html>
