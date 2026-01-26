@@ -1,0 +1,99 @@
+{% set base_path = "../" %}
+{% set active_page = "team" %}
+{% extends "_base.html" %}
+
+{% block title %}{{ team }} · Elo Trend · NFL Elo{% endblock %}
+
+{% block content %}
+<section class="card">
+  <div class="cardrow" style="align-items: baseline;">
+    <div>
+      <h1 class="h1">{{ team }} Elo by Week</h1>
+      <div class="muted">Season {{ season }}</div>
+    </div>
+
+    <div class="controls">
+      <a class="btn" href="{{ base_path }}team/{{ team|slug }}.html">← Back to {{ team }}</a>
+      <a class="btn" href="{{ base_path }}index.html">Home</a>
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="chart-wrap" style="height: 420px;">
+    <canvas id="eloChart"></canvas>
+  </div>
+</section>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const weeks = {{ weeks | tojson }};
+  const elos  = {{ elos  | tojson }};
+
+  new Chart(document.getElementById("eloChart"), {
+    type: "line",
+    data: {
+      labels: weeks.map(w => `W${w}`),
+      datasets: [{
+        label: "Elo",
+        data: elos,
+
+        borderColor: "red",
+        backgroundColor: "transparent",
+
+        tension: 0,
+
+        /* optional: points */
+        pointRadius: 2
+      },
+       {
+          /* Baseline  */
+          label: "Baseline",
+          data: weeks.map(() => 1500),
+          borderColor: "rgba(255,255,255,0.6)",
+          backgroundColor: "transparent",
+          borderDash: [6, 6],
+          tension: 0,
+          pointRadius: 0,
+          borderWidth: 1
+        }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend:
+        { display: true,
+         position: 'top',
+         align: 'start',
+         labels: {
+            color: "white",
+            boxWidth: 30,
+            boxHeight: 2,
+            padding: 16,
+            font: {
+              size: 13,
+              weight: "500"
+        }
+
+         }
+         } },
+      scales: {
+        x: { title: { display: true, text: "Week" } },
+        y: {
+          title: { display: true, text: "Elo" },
+
+          /* ✅ fixed range so 1500 is centered */
+          min: 1200,
+          max: 1800,
+
+          /* ✅ makes ticks land nicely around 1500 */
+          ticks: {
+            stepSize: 100
+          }
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}

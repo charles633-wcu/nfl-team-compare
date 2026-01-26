@@ -1,0 +1,402 @@
+:root {
+  --bg: #0b1220;
+  --panel: #111b2e;
+  --border: #223253;
+  --text: #eaf0ff;
+  --muted: rgba(234,240,255,0.72);
+  --link: #8bbcff;
+}
+
+* { box-sizing: border-box; }
+/* ---------- Typography ---------- */
+
+/* Headings / display text */
+.h1,
+.h2,
+.brand .title,
+.weektitle {
+  font-family: "Bebas Neue", sans-serif;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 400; /* Bebas is bold by design */
+}
+
+
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+
+/* ---------- Top Bar ---------- */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  background: rgba(17,27,46,0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+}
+
+.brand .title { font-weight: 800; font-size: 24px; letter-spacing: 2px; }
+.brand .subtitle { color: var(--muted); font-family:"Bebas Neue"; font-size: 18px; margin-top: 2px; }
+
+.nav { display: flex; gap: 10px; align-items: center; }
+.navlink { color: var(--muted); text-decoration: none; font-size: 14px; }
+.navlink.active { color: var(--text); font-weight: 700; }
+.navlink.disabled { opacity: 0.5; cursor: not-allowed; }
+.navsep { color: var(--muted); }
+
+/* ---------- Layout ---------- */
+.container {
+  max-width: 1100px;
+  margin: 18px auto;
+  padding: 0 16px;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+}
+
+.cardrow {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.h1 { margin: 0; font-size: 26px; }
+.h2 { margin: 0; font-size: 18px; }
+.muted { color: var(--muted); }
+
+.footer {
+  max-width: 1100px;
+  margin: 0 auto 22px;
+  padding: 0 16px;
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* ---------- Controls ---------- */
+.controls { display: flex; gap: 10px; align-items: center; }
+.label { color: var(--muted); font-size: 13px; }
+
+.select {
+  background: #0b1220;
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+
+/* ---------- Links ---------- */
+.link { color: var(--link); text-decoration: none; }
+.link:hover { text-decoration: underline; }
+
+/* ---------- Table Base ---------- */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 15px 10px;
+  border-bottom: 1px solid rgba(34,50,83,0.55);
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.table th {
+  text-align: left;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.table tr:hover td { background: rgba(139,188,255,0.05); }
+
+/* Numeric columns should be right-aligned everywhere by default */
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Leaderboard table helpers ---------- */
+.rankcol {
+  width: 56px;
+  text-align: center;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+.teamcol {
+  /* if you’re using a dedicated team column cell */
+  padding-left: 0;
+}
+
+/* Team link used in leaderboard + team pages */
+.teamlink {
+  display: flex;
+  align-items: center;
+  gap: 10px;                 /* FIXED (no space in px) */
+  color: var(--link);
+  text-decoration: none;
+  min-width: 0;              /* allows ellipsis */
+}
+
+.teamlink:hover { text-decoration: underline; }
+
+.teamname {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Default logo size used in tables (not the big header logo) */
+.logo {
+  width: 40px;               /* FIXED */
+  height: 40px;              /* FIXED */
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+/* Optional wrapper if you use one */
+.logowrap {
+  width: 40px;               /* FIXED */
+/*  display: flex;
+  justify-content: center;
+  padding-right: 16px; */
+}
+
+/* ---------- Team page header ---------- */
+.teamhero {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.teamhero-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 320px;
+}
+
+.teamlogo {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.teamhero-right {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.statpill {
+  border: 1px solid var(--border);
+  background: rgba(11,18,32,0.55);
+  padding: 10px 12px;
+  border-radius: 12px;
+  min-width: 120px;
+  text-align: center;
+}
+
+.statlabel { color: var(--muted); font-size: 12px; margin-bottom: 2px; }
+.statvalue { font-weight: 800; font-variant-numeric: tabular-nums; font-size: 18px; }
+
+/* ---------- Team page weeks (details “dropdown”) ---------- */
+.accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.weekpanel {
+  border: 1px solid rgba(34,50,83,0.55);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(17,27,46,0.6);
+}
+
+.weeksummary {
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  list-style: none;
+}
+
+.weeksummary::-webkit-details-marker { display: none; }
+
+.weektitle { font-weight: 800; }
+.weekmeta { font-size: 13px; }
+
+/* ---------- Team page table alignment lock ---------- */
+/* Add class="table teamtable" on team page tables if you can.
+   If you cannot/don’t want to change HTML, this will still help a bit
+   by targeting tables inside week panels. */
+.weekpanel .table,
+.table.teamtable {
+  table-layout: fixed;
+}
+
+.weekpanel .table th,
+.weekpanel .table td,
+.table.teamtable th,
+.table.teamtable td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Column sizing: stabilizes H/A..Δ..Post alignment */
+.weekpanel .table th:nth-child(1),
+.weekpanel .table td:nth-child(1) { width: 44%; } /* Opponent */
+.weekpanel .table th:nth-child(2),
+.weekpanel .table td:nth-child(2) { width: 7%;  } /* H/A */
+.weekpanel .table th:nth-child(3),
+.weekpanel .table td:nth-child(3) { width: 12%; } /* Score */
+.weekpanel .table th:nth-child(4),
+.weekpanel .table td:nth-child(4) { width: 9%;  } /* Margin */
+.weekpanel .table th:nth-child(5),
+.weekpanel .table td:nth-child(5) { width: 16%; } /* Predicted Margin */
+.weekpanel .table th:nth-child(6),
+.weekpanel .table td:nth-child(6) { width: 6%;  } /* Δ Elo */
+.weekpanel .table th:nth-child(7),
+.weekpanel .table td:nth-child(7) { width: 6%;  } /* Post */
+
+/* ---------- Small utilities (optional) ---------- */
+.center { text-align: center; }
+
+/* ===============================
+   Team Game History (CSS Grid)
+   =============================== */
+
+.gamegrid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.gamerow {
+  display: grid;
+  grid-template-columns:
+    3fr    /* Opponent */
+    1fr    /* Location */
+    1fr    /* Score */
+    1fr    /* Margin */
+    1.4fr  /* Predicted Margin */
+    0.8fr  /* Δ Elo */
+    0.8fr; /* Post */
+  align-items: center;
+  gap: 12px;
+}
+
+.gamerow > div {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.gamerow .opponent {
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.gameheader {
+  color: var(--muted);
+  font-weight: 700;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(34,50,83,0.55);
+}
+
+.gamebody {
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(34,50,83,0.35);
+}
+
+
+/* Leaderboard grid (same philosophy as team page rows) */
+.lbgrid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.lbrow {
+  display: grid;
+  grid-template-columns:
+    0.7fr  /* Rank */
+    3fr    /* Team */
+    1fr    /* Elo */
+    1fr;   /* Δ Elo */
+  align-items: center;
+  gap: 12px;
+}
+
+.lbrow > div {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.lbrow .opponent {
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.lbheader {
+  color: var(--muted);
+  font-weight: 700;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(34,50,83,0.55);
+}
+
+.lbbody {
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(34,50,83,0.35);
+}
+
+.chart-wrap { width: 100%; }
+.btn { padding: 8px 12px; border-radius: 10px; display: inline-block; }
+
+/* === Force ALL links to be white, everywhere === */
+a,
+a:visited,
+a:hover,
+a:active,
+a:focus {
+  color: #ffffff !important;
+  text-decoration: none;
+}
+a:hover {
+  color: #e5e7eb !important; /* soft gray */
+  text-decoration: underline;
+}
+

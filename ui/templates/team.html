@@ -1,0 +1,135 @@
+{% set base_path = "../" %}
+{% set active_page = "team" %}
+{% extends "_base.html" %}
+
+{% block title %}{{ team }} · Team Dashboard · NFL Elo{% endblock %}
+
+{% block content %}
+<section class="card">
+  <div class="teamhero">
+    <div class="teamhero-left">
+      <img
+        class="teamlogo"
+        src="{{ base_path }}static/img/logos/{{ team|slug }}.png"
+        alt="{{ team }} logo"
+        loading="lazy"
+      />
+      <div>
+        <h1 class="h1" style="margin-bottom: 4px;">{{ team }}</h1>
+        <div class="muted">Season {{ season }} · Through Week {{ current_week }}</div>
+      </div>
+    </div>
+
+    <div class="teamhero-right">
+      <div class="statpill">
+        <div class="statlabel">Rank</div>
+        <div class="statvalue">#{{ rank }}</div>
+      </div>
+      <div class="statpill">
+        <div class="statlabel">Final Elo</div>
+        <div class="statvalue">{{ current_elo }}</div>
+      </div>
+        <a class="statpill" href="{{ base_path }}elo/{{ team|slug }}.html" style="text-decoration:none;">
+        <div class="statlabel">Chart</div>
+        <div class="statvalue">Elo Trend</div>
+      </a>
+
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="cardrow" style="align-items: baseline;">
+    <div>
+      <h2 class="h2">Game History</h2>
+    </div>
+  </div>
+
+  <div class="accordion">
+    {% for w in weeks if w.week != 0 %}
+      <details class="weekpanel" open>
+        <summary class="weeksummary">
+          <span class="weektitle">Week {{ w.week }}</span>
+          <span class="weekmeta muted">Elo (End of Week): {{ w.final_elo }}</span>
+        </summary>
+
+        {% if w.games|length == 0 %}
+          <div class="muted" style="padding: 10px 0;">Bye week</div>
+        {% else %}
+          <div class="gamegrid">
+            <div class="gamerow gameheader">
+              <div class="opponent">Opponent</div>
+              <div>Location</div>
+              <div>Score</div>
+              <div>Margin</div>
+              <div>Predicted Margin</div>
+              <div>Δ Elo</div>
+              <div>Post</div>
+            </div>
+
+            {% for g in w.games %}
+            <div class="gamerow gamebody">
+              <div class="opponent">
+                <a class="teamlink" href="{{ base_path }}team/{{ g.opponent|slug }}.html">
+                  <img
+                    class="logo"
+                    src="{{ base_path }}static/img/logos/{{ g.opponent|slug }}.png"
+                    alt="{{ g.opponent }} logo"
+                    loading="lazy"
+                  />
+                  <span class="teamname">{{ g.opponent }}</span>
+                </a>
+              </div>
+
+              <div>{{ "Home" if g.home else "Away" }}</div>
+
+              <div>
+                {% if g.points_for is none or g.points_against is none %}
+                  —
+                {% else %}
+                  {{ g.points_for }}–{{ g.points_against }}
+                {% endif %}
+              </div>
+
+              <div>
+                {% if g.margin is none %}
+                  —
+                {% else %}
+                  {{ g.margin }}
+                {% endif %}
+              </div>
+
+              <div>
+                {% if g.predicted_margin_pre is none %}
+                  —
+                {% else %}
+                  {{ "%.1f"|format(g.predicted_margin_pre) }}
+                {% endif %}
+              </div>
+
+              <div>
+                {% if g.delta_elo is none %}
+                  —
+                {% elif g.delta_elo > 0 %}
+                  +{{ g.delta_elo }}
+                {% else %}
+                  {{ g.delta_elo }}
+                {% endif %}
+              </div>
+
+              <div>
+                {% if g.elo_after_game is none %}
+                  —
+                {% else %}
+                  {{ g.elo_after_game }}
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </details>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

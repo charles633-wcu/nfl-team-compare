@@ -1,0 +1,150 @@
+
+
+<!doctype html>
+<html lang="en">
+<head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+  href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap"
+  rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Carolina Panthers · Elo Trend · NFL Elo</title>
+  <link rel="stylesheet" href="../static/css/app.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="title">
+          NFL Elo Dashboard
+      </div>
+      <div class="subtitle">2024 Regular Season</div>
+    </div>
+    <nav class="nav">
+      <a href="../leaderboard/week-.html" class="navlink ">Leaderboard</a>
+      <span class="navsep">•</span>
+      
+  <span class="navsep">•</span>
+      <a href="../team/carolina-panthers.html"
+         class="navlink active">
+        Team
+      </a>
+    
+
+    </nav>
+  </header>
+
+  <main class="container">
+    
+<section class="card">
+  <div class="cardrow" style="align-items: baseline;">
+    <div>
+      <h1 class="h1">Carolina Panthers Elo by Week</h1>
+      <div class="muted">Season 2024</div>
+    </div>
+
+    <div class="controls">
+      <a class="btn" href="../team/carolina-panthers.html">← Back to Carolina Panthers</a>
+      <a class="btn" href="../index.html">Home</a>
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="chart-wrap" style="height: 420px;">
+    <canvas id="eloChart"></canvas>
+  </div>
+</section>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const weeks = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
+  const elos  = [1500.0, 1455.0, 1425.0, 1465.0, 1434.0, 1401.0, 1377.0, 1354.0, 1339.0, 1349.0, 1369.0, 1369.0, 1364.0, 1354.0, 1348.0, 1321.0, 1360.0, 1340.0, 1374.0];
+
+  new Chart(document.getElementById("eloChart"), {
+    type: "line",
+    data: {
+      labels: weeks.map(w => `W${w}`),
+      datasets: [{
+        label: "Elo",
+        data: elos,
+
+        borderColor: "red",
+        backgroundColor: "transparent",
+
+        tension: 0,
+
+        /* optional: points */
+        pointRadius: 2
+      },
+       {
+          /* Baseline  */
+          label: "Baseline",
+          data: weeks.map(() => 1500),
+          borderColor: "rgba(255,255,255,0.6)",
+          backgroundColor: "transparent",
+          borderDash: [6, 6],
+          tension: 0,
+          pointRadius: 0,
+          borderWidth: 1
+        }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend:
+        { display: true,
+         position: 'top',
+         align: 'start',
+         labels: {
+            color: "white",
+            boxWidth: 30,
+            boxHeight: 2,
+            padding: 16,
+            font: {
+              size: 13,
+              weight: "500"
+        }
+
+         }
+         } },
+      scales: {
+        x: { title: { display: true, text: "Week" } },
+        y: {
+          title: { display: true, text: "Elo" },
+
+          /* ✅ fixed range so 1500 is centered */
+          min: 1200,
+          max: 1800,
+
+          /* ✅ makes ticks land nicely around 1500 */
+          ticks: {
+            stepSize: 100
+          }
+        }
+      }
+    }
+  });
+</script>
+
+  </main>
+
+  <footer class="footer">
+    <span class="muted">Season 2024</span>
+    <span class="muted">Baseline: </span>
+    <span class="muted">K Factor: </span>
+      <span class="muted">#About / Contact
+
+Terms / Privacy
+
+GitHub / Docs
+
+Version / Build info
+
+      dont forget remove the formula nad put it on about</span>
+  </footer>
+</body>
+</html>

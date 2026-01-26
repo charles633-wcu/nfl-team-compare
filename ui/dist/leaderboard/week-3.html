@@ -1,0 +1,1091 @@
+
+
+
+<!doctype html>
+<html lang="en">
+<head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+  href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap"
+  rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Leaderboard · Week 3 · NFL Elo</title>
+  <link rel="stylesheet" href="../static/css/app.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="title">
+          NFL Elo Dashboard
+      </div>
+      <div class="subtitle">2024 Regular Season</div>
+    </div>
+    <nav class="nav">
+      <a href="../leaderboard/week-3.html" class="navlink active">Leaderboard</a>
+      <span class="navsep">•</span>
+      
+      <span class="navsep">•</span>
+      <span class="navlink disabled">Team</span>
+    
+
+    </nav>
+  </header>
+
+  <main class="container">
+    
+
+<section class="card">
+  <div class="cardrow">
+    <div>
+      <h1 class="h1">Leaderboard</h1>
+      <div class="muted">Week 3 · Season 2024</div>
+    </div>
+
+    <div class="controls">
+      <select
+        id="weekSelect"
+        class="select"
+        onchange="location = this.value;"
+      >
+        
+          <option
+            value="week-0.html"
+            
+          >
+            Week 0
+          </option>f
+        
+          <option
+            value="week-1.html"
+            
+          >
+            Week 1
+          </option>f
+        
+          <option
+            value="week-2.html"
+            
+          >
+            Week 2
+          </option>f
+        
+          <option
+            value="week-3.html"
+            selected
+          >
+            Week 3
+          </option>f
+        
+          <option
+            value="week-4.html"
+            
+          >
+            Week 4
+          </option>f
+        
+          <option
+            value="week-5.html"
+            
+          >
+            Week 5
+          </option>f
+        
+          <option
+            value="week-6.html"
+            
+          >
+            Week 6
+          </option>f
+        
+          <option
+            value="week-7.html"
+            
+          >
+            Week 7
+          </option>f
+        
+          <option
+            value="week-8.html"
+            
+          >
+            Week 8
+          </option>f
+        
+          <option
+            value="week-9.html"
+            
+          >
+            Week 9
+          </option>f
+        
+          <option
+            value="week-10.html"
+            
+          >
+            Week 10
+          </option>f
+        
+          <option
+            value="week-11.html"
+            
+          >
+            Week 11
+          </option>f
+        
+          <option
+            value="week-12.html"
+            
+          >
+            Week 12
+          </option>f
+        
+          <option
+            value="week-13.html"
+            
+          >
+            Week 13
+          </option>f
+        
+          <option
+            value="week-14.html"
+            
+          >
+            Week 14
+          </option>f
+        
+          <option
+            value="week-15.html"
+            
+          >
+            Week 15
+          </option>f
+        
+          <option
+            value="week-16.html"
+            
+          >
+            Week 16
+          </option>f
+        
+          <option
+            value="week-17.html"
+            
+          >
+            Week 17
+          </option>f
+        
+          <option
+            value="week-18.html"
+            
+          >
+            Week 18
+          </option>f
+        
+      </select>
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="lbgrid">
+
+    <!-- Header row -->
+    <div class="lbrow lbheader">
+      <div>Rank</div>
+      <div class="opponent">Team</div>
+      <div>Elo</div>
+      <div>Δ Elo</div>
+    </div>
+
+    <!-- Data rows -->
+    
+    <div class="lbrow lbbody">
+      <div>1</div>
+
+      <div class="opponent">
+        <a
+          class="teamlink"
+          href="../team/minnesota-vikings.html"
+        >
+          <img
+            class="logo"
+            src="../static/img/logos/minnesota-vikings.png"
+            alt="Minnesota Vikings logo"
+            loading="lazy"
+          />
+          <span class="teamname">Minnesota Vikings</span>
+        </a>
+      </div>
+
+      <div>1601</div>
+
+      <div>
+        
+          +38
+        
+      </div>
+    </div>
+    
+    <div class="lbrow lbbody">
+      <div>2</div>
+
+      <div class="opponent">
+        <a
+          class="teamlink"
+          href="../team/buffalo-bills.html"
+        >
+          <img
+            class="logo"
+            src="../static/img/logos/buffalo-bills.png"
+            alt="Buffalo Bills logo"
+            loading="lazy"
+          />
+          <span class="teamname">Buffalo Bills</span>
+        </a>
+      </div>
+
+      <div>1593</div>
+
+      <div>
+        
+          +31
+        
+      </div>
+    </div>
+    
+    <div class="lbrow lbbody">
+      <div>3</div>
+
+      <div class="opponent">
+        <a
+          class="teamlink"
+          href="../team/pittsburgh-steelers.html"
+        >
+          <img
+            class="logo"
+            src="../static/img/logos/pittsburgh-steelers.png"
+            alt="Pittsburgh Steelers logo"
+            loading="lazy"
+          />
+          <span class="teamname">Pittsburgh Steelers</span>
+        </a>
+      </div>
+
+      <div>1580</div>
+
+      <div>
+        
+          +31
+        
+      </div>
+    </div>
+    
+    <div class="lbrow lbbody">
+      <div>4</div>
+
+      <div class="opponent">
+        <a
+          class="teamlink"
+          href="../team/seattle-seahawks.html"
+        >
+          <img
+            class="logo"
+            src="../static/img/logos/seattle-seahawks.png"
+            alt="Seattle Seahawks logo"
+            loading="lazy"
+          />
+          <span class="teamname">Seattle Seahawks</span>
+        </a>
+      </div>
+
+      <div>1573</div>
+
+      <div>
+        
+          +31
+        
+      </div>
+    </div>
+    
+    <div class="lbrow lbbody">
+      <div>5</div>
+
+      <div class="opponent">
+        <a
+          class="teamlink"
+          href="../team/new-orleans-saints.html"
+        >
+          <img
+            class="logo"
+            src="../static/img/logos/new-orleans-saints.png"
+            alt="New Orleans Saints logo"
+            loading="lazy"
+          />
+          <span class="teamname">New Orleans Saints</span>
+        </a>
+      </div>
+
+      <div>1563</div>
+
+      <div>
+        
+          -22
+        
+      </div>
+    </div>
+    
+    <div class="lbrow lbbody">
+      <div>6</div>
+
+      <div class="opponent">
+        <a
+          class="teamlink"
+          href="../team/kansas-city-chiefs.html"
+        >
+          <img
+            class="logo"
+            src="../static/img/logos/kansas-city-chiefs.png"
+            alt="Kansas City Chiefs logo"
+            loading="lazy"
+          />
+          <span class="teamname">Kansas City Chiefs</span>
+        </a>
+      </div>
+
+      <div>1552</div>
+
+      <div>
+        
+          +19
+        
+      </div>
+    </div>
+    
+    <div class="lbrow lbbody">
+      <div>7</div>
+
+      <div class="opponent">
+        <a
+          class="teamlink"
+          href="../team/new-york-jets.html"
+        >
+          <img
+            class="logo"
+            src="../static/img/logos/new-york-jets.png"
+            alt="New York Jets logo"
+            loading="lazy"
+          />
+          <span class="teamname">New York Jets</span>
+        </a>
+      </div>
+
+      <div>1534</div>
+
+      <div>
+        
+          +40
+        
+      </div>
+    </div>
+    
+    <div class="lbrow lbbody">
+      <div>8</div>
+
+      <div class="opponent">
+        <a
+          class="teamlink"
+          href="../team/philadelphia-eagles.html"
+        >
+          <img
+            class="logo"
+            src="../static/img/logos/philadelphia-eagles.png"
+            alt="Philadelphia Eagles logo"
+            loading="lazy"
+          />
+          <span class="teamname">Philadelphia Eagles</span>
+        </a>
+      </div>
+
+      <div>1534</div>
+
+      <div>
+        
+          +22
+        
+      </div>
+    </div>
+    
+    <div class="lbrow lbbody">
+      <div>9</div>
+
+      <div class="opponent">
+        <a
+          class="teamlink"
+          href="../team/detroit-lions.html"
+        >
+          <img
+            class="logo"
+            src="../static/img/logos/detroit-lions.png"
+            alt="Detroit Lions logo"
+            loading="lazy"
+          />
+          <span class="teamname">Detroit Lions</span>
+        </a>
+      </div>
+
+      <div>1532</div>
+
+      <div>
+        
+          +27
+        
+      </div>
+    </div>
+    
+    <div class="lbrow lbbody">
+      <div>10</div>
+
+      <div class="opponent">
+        <a
+          class="teamlink"
+          href="../team/green-bay-packers.html"
+        >
+          <img
+            class="logo"
+            src="../static/img/logos/green-bay-packers.png"
+            alt="Green Bay Packers logo"
+            loading="lazy"
+          />
+          <span class="teamname">Green Bay Packers</span>
+        </a>
+      </div>
+
+      <div>1532</div>
+
+      <div>
+        
+          +29
+        
+      </div>
+    </div>
+    
+    <div class="lbrow lbbody">
+      <div>11</div>
+
+      <div class="opponent">
+        <a
+          class="teamlink"
+          href="../team/los-angeles-chargers.html"
+        >
+          <img
+            class="logo"
+            src="../static/img/logos/los-angeles-chargers.png"
+            alt="Los Angeles Chargers logo"
+            loading="lazy"
+          />
+          <span class="teamname">Los Angeles Chargers</span>
+        </a>
+      </div>
+
+      <div>1531</div>
+
+      <div>
+        
+          -31
+        
+      </div>
+    </div>
+    
+    <div class="lbrow lbbody">
+      <div>12</div>
+
+      <div class="opponent">
+        <a
+          class="teamlink"
+          href="../team/tampa-bay-buccaneers.html"
+        >
+          <img
+            class="logo"
+            src="../static/img/logos/tampa-bay-buccaneers.png"
+            alt="Tampa Bay Buccaneers logo"
+            loading="lazy"
+          />
+          <span class="teamname">Tampa Bay Buccaneers</span>
+        </a>
+      </div>
+
+      <div>1505</div>
+
+      <div>
+        
+          -50
+        
+      </div>
+    </div>
+    
+    <div class="lbrow lbbody">
+      <div>13</div>
+
+      <div class="opponent">
+        <a
+          class="teamlink"
+          href="../team/denver-broncos.html"
+        >
+          <img
+            class="logo"
+            src="../static/img/logos/denver-broncos.png"
+            alt="Denver Broncos logo"
+            loading="lazy"
+          />
+          <span class="teamname">Denver Broncos</span>
+        </a>
+      </div>
+
+      <div>1504</div>
+
+      <div>
+        
+          +50
+        
+      </div>
+    </div>
+    
+    <div class="lbrow lbbody">
+      <div>14</div>
+
+      <div class="opponent">
+        <a
+          class="teamlink"
+          href="../team/washington-commanders.html"
+        >
+          <img
+            class="logo"
+            src="../static/img/logos/washington-commanders.png"
+            alt="Washington Commanders logo"
+            loading="lazy"
+          />
+          <span class="teamname">Washington Commanders</span>
+        </a>
+      </div>
+
+      <div>1502</div>
+
+      <div>
+        
+          +21
+        
+      </div>
+    </div>
+    
+    <div class="lbrow lbbody">
+      <div>15</div>
+
+      <div class="opponent">
+        <a
+          class="teamlink"
+          href="../team/houston-texans.html"
+        >
+          <img
+            class="logo"
+            src="../static/img/logos/houston-texans.png"
+            alt="Houston Texans logo"
+            loading="lazy"
+          />
+          <span class="teamname">Houston Texans</span>
+        </a>
+      </div>
+
+      <div>1501</div>
+
+      <div>
+        
+          -38
+        
+      </div>
+    </div>
+    
+    <div class="lbrow lbbody">
+      <div>16</div>
+
+      <div class="opponent">
+        <a
+          class="teamlink"
+          href="../team/arizona-cardinals.html"
+        >
+          <img
+            class="logo"
+            src="../static/img/logos/arizona-cardinals.png"
+            alt="Arizona Cardinals logo"
+            loading="lazy"
+          />
+          <span class="teamname">Arizona Cardinals</span>
+        </a>
+      </div>
+
+      <div>1492</div>
+
+      <div>
+        
+          -27
+        
+      </div>
+    </div>
+    
+    <div class="lbrow lbbody">
+      <div>17</div>
+
+      <div class="opponent">
+        <a
+          class="teamlink"
+          href="../team/indianapolis-colts.html"
+        >
+          <img
+            class="logo"
+            src="../static/img/logos/indianapolis-colts.png"
+            alt="Indianapolis Colts logo"
+            loading="lazy"
+          />
+          <span class="teamname">Indianapolis Colts</span>
+        </a>
+      </div>
+
+      <div>1487</div>
+
+      <div>
+        
+          +26
+        
+      </div>
+    </div>
+    
+    <div class="lbrow lbbody">
+      <div>18</div>
+
+      <div class="opponent">
+        <a
+          class="teamlink"
+          href="../team/san-francisco-49ers.html"
+        >
+          <img
+            class="logo"
+            src="../static/img/logos/san-francisco-49ers.png"
+            alt="San Francisco 49ers logo"
+            loading="lazy"
+          />
+          <span class="teamname">San Francisco 49ers</span>
+        </a>
+      </div>
+
+      <div>1487</div>
+
+      <div>
+        
+          -22
+        
+      </div>
+    </div>
+    
+    <div class="lbrow lbbody">
+      <div>19</div>
+
+      <div class="opponent">
+        <a
+          class="teamlink"
+          href="../team/baltimore-ravens.html"
+        >
+          <img
+            class="logo"
+            src="../static/img/logos/baltimore-ravens.png"
+            alt="Baltimore Ravens logo"
+            loading="lazy"
+          />
+          <span class="teamname">Baltimore Ravens</span>
+        </a>
+      </div>
+
+      <div>1476</div>
+
+      <div>
+        
+          +20
+        
+      </div>
+    </div>
+    
+    <div class="lbrow lbbody">
+      <div>20</div>
+
+      <div class="opponent">
+        <a
+          class="teamlink"
+          href="../team/dallas-cowboys.html"
+        >
+          <img
+            class="logo"
+            src="../static/img/logos/dallas-cowboys.png"
+            alt="Dallas Cowboys logo"
+            loading="lazy"
+          />
+          <span class="teamname">Dallas Cowboys</span>
+        </a>
+      </div>
+
+      <div>1476</div>
+
+      <div>
+        
+          -20
+        
+      </div>
+    </div>
+    
+    <div class="lbrow lbbody">
+      <div>21</div>
+
+      <div class="opponent">
+        <a
+          class="teamlink"
+          href="../team/chicago-bears.html"
+        >
+          <img
+            class="logo"
+            src="../static/img/logos/chicago-bears.png"
+            alt="Chicago Bears logo"
+            loading="lazy"
+          />
+          <span class="teamname">Chicago Bears</span>
+        </a>
+      </div>
+
+      <div>1475</div>
+
+      <div>
+        
+          -26
+        
+      </div>
+    </div>
+    
+    <div class="lbrow lbbody">
+      <div>22</div>
+
+      <div class="opponent">
+        <a
+          class="teamlink"
+          href="../team/new-york-giants.html"
+        >
+          <img
+            class="logo"
+            src="../static/img/logos/new-york-giants.png"
+            alt="New York Giants logo"
+            loading="lazy"
+          />
+          <span class="teamname">New York Giants</span>
+        </a>
+      </div>
+
+      <div>1472</div>
+
+      <div>
+        
+          +28
+        
+      </div>
+    </div>
+    
+    <div class="lbrow lbbody">
+      <div>23</div>
+
+      <div class="opponent">
+        <a
+          class="teamlink"
+          href="../team/new-england-patriots.html"
+        >
+          <img
+            class="logo"
+            src="../static/img/logos/new-england-patriots.png"
+            alt="New England Patriots logo"
+            loading="lazy"
+          />
+          <span class="teamname">New England Patriots</span>
+        </a>
+      </div>
+
+      <div>1467</div>
+
+      <div>
+        
+          -40
+        
+      </div>
+    </div>
+    
+    <div class="lbrow lbbody">
+      <div>24</div>
+
+      <div class="opponent">
+        <a
+          class="teamlink"
+          href="../team/carolina-panthers.html"
+        >
+          <img
+            class="logo"
+            src="../static/img/logos/carolina-panthers.png"
+            alt="Carolina Panthers logo"
+            loading="lazy"
+          />
+          <span class="teamname">Carolina Panthers</span>
+        </a>
+      </div>
+
+      <div>1465</div>
+
+      <div>
+        
+          +40
+        
+      </div>
+    </div>
+    
+    <div class="lbrow lbbody">
+      <div>25</div>
+
+      <div class="opponent">
+        <a
+          class="teamlink"
+          href="../team/atlanta-falcons.html"
+        >
+          <img
+            class="logo"
+            src="../static/img/logos/atlanta-falcons.png"
+            alt="Atlanta Falcons logo"
+            loading="lazy"
+          />
+          <span class="teamname">Atlanta Falcons</span>
+        </a>
+      </div>
+
+      <div>1464</div>
+
+      <div>
+        
+          -19
+        
+      </div>
+    </div>
+    
+    <div class="lbrow lbbody">
+      <div>26</div>
+
+      <div class="opponent">
+        <a
+          class="teamlink"
+          href="../team/cleveland-browns.html"
+        >
+          <img
+            class="logo"
+            src="../static/img/logos/cleveland-browns.png"
+            alt="Cleveland Browns logo"
+            loading="lazy"
+          />
+          <span class="teamname">Cleveland Browns</span>
+        </a>
+      </div>
+
+      <div>1460</div>
+
+      <div>
+        
+          -28
+        
+      </div>
+    </div>
+    
+    <div class="lbrow lbbody">
+      <div>27</div>
+
+      <div class="opponent">
+        <a
+          class="teamlink"
+          href="../team/los-angeles-rams.html"
+        >
+          <img
+            class="logo"
+            src="../static/img/logos/los-angeles-rams.png"
+            alt="Los Angeles Rams logo"
+            loading="lazy"
+          />
+          <span class="teamname">Los Angeles Rams</span>
+        </a>
+      </div>
+
+      <div>1454</div>
+
+      <div>
+        
+          +22
+        
+      </div>
+    </div>
+    
+    <div class="lbrow lbbody">
+      <div>28</div>
+
+      <div class="opponent">
+        <a
+          class="teamlink"
+          href="../team/miami-dolphins.html"
+        >
+          <img
+            class="logo"
+            src="../static/img/logos/miami-dolphins.png"
+            alt="Miami Dolphins logo"
+            loading="lazy"
+          />
+          <span class="teamname">Miami Dolphins</span>
+        </a>
+      </div>
+
+      <div>1449</div>
+
+      <div>
+        
+          -31
+        
+      </div>
+    </div>
+    
+    <div class="lbrow lbbody">
+      <div>29</div>
+
+      <div class="opponent">
+        <a
+          class="teamlink"
+          href="../team/cincinnati-bengals.html"
+        >
+          <img
+            class="logo"
+            src="../static/img/logos/cincinnati-bengals.png"
+            alt="Cincinnati Bengals logo"
+            loading="lazy"
+          />
+          <span class="teamname">Cincinnati Bengals</span>
+        </a>
+      </div>
+
+      <div>1447</div>
+
+      <div>
+        
+          -21
+        
+      </div>
+    </div>
+    
+    <div class="lbrow lbbody">
+      <div>30</div>
+
+      <div class="opponent">
+        <a
+          class="teamlink"
+          href="../team/las-vegas-raiders.html"
+        >
+          <img
+            class="logo"
+            src="../static/img/logos/las-vegas-raiders.png"
+            alt="Las Vegas Raiders logo"
+            loading="lazy"
+          />
+          <span class="teamname">Las Vegas Raiders</span>
+        </a>
+      </div>
+
+      <div>1445</div>
+
+      <div>
+        
+          -41
+        
+      </div>
+    </div>
+    
+    <div class="lbrow lbbody">
+      <div>31</div>
+
+      <div class="opponent">
+        <a
+          class="teamlink"
+          href="../team/jacksonville-jaguars.html"
+        >
+          <img
+            class="logo"
+            src="../static/img/logos/jacksonville-jaguars.png"
+            alt="Jacksonville Jaguars logo"
+            loading="lazy"
+          />
+          <span class="teamname">Jacksonville Jaguars</span>
+        </a>
+      </div>
+
+      <div>1428</div>
+
+      <div>
+        
+          -31
+        
+      </div>
+    </div>
+    
+    <div class="lbrow lbbody">
+      <div>32</div>
+
+      <div class="opponent">
+        <a
+          class="teamlink"
+          href="../team/tennessee-titans.html"
+        >
+          <img
+            class="logo"
+            src="../static/img/logos/tennessee-titans.png"
+            alt="Tennessee Titans logo"
+            loading="lazy"
+          />
+          <span class="teamname">Tennessee Titans</span>
+        </a>
+      </div>
+
+      <div>1418</div>
+
+      <div>
+        
+          -29
+        
+      </div>
+    </div>
+    
+
+  </div>
+</section>
+
+
+  </main>
+
+  <footer class="footer">
+    <span class="muted">Season 2024</span>
+    <span class="muted">Baseline: 1500</span>
+    <span class="muted">K Factor: 25</span>
+      <span class="muted">#About / Contact
+
+Terms / Privacy
+
+GitHub / Docs
+
+Version / Build info
+
+      dont forget remove the formula nad put it on about</span>
+  </footer>
+</body>
+</html>

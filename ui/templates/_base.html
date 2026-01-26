@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+  href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap"
+  rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{% block title %}NFL Elo{% endblock %}</title>
+  <link rel="stylesheet" href="{{ base_path }}static/css/app.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="title">
+          NFL Elo Dashboard
+      </div>
+      <div class="subtitle">2024 Regular Season</div>
+    </div>
+    <nav class="nav">
+      <a href="{{ base_path }}leaderboard/week-{{ current_week }}.html" class="navlink {% if active_page == 'leaderboard' %}active{% endif %}">Leaderboard</a>
+      <span class="navsep">•</span>
+      {% if active_page == "team" and team is defined %}
+  <span class="navsep">•</span>
+      <a href="{{ base_path }}team/{{ team|slug }}.html"
+         class="navlink active">
+        Team
+      </a>
+    {% else %}
+      <span class="navsep">•</span>
+      <span class="navlink disabled">Team</span>
+    {% endif %}
+
+    </nav>
+  </header>
+
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    <span class="muted">Season {{ season }}</span>
+    <span class="muted">Baseline: {{ baseline }}</span>
+    <span class="muted">K Factor: {{ k_factor }}</span>
+      <span class="muted">#About / Contact
+
+Terms / Privacy
+
+GitHub / Docs
+
+Version / Build info
+
+      dont forget remove the formula nad put it on about</span>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,132 @@
+services:
+  data-api:
+    build:
+      context: .
+      dockerfile: data-api/Dockerfile
+    container_name: nfl-data-api
+    environment:
+      - DB_PATH=/data/nfl-season-2024.db
+    volumes:
+      - ./loader/data/nfl-season-2024.db:/data/nfl-season-2024.db:ro
+    networks:
+      - apisix-network
+
+  analytics-api:
+    build:
+      context: .
+      dockerfile: analytics-api/Dockerfile
+    container_name: nfl-analytics-api
+    environment:
+      - ELO_API_BASE=http://data-api:8000
+      - ELO_JSON_PATH=/data/elo_2024.json
+    depends_on:
+      - data-api
+    volumes:
+      - ./elo:/data
+    networks:
+      - apisix-network
+
+  etcd:
+    image: bitnamilegacy/etcd:3.4.9
+    container_name: etcd
+    environment:
+      ALLOW_NONE_AUTHENTICATION: "yes"
+      ETCD_ENABLE_V2: "true"
+      ETCD_ADVERTISE_CLIENT_URLS: "http://etcd:2379"
+      ETCD_LISTEN_CLIENT_URLS: "http://0.0.0.0:2379"
+    networks:
+      - apisix-network
+
+  apisix:
+    image: apache/apisix:3.7.0-debian
+    container_name: apisix
+    depends_on:
+      - etcd
+      - data-api
+      - analytics-api
+    volumes:
+      - ./conf/config.yaml:/usr/local/apisix/conf/config.yaml
+    ports:
+      - "9080:9080"
+      - "9180:9180"
+    networks:
+      - apisix-network
+
+  route-init:
+    image: curlimages/curl:8.6.0
+    container_name: route-init
+    depends_on:
+      - apisix
+    networks:
+      - apisix-network
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        echo "Waiting for APISIX admin API."
+        until curl -s http://apisix:9180/apisix/admin/routes \
+          -H "X-API-KEY: edd1c9f034335f136f87ad84b625c8f1" \
+          | grep -q '"list"'; do
+          sleep 3
+        done
+
+        echo "Registering data-api routes"
+        curl -s -X PUT http://apisix:9180/apisix/admin/routes/1 \
+          -H "X-API-KEY: edd1c9f034335f136f87ad84b625c8f1" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "uri": "/api/*",
+            "plugins": {
+              "proxy-rewrite": {
+                "regex_uri": ["^/api/(.*)$", "/$1"]
+              }
+            },
+            "upstream": {
+              "type": "roundrobin",
+              "nodes": {
+                "data-api:8000": 1
+              }
+            }
+          }'
+
+        echo "Registering analytics-api routes"
+        curl -s -X PUT http://apisix:9180/apisix/admin/routes/2 \
+          -H "X-API-KEY: edd1c9f034335f136f87ad84b625c8f1" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "uri": "/analytics/*",
+            "plugins": {
+              "proxy-rewrite": {
+                "regex_uri": ["^/analytics/(.*)$", "/$1"]
+              }
+            },
+            "upstream": {
+              "type": "roundrobin",
+              "nodes": {
+                "analytics-api:8001": 1
+              }
+            }
+          }'
+
+        echo "Routes registered successfully."
+
+  elo-init:
+    image: curlimages/curl:8.5.0
+    depends_on:
+      - apisix
+    command: >
+      sh -c "
+      echo 'Waiting for APISIX...';
+      until curl -sf http://apisix:9080/analytics/health; do
+        sleep 2;
+      done;
+      echo 'Recomputing Elo...';
+      curl -X POST http://apisix:9080/analytics/elo/recompute;
+      echo 'Elo ready.';
+      "
+    restart: "no"
+
+
+networks:
+  apisix-network:
+    driver: bridge

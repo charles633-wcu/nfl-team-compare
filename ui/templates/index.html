@@ -1,0 +1,70 @@
+{% set base_path = "" %}
+{% set active_page = "leaderboard" %}
+{% set current_week = week %}
+{% extends "_base.html" %}
+
+{% block title %}Leaderboard · Week {{ week }} · NFL Elo{% endblock %}
+
+{% block content %}
+<section class="card">
+  <div class="cardrow">
+    <div>
+      <h1 class="h1">Leaderboard</h1>
+      <div class="muted">Week {{ week }} · Season {{ season }}</div>
+    </div>
+
+    <div class="controls">
+      <select id="weekSelect" class="select" onchange="location = this.value;">
+        {% for w in available_weeks %}
+          <option value="leaderboard/week-{{ w }}.html" {% if w == week %}selected{% endif %}>
+            Week {{ w }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="lbgrid">
+
+    <div class="lbrow lbheader">
+      <div>Rank</div>
+      <div class="opponent">Team</div>
+      <div>Elo</div>
+      <div>Δ Elo</div>
+    </div>
+
+    {% for team, elo, delta in rows %}
+    <div class="lbrow lbbody">
+      <div>{{ loop.index }}</div>
+
+      <div class="opponent">
+        <a class="teamlink" href="team/{{ team|slug }}.html">
+          <img
+            class="logo"
+            src="static/img/logos/{{ team|slug }}.png"
+            alt="{{ team }} logo"
+            loading="lazy"
+          />
+          <span class="teamname">{{ team }}</span>
+        </a>
+      </div>
+
+      <div>{{ elo }}</div>
+
+      <div>
+        {% if delta is none %}
+          —
+        {% elif delta > 0 %}
+          +{{ delta }}
+        {% else %}
+          {{ delta }}
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+
+  </div>
+</section>
+{% endblock %}
