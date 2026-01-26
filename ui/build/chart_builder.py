@@ -13,22 +13,10 @@ def build_elo_chart_pages(
     teams: Iterable[str],
     slugify,
 ) -> None:
-    """
-    Writes: dist/elo/<team-slug>.html
-
-    Expects:
-      - env has template "team_elo_chart.html"
-      - elo_all comes from /elo/all and contains:
-          elo_all["elo"] = { "0": { "Team A": 1500, ... }, "1": {...}, ... }
-      - dist_dir is ui/dist
-      - teams is an iterable of team names (strings)
-      - slugify is your existing slugify() function
-    """
     elo_by_week: Dict[str, Dict[str, Any]] = elo_all.get("elo", {}) or {}
     if not elo_by_week:
         raise RuntimeError("elo_all['elo'] missing or empty; cannot build chart pages.")
 
-    # Determine available weeks from keys (strings)
     weeks: List[int] = []
     for k in elo_by_week.keys():
         try:
@@ -61,7 +49,6 @@ def build_elo_chart_pages(
 
             team_weeks.append(w)
 
-        # If a team is missing entirely, still generate a page (with empty series)
         html = tpl.render(
             team=team,
             season=season,

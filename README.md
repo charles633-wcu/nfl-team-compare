@@ -1,3 +1,5 @@
+AWS RECOMPUTE TO SOHW DATA-API AND ANALAYTICS API TALKING
+
 # NFL Team Comparison Web App
 
 This project is a deployed full-stack web application that allows users to compare two NFL teams from a selected season using real game data. The application aggregates official game results and standings data from a third-party sports API and presents computed season statistics through a clean, server-rendered interface.

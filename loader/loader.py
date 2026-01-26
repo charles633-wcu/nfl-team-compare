@@ -28,7 +28,6 @@ def fetch_games(url: str):
 
 
 def to_date_only(date_utc: str) -> str:
-    # "2024-09-06 00:20:00Z" → "2024-09-06"
     return datetime.strptime(date_utc, "%Y-%m-%d %H:%M:%SZ").date().isoformat()
 
 

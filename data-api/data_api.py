@@ -1,23 +1,3 @@
-# app/main.py
-#
-# FastAPI API layer for your SQLite DB:
-#   app/data/nfl-season-2024.db
-#
-# Endpoints:
-#   GET /health
-#   GET /games
-#     - optional query params: week, team, played (true/false)
-#   GET /teams
-#   GET /teams/{team_name}/summary
-#
-# Run (from project root):
-#   pip install fastapi uvicorn
-#   uvicorn app.main:app --reload
-#
-# Notes:
-# - This assumes a table named `games` with columns:
-#   match_number, week, game_date, home_team, away_team, home_score, away_score
-
 from __future__ import annotations
 
 import os
@@ -217,16 +197,3 @@ def team_summary(team_name: str) -> Dict[str, Any]:
         "point_diff": int(row["points_for"]) - int(row["points_against"]),
     }
 
-#python -m uvicorn data-api.data_api:app --reload
-
-
-
-#http://127.0.0.1:8000/health
-
-#http://127.0.0.1:8000/games?limit=5
-
-#http://127.0.0.1:8000/teams
-
-#http://127.0.0.1:8000/teams/Kansas%20City%20Chiefs/summary
-
-#http://127.0.0.1:8000/games?team=Kansas%20City%20Chiefs&played=true

@@ -116,7 +116,7 @@ def compute_weekly_elo(games: List[Dict[str, Any]], teams: List[str], cfg: EloCo
     for t in teams:
         out["teams"][t]["0"] = {"games": [], "final_elo": int(cfg.baseline)}
 
-    # Weeks 1..18
+    # Weeks 1-10
     for week in range(1, cfg.weeks + 1):
         # deterministic ordering within week
         week_games = sorted(
@@ -224,7 +224,6 @@ def compute_weekly_elo(games: List[Dict[str, Any]], teams: List[str], cfg: EloCo
         "n_samples": len(x_elo_diff),
     }
 
-    # OPTIONAL: inject predicted margin into every stored game record
     for team, weeks_blob in out["teams"].items():
         for wk, wk_obj in weeks_blob.items():
             for game in wk_obj.get("games", []):
@@ -260,7 +259,6 @@ def persist_elo_to_sqlite(
     try:
         cur = conn.cursor()
 
-        # Meta table (one row per season)
         cur.execute(
             """
             CREATE TABLE IF NOT EXISTS elo_meta (
@@ -288,7 +286,6 @@ def persist_elo_to_sqlite(
             """
         )
 
-        # Per-team game logs (mirrors what you already embed under teams[team][week]["games"])
         cur.execute(
             """
             CREATE TABLE IF NOT EXISTS elo_games (
@@ -313,7 +310,6 @@ def persist_elo_to_sqlite(
             """
         )
 
-        # Replace season data (idempotent runs)
         cur.execute("DELETE FROM elo_meta   WHERE season = ?", (cfg.season,))
         cur.execute("DELETE FROM elo_weekly WHERE season = ?", (cfg.season,))
         cur.execute("DELETE FROM elo_games  WHERE season = ?", (cfg.season,))

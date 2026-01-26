@@ -1,4 +1,3 @@
-# ui/build/build_site.py
 from __future__ import annotations
 
 import json
@@ -15,9 +14,6 @@ import requests
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 
-# -----------------------------
-# Config
-# -----------------------------
 DEFAULT_ANALYTICS_API = "http://127.0.0.1:8001"
 
 
@@ -30,7 +26,6 @@ class SiteConfig:
 def slugify(name: str) -> str:
     """
     "Philadelphia Eagles" -> "philadelphia-eagles"
-    Keeps it simple + predictable for file paths and logo lookups.
     """
     s = name.strip().lower()
     s = s.replace("&", "and")
@@ -41,18 +36,14 @@ def slugify(name: str) -> str:
     return s
 
 
-# -----------------------------
 # HTTP helpers
-# -----------------------------
 def http_get_json(url: str, timeout_s: int) -> Dict[str, Any]:
     r = requests.get(url, timeout=timeout_s)
     r.raise_for_status()
     return r.json()
 
 
-# -----------------------------
 # Data shaping
-# -----------------------------
 def parse_weeks_from_elo_all(payload: Dict[str, Any]) -> List[int]:
     """
     payload["elo"] is a dict keyed by week as string: { "0": {...}, "1": {...} }
@@ -88,7 +79,6 @@ def leaderboard_rows_for_week(
         try:
             elo_int = int(elo_val)
         except Exception:
-            # fall back in case it comes in as float/str weirdness
             elo_int = int(float(elo_val))
 
         delta: int | None = None
@@ -104,9 +94,7 @@ def leaderboard_rows_for_week(
     return rows
 
 
-# -----------------------------
 # Build
-# -----------------------------
 def build_site(cfg: SiteConfig) -> None:
     here = Path(__file__).resolve()
     ui_dir = here.parents[1]             # .../ui
@@ -124,7 +112,6 @@ def build_site(cfg: SiteConfig) -> None:
     team_out_dir.mkdir(parents=True, exist_ok=True)
     elo_out_dir.mkdir(parents=True, exist_ok=True)
 
-    # Jinja env
     env = Environment(
         loader=FileSystemLoader(str(templates_dir)),
         autoescape=select_autoescape(["html", "xml"]),
@@ -188,7 +175,6 @@ def build_site(cfg: SiteConfig) -> None:
             failures.append((team, repr(e)))
             print(f"⚠️  Team page skipped: {team} ({e})")
 
-        # small throttle helps fragile dev servers
         time.sleep(0.15)
 
     if failures:
@@ -196,9 +182,7 @@ def build_site(cfg: SiteConfig) -> None:
         for team, err in failures:
             print(f"- {team}: {err}")
 
-    # -----------------------------
-    # Build ELO CHART pages (dist/elo/<slug>.html)
-    # -----------------------------
+    # Build Elo CHART pages (
     teams = [team for team, _elo, _delta in latest_rows]
     build_elo_chart_pages(
         env=env,
@@ -228,7 +212,7 @@ def build_site(cfg: SiteConfig) -> None:
         shutil.rmtree(out_static_dir)
     shutil.copytree(static_dir, out_static_dir)
 
-    print("✅ Site built")
+    print("Site built")
     print(f"- index: {dist_dir / 'index.html'} (week {latest_week})")
     print(f"- leaderboard: {leaderboard_out_dir} ({len(weeks)} pages)")
     print(f"- teams: {team_out_dir} ({len(latest_rows)} pages)")

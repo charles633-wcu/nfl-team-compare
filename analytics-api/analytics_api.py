@@ -73,7 +73,6 @@ def elo_meta(
     }
 
     if not p.exists():
-        # Keep GET side-effect-free; don't recompute here.
         meta["status"] = "missing"
         meta["message"] = "Elo JSON not found. Call POST /elo/recompute to generate it."
         return meta
@@ -90,7 +89,6 @@ def elo_meta(
         raw = p.read_text(encoding="utf-8")
         data = json.loads(raw)
 
-        # These keys match your compute_elo output structure
         meta["weeks_present"] = len((data.get("elo") or {}).keys())
         meta["teams_present"] = len((data.get("teams") or {}).keys())
 
@@ -185,30 +183,3 @@ def team_elo(team_name: str) -> Dict[str, Any]:
     return {"season": data["season"], "team": team_name, "weeks": weeks_out}
 
 
-#http://127.0.0.1:8001/health
-
-#http://127.0.0.1:8001/elo/all
-#http://127.0.0.1:8001/elo/recompute
-# http://127.0.0.1:8001/teams/Philadelphia%20Eagles/elo
-#http://127.0.0.1:8001/elo/1
-#from ROOT uvicorn analytics_api:app --reload --port 8001 --app-dir analytics-api
-
-
-
-#DOCKER ROUTES
-#http://localhost:9080/api/health
-
-#http://localhost:9080/api/teams
-
-#http://localhost:9080/api/teams/Kansas%20City%20Chiefs/summary
-
-#http://localhost:9080/api/games?limit=5
-
-
-#http://localhost:9080/analytics/health
-#http://localhost:9080/analytics/elo/meta
-#http://localhost:9080/analytics/elo/all
-#http://localhost:9080/analytics/elo/recompute
-#http://localhost:9080/analytics/elo/1
-#http://localhost:9080/analytics/teams/Philadelphia%20Eagles/elo
-#DONT FORGET CHECK IF ELO_2024.json is on the EC2
