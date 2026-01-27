@@ -111,12 +111,17 @@ The UI is generated from the Analytics API at build time, then served as pure st
 From repo root:
 
 Windows (PowerShell)
+```
 $env:ANALYTICS_API_BASE="http://localhost:9080/analytics"
 python ui/build/build_site.py
+```
 
 macOS/Linux
+```
 export ANALYTICS_API_BASE="http://localhost:9080/analytics"
 python ui/build/build_site.py
+```
+
 Output is written to:
 
 **nfl-team-compare/ui/dist/index.html**
