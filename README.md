@@ -108,18 +108,13 @@ docker compose up --build
 Build the static site (UI)
 The UI is generated from the Analytics API at build time, then served as pure static files.
 
-From repo root:
+### Generate the static site
+From repo root (Windows Powershell):
 
-Windows (PowerShell)
 ```
+cd ui
 $env:ANALYTICS_API_BASE="http://localhost:9080/analytics"
-python ui/build/build_site.py
-```
-
-macOS/Linux
-```
-export ANALYTICS_API_BASE="http://localhost:9080/analytics"
-python ui/build/build_site.py
+py .\build\build_site.py
 ```
 
 Output is written to:
