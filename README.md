@@ -109,6 +109,11 @@ Build the static site (UI)
 The UI is generated from the Analytics API at build time, then served as pure static files.
 
 ### Generate the static site
+
+The website is generated at build time from the Analytics API and written to `ui/dist/`.
+
+> Run the backend stack first (`docker compose up --build`) so the Analytics API is reachable.
+
 From repo root (Windows Powershell):
 
 ```
