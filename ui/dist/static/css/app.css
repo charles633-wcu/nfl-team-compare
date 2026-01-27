@@ -400,3 +400,13 @@ a:hover {
   text-decoration: underline;
 }
 
+.brandlink,
+.brandlink:visited,
+.brandlink:hover,
+.brandlink:active {
+  color: inherit;
+  text-decoration: none;
+}
+.brandlink:hover {
+  text-decoration: underline;
+}

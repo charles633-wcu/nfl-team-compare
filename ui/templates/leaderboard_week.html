@@ -36,7 +36,6 @@
 <section class="card">
   <div class="lbgrid">
 
-    <!-- Header row -->
     <div class="lbrow lbheader">
       <div>Rank</div>
       <div class="opponent">Team</div>
@@ -44,7 +43,6 @@
       <div>Δ Elo</div>
     </div>
 
-    <!-- Data rows -->
     {% for team, elo, delta in rows %}
     <div class="lbrow lbbody">
       <div>{{ loop.index }}</div>

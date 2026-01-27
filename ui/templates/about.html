@@ -1,0 +1,40 @@
+{% set base_path = "" %}
+{% set active_page = "about" %}
+{% extends "_base.html" %}
+
+{% block title %}About · NFL Elo{% endblock %}
+
+{% block content %}
+<section class="card">
+  <h1 class="h1">About</h1>
+  <p class="muted">
+    This NFL Elo dashboard was created by me (a student at West Chester University of Pennsylvania)
+      for the purposes of practicing and demonstrating what I've learned about full-stack development. This project
+      loads season data, stores and computes Elo ratings in the backend, and generates a clean website with
+      charts that are easy to browse.
+  </p>
+</section>
+
+<section class="card">
+  <h1 class="h1">Elo Formula</h1>
+
+  <div class="muted" style="line-height:1.8;">
+    \[
+      E = \frac{1}{1 + 10^{\frac{OppElo - TeamElo}{400}}}
+    \]
+    \[
+      NewElo = OldElo + K \cdot (Result - E)
+    \]
+    \[
+      Result \in \{1, 0.5, 0\}
+    \]
+  </div>
+</section>
+
+<script>
+  window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] } };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+
+{% endblock %}

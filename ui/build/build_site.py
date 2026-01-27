@@ -94,18 +94,16 @@ def leaderboard_rows_for_week(
     return rows
 
 
-# Build
 def build_site(cfg: SiteConfig) -> None:
     here = Path(__file__).resolve()
-    ui_dir = here.parents[1]             # .../ui
+    ui_dir = here.parents[1]  # .../ui
     templates_dir = ui_dir / "templates"
     static_dir = ui_dir / "static"
     dist_dir = ui_dir / "dist"
 
-    # Output subfolders
     leaderboard_out_dir = dist_dir / "leaderboard"
-    team_out_dir = dist_dir / "team"     # placeholder for next step
-    elo_out_dir = dist_dir / "elo"       # charts live here
+    team_out_dir = dist_dir / "team"
+    elo_out_dir = dist_dir / "elo"
 
     dist_dir.mkdir(parents=True, exist_ok=True)
     leaderboard_out_dir.mkdir(parents=True, exist_ok=True)
@@ -145,13 +143,29 @@ def build_site(cfg: SiteConfig) -> None:
     )
     (dist_dir / "index.html").write_text(index_html, encoding="utf-8")
 
+    # Render about + contact pages at dist root
+    about_tpl = env.get_template("about.html")
+    about_html = about_tpl.render(
+        season=season,
+        baseline=baseline,
+        k_factor=k_factor,
+        current_week=latest_week,
+    )
+    (dist_dir / "about.html").write_text(about_html, encoding="utf-8")
+
+    contact_tpl = env.get_template("contact.html")
+    contact_html = contact_tpl.render(
+        season=season,
+        baseline=baseline,
+        k_factor=k_factor,
+        current_week=latest_week,
+    )
+    (dist_dir / "contact.html").write_text(contact_html, encoding="utf-8")
+
     # Build TEAM pages (dist/team/<slug>.html)
     team_tpl = env.get_template("team.html")
-    team_out_dir = dist_dir / "team"
-    team_out_dir.mkdir(parents=True, exist_ok=True)
 
     failures = []
-
     for team, _elo, _delta in latest_rows:
         try:
             payload = fetch_team_timeline(cfg.analytics_api_base, team, timeout_s=cfg.timeout_s)
@@ -168,12 +182,11 @@ def build_site(cfg: SiteConfig) -> None:
                 baseline=baseline,
                 k_factor=k_factor,
             )
-
             (team_out_dir / f"{slugify(team)}.html").write_text(html, encoding="utf-8")
 
         except requests.exceptions.RequestException as e:
             failures.append((team, repr(e)))
-            print(f"⚠️  Team page skipped: {team} ({e})")
+            print(f"Team page skipped: {team} ({e})")
 
         time.sleep(0.15)
 
@@ -182,7 +195,17 @@ def build_site(cfg: SiteConfig) -> None:
         for team, err in failures:
             print(f"- {team}: {err}")
 
-    # Build Elo CHART pages (
+    # Loads division rivals mapping (repo-root /elo/division_rivals.json)
+    repo_root = here.parents[2]  # .../ui/build/build_site.py -> parents[2] is repo root
+    rivals_path = repo_root / "elo" / "division_rivals.json"
+
+    division_rivals: Dict[str, List[str]] = {}
+    if rivals_path.exists():
+        division_rivals = json.loads(rivals_path.read_text(encoding="utf-8"))
+    else:
+        print(f"division_rivals.json not found at: {rivals_path} (charts will be single-line)")
+
+    # Build Elo CHART pages (dist/elo/<slug>.html)
     teams = [team for team, _elo, _delta in latest_rows]
     build_elo_chart_pages(
         env=env,
@@ -190,9 +213,10 @@ def build_site(cfg: SiteConfig) -> None:
         elo_all=elo_all,
         teams=teams,
         slugify=slugify,
+        division_rivals=division_rivals,
     )
 
-    # Render each week page
+    # Render each week page (dist/leaderboard/week-<w>.html)
     week_tpl = env.get_template("leaderboard_week.html")
     for w in weeks:
         rows = leaderboard_rows_for_week(elo_all, w)
@@ -220,13 +244,13 @@ def build_site(cfg: SiteConfig) -> None:
     print(f"- static: {out_static_dir}")
 
 
-
 def main() -> None:
     cfg = SiteConfig(
         analytics_api_base=os.getenv("ANALYTICS_API_BASE", DEFAULT_ANALYTICS_API),
         timeout_s=int(os.getenv("ANALYTICS_API_TIMEOUT_S", "15")),
     )
     build_site(cfg)
+
 
 
 if __name__ == "__main__":

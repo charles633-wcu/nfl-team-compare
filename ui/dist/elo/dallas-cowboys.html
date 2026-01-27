@@ -18,12 +18,16 @@
   <header class="topbar">
     <div class="brand">
       <div class="title">
-          NFL Elo Dashboard
-      </div>
+          
+            <a href="../leaderboard/week-18.html" class="brandlink">
+              NFL Elo Dashboard
+            </a>
+          
+        </div>
       <div class="subtitle">2024 Regular Season</div>
     </div>
     <nav class="nav">
-      <a href="../leaderboard/week-.html" class="navlink ">Leaderboard</a>
+      <a href="../leaderboard/week-18.html" class="navlink ">Leaderboard</a>
       <span class="navsep">•</span>
       
   <span class="navsep">•</span>
@@ -41,8 +45,8 @@
 <section class="card">
   <div class="cardrow" style="align-items: baseline;">
     <div>
-      <h1 class="h1">Dallas Cowboys Elo by Week</h1>
-      <div class="muted">Season 2024</div>
+      <h1 class="h1">Dallas Cowboys Elo By Week</h1>
+      <div class="muted">Regular Season 2024</div>
     </div>
 
     <div class="controls">
@@ -58,72 +62,121 @@
   </div>
 </section>
 
-<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-  const weeks = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
-  const elos  = [1500.0, 1535.0, 1496.0, 1476.0, 1498.0, 1519.0, 1481.0, 1481.0, 1459.0, 1439.0, 1416.0, 1388.0, 1431.0, 1451.0, 1426.0, 1452.0, 1472.0, 1453.0, 1442.0];
+  const TEAM_PRIMARY = {
+    "Arizona Cardinals": "#97233F",
+    "Atlanta Falcons": "#A71930",
+    "Baltimore Ravens": "#241773",
+    "Buffalo Bills": "#00338D",
+    "Carolina Panthers": "#0085CA",
+    "Chicago Bears": "#0B162A",
+    "Cincinnati Bengals": "#FB4F14",
+    "Cleveland Browns": "#311D00",
+    "Dallas Cowboys": "#003594",
+    "Denver Broncos": "#FB4F14",
+    "Detroit Lions": "#0076B6",
+    "Green Bay Packers": "#203731",
+    "Houston Texans": "#03202F",
+    "Indianapolis Colts": "#002C5F",
+    "Jacksonville Jaguars": "#101820",
+    "Kansas City Chiefs": "#E31837",
+    "Las Vegas Raiders": "#000000",
+    "Los Angeles Chargers": "#0080C6",
+    "Los Angeles Rams": "#003594",
+    "Miami Dolphins": "#008E97",
+    "Minnesota Vikings": "#4F2683",
+    "New England Patriots": "#002244",
+    "New Orleans Saints": "#D3BC8D",
+    "New York Giants": "#0B2265",
+    "New York Jets": "#125740",
+    "Philadelphia Eagles": "#004C54",
+    "Pittsburgh Steelers": "#FFB612",
+    "San Francisco 49ers": "#AA0000",
+    "Seattle Seahawks": "#002244",
+    "Tampa Bay Buccaneers": "#D50A0A",
+    "Tennessee Titans": "#0C2340",
+    "Washington Commanders": "#5A1414"
+  };
+
+  const weeks    = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
+  const series   = [{"elos": [1500.0, 1535.0, 1496.0, 1476.0, 1498.0, 1519.0, 1481.0, 1481.0, 1459.0, 1439.0, 1416.0, 1388.0, 1431.0, 1451.0, 1426.0, 1452.0, 1472.0, 1453.0, 1442.0], "team": "Dallas Cowboys"}, {"elos": [1500.0, 1461.0, 1444.0, 1472.0, 1450.0, 1487.0, 1455.0, 1421.0, 1407.0, 1396.0, 1376.0, 1376.0, 1348.0, 1329.0, 1318.0, 1307.0, 1283.0, 1334.0, 1329.0], "team": "New York Giants"}, {"elos": [1500.0, 1522.0, 1512.0, 1534.0, 1494.0, 1494.0, 1509.0, 1543.0, 1577.0, 1590.0, 1613.0, 1638.0, 1658.0, 1678.0, 1684.0, 1711.0, 1684.0, 1702.0, 1707.0], "team": "Philadelphia Eagles"}, {"elos": [1500.0, 1464.0, 1481.0, 1502.0, 1543.0, 1569.0, 1541.0, 1564.0, 1581.0, 1592.0, 1584.0, 1559.0, 1516.0, 1543.0, 1543.0, 1549.0, 1576.0, 1593.0, 1604.0], "team": "Washington Commanders"}];
+  const teamName = "Dallas Cowboys";
+  const baseline = 1500;
+
+  function hexToRgba(hex, a) {
+    const h = (hex || "").replace("#", "");
+    if (h.length !== 6) return `rgba(255,255,255,${a})`;
+    const r = parseInt(h.slice(0, 2), 16);
+    const g = parseInt(h.slice(2, 4), 16);
+    const b = parseInt(h.slice(4, 6), 16);
+    return `rgba(${r},${g},${b},${a})`;
+  }
+
+  const labels = weeks.map(w => `W${w}`);
+
+  // Writes "Division rivals:" context line
+  const rivals = series.map(s => s.team).filter(t => t !== teamName);
+
+  // Main line is orange; rivals use team primary colors, dimmed
+  const MAIN_COLOR = "rgba(255,165,0,1)";  // orange
+  const RIVAL_ALPHA = 0.65;
+
+  const datasets = series.map(s => {
+    const isMain = (s.team === teamName);
+    const baseHex = TEAM_PRIMARY[s.team] || "#FFFFFF";
+    const rivalColor = hexToRgba(baseHex, RIVAL_ALPHA);
+
+    return {
+      label: isMain ? `${s.team} (Elo Score)` : `${s.team} (Division rival)`,
+      data: s.elos,
+      borderColor: isMain ? MAIN_COLOR : rivalColor,
+      backgroundColor: "transparent",
+      tension: 0,
+      pointRadius: isMain ? 2 : 0,
+      borderWidth: isMain ? 3 : 2,
+      borderDash: isMain ? [] : [5, 5]
+    };
+  });
+
+  datasets.push({
+    label: "Baseline",
+    data: weeks.map(() => baseline),
+    borderColor: "rgba(255,255,255,0.6)",
+    backgroundColor: "transparent",
+    borderDash: [6, 6],
+    tension: 0,
+    pointRadius: 0,
+    borderWidth: 1
+  });
 
   new Chart(document.getElementById("eloChart"), {
     type: "line",
-    data: {
-      labels: weeks.map(w => `W${w}`),
-      datasets: [{
-        label: "Elo",
-        data: elos,
-
-        borderColor: "red",
-        backgroundColor: "transparent",
-
-        tension: 0,
-
-        /* optional: points */
-        pointRadius: 2
-      },
-       {
-          /* Baseline  */
-          label: "Baseline",
-          data: weeks.map(() => 1500),
-          borderColor: "rgba(255,255,255,0.6)",
-          backgroundColor: "transparent",
-          borderDash: [6, 6],
-          tension: 0,
-          pointRadius: 0,
-          borderWidth: 1
-        }]
-    },
+    data: { labels, datasets },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend:
-        { display: true,
-         position: 'top',
-         align: 'start',
-         labels: {
+      plugins: {
+        legend: {
+          display: true,
+          position: "top",
+          align: "start",
+          labels: {
             color: "white",
             boxWidth: 30,
             boxHeight: 2,
             padding: 16,
-            font: {
-              size: 13,
-              weight: "500"
+            font: { size: 13, weight: "500" }
+          }
         }
-
-         }
-         } },
+      },
       scales: {
         x: { title: { display: true, text: "Week" } },
         y: {
           title: { display: true, text: "Elo" },
-
-          /* ✅ fixed range so 1500 is centered */
           min: 1200,
           max: 1800,
-
-          /* ✅ makes ticks land nicely around 1500 */
-          ticks: {
-            stepSize: 100
-          }
+          ticks: { stepSize: 100 }
         }
       }
     }
@@ -133,18 +186,16 @@
   </main>
 
   <footer class="footer">
-    <span class="muted">Season 2024</span>
-    <span class="muted">Baseline: </span>
-    <span class="muted">K Factor: </span>
-      <span class="muted">#About / Contact
+      <span class="muted">Season 2024</span>
 
-Terms / Privacy
+      <span class="footerlinks">
+        <a class="footerlink" href="../about.html">About</a>
+        <span class="navsep">•</span>
+        <a class="footerlink" href="../contact.html">Contact</a>
+        <span class="navsep">•</span>
+        <a class="footerlink" href="https://github.com/charles633-wcu/nfl-team-compare/tree/main/ui/build" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </footer>
 
-GitHub / Docs
-
-Version / Build info
-
-      dont forget remove the formula nad put it on about</span>
-  </footer>
 </body>
 </html>

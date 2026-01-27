@@ -1,3 +1,5 @@
+
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -9,51 +11,62 @@
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>{% block title %}NFL Elo{% endblock %}</title>
-  <link rel="stylesheet" href="{{ base_path }}static/css/app.css" />
+  <title>Contact </title>
+  <link rel="stylesheet" href="static/css/app.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="brand">
       <div class="title">
-          {% if active_page == "leaderboard" %}
-            NFL Elo Dashboard
-          {% else %}
-            <a href="{{ base_path }}leaderboard/week-18.html" class="brandlink">
+          
+            <a href="leaderboard/week-18.html" class="brandlink">
               NFL Elo Dashboard
             </a>
-          {% endif %}
+          
         </div>
       <div class="subtitle">2024 Regular Season</div>
     </div>
     <nav class="nav">
-      <a href="{{ base_path }}leaderboard/week-18.html" class="navlink {% if active_page == 'leaderboard' %}active{% endif %}">Leaderboard</a>
+      <a href="leaderboard/week-18.html" class="navlink ">Leaderboard</a>
       <span class="navsep">•</span>
-      {% if active_page == "team" and team is defined %}
-  <span class="navsep">•</span>
-      <a href="{{ base_path }}team/{{ team|slug }}.html"
-         class="navlink active">
-        Team
-      </a>
-    {% else %}
+      
       <span class="navsep">•</span>
       <span class="navlink disabled">Team</span>
-    {% endif %}
+    
 
     </nav>
   </header>
 
   <main class="container">
-    {% block content %}{% endblock %}
+    
+<section class="card">
+  <h1 class="h1">Contact</h1>
+</section>
+
+<section class="card">
+  <h2 class="h2">Links</h2>
+  <ul class="muted">
+    <li><a class="footerlink" href="https://github.com/charles633-wcu/nfl-team-compare" target="_blank" rel="noopener">GitHub</a></li>
+    <li><a class="footerlink" href="https://linkedin.com/in/charles-wang-3a80961a4" target="_blank" rel="noopener">LinkedIn</a></li>
+  </ul>
+</section>
+
+<section class="card">
+  <h2 class="h2">Email</h2>
+  <p class="muted">
+    You can e-mail me at 2015wangch@gmail.com or cwang633@wcupa.edu.
+  </p>
+</section>
+
   </main>
 
   <footer class="footer">
-      <span class="muted">Season {{ season }}</span>
+      <span class="muted">Season 2024</span>
 
       <span class="footerlinks">
-        <a class="footerlink" href="{{ base_path }}about.html">About</a>
+        <a class="footerlink" href="about.html">About</a>
         <span class="navsep">•</span>
-        <a class="footerlink" href="{{ base_path }}contact.html">Contact</a>
+        <a class="footerlink" href="contact.html">Contact</a>
         <span class="navsep">•</span>
         <a class="footerlink" href="https://github.com/charles633-wcu/nfl-team-compare/tree/main/ui/build" target="_blank" rel="noopener">GitHub</a>
       </span>
