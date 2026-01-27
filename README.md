@@ -130,7 +130,7 @@ Output is written to:
 ## Tech stack
 
 **Backend**
-- Python (FastAPI, Pydantic)
+- Python (libraries include but ot limited to: **FastAPI, Pydantic**)
 - SQLite
 
 **Infra / Deployment**
@@ -143,9 +143,9 @@ Output is written to:
 - APISIX + etcd (routing `/api/*` and `/analytics/*`)
 
 **Frontend**
-- Jinja2 (static site generation)
+- Jinja2 
 - HTML/CSS
-- JavaScript (Chart.js)
+- JavaScript 
 
 ## Deployment (AWS)
 
