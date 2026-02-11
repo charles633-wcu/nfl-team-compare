@@ -44,10 +44,7 @@ def mov_multiplier(point_diff: int, winner_elo: float, loser_elo: float) -> floa
 
 
 def fit_ols(x: List[float], y: List[float]) -> Tuple[float, float]:
-    """
-    Fits y = a + b*x using closed-form OLS.
-    Returns (a, b).
-    """
+
     if len(x) != len(y) or len(x) < 2:
         return 0.0, 0.0
 
@@ -97,7 +94,7 @@ def compute_weekly_elo(games: List[Dict[str, Any]], teams: List[str], cfg: EloCo
     # floats internally, round only at end-of-week for stored Elo
     current: Dict[str, float] = {t: float(cfg.baseline) for t in teams}
 
-    # Artifact output
+    # Artifact
     out: Dict[str, Any] = {
         "season": cfg.season,
         "baseline": cfg.baseline,
@@ -111,20 +108,17 @@ def compute_weekly_elo(games: List[Dict[str, Any]], teams: List[str], cfg: EloCo
     x_elo_diff: List[float] = []
     y_margin: List[float] = []
 
-    # Week 0 snapshot
     out["elo"]["0"] = {t: int(cfg.baseline) for t in teams}
     for t in teams:
         out["teams"][t]["0"] = {"games": [], "final_elo": int(cfg.baseline)}
 
     # Weeks 1-10
     for week in range(1, cfg.weeks + 1):
-        # deterministic ordering within week
         week_games = sorted(
             games_by_week.get(week, []),
             key=lambda g: (g.get("game_date", ""), int(g.get("match_number", 0))),
         )
 
-        # init weekly structures for all teams (so bye weeks exist)
         for t in teams:
             out["teams"][t].setdefault(str(week), {"games": [], "final_elo": None})
 
@@ -138,7 +132,7 @@ def compute_weekly_elo(games: List[Dict[str, Any]], teams: List[str], cfg: EloCo
             home_pre = current[home]
             away_pre = current[away]
 
-            # Collect regression training sample (home perspective)
+            # Collect regression training sample
             x_elo_diff.append(home_pre - away_pre)
             y_margin.append(hs - aws)
 
@@ -150,7 +144,6 @@ def compute_weekly_elo(games: List[Dict[str, Any]], teams: List[str], cfg: EloCo
             home_margin = hs - aws
             away_margin = aws - hs
 
-            # MOV multiplier (ties: use 1.0)
             if s_home == 0.5:
                 mult = 1.0
             else:
@@ -163,7 +156,6 @@ def compute_weekly_elo(games: List[Dict[str, Any]], teams: List[str], cfg: EloCo
                     pd = abs(home_margin)
                 mult = mov_multiplier(pd, winner_elo, loser_elo)
 
-            # Apply update (mirror update)
             delta_home = cfg.k_factor * mult * (s_home - e_home)
             delta_away = -delta_home
 
@@ -206,14 +198,11 @@ def compute_weekly_elo(games: List[Dict[str, Any]], teams: List[str], cfg: EloCo
                 }
             )
 
-        # End-of-week snapshot (integers)
         out["elo"][str(week)] = {t: int(round(current[t])) for t in teams}
 
-        # Attach end-of-week Elo to each team week record
         for t in teams:
             out["teams"][t][str(week)]["final_elo"] = int(out["elo"][str(week)][t])
 
-    # Fit the margin model once after Elo is computed (using pregame Elo diffs)
     a, b = fit_ols(x_elo_diff, y_margin)
     out["margin_model"] = {
         "type": "ols",
@@ -238,15 +227,10 @@ def persist_elo_to_sqlite(
     result: Dict[str, Any],
     cfg: EloConfig,
     db_path: Path,
-) -> None:
-    """
-    Persist the Elo artifact into SQLite in both:
-      1) raw form (a single JSON blob row)
-      2) normalized tables for easy querying (weekly elos + per-team game logs)
-    """
+    ) -> None:
+
     db_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Canonical JSON for hashing + storage
     canonical = json.dumps(result, sort_keys=True, separators=(",", ":"))
     sha = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
     created_utc = (

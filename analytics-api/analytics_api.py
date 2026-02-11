@@ -55,13 +55,7 @@ def health() -> Dict[str, Any]:
 def elo_meta(
     sha256: bool = Query(default=False, description="If true, include sha256 of the elo json file"),
 ) -> Dict[str, Any]:
-    """
-    Artifact health / debugging:
-    - Confirms whether the Elo JSON exists and is readable
-    - Reports file size + last modified time (UTC)
-    - Reports weeks_present + teams_present by parsing the JSON
-    - Optional sha256 for integrity checks
-    """
+
     p = ELO_JSON_PATH
 
     meta: Dict[str, Any] = {
@@ -121,7 +115,7 @@ def recompute() -> Dict[str, Any]:
 
 @app.get("/elo/all")
 def elo_all() -> Dict[str, Any]:
-    # Full artifact (useful for debugging)
+    # Full artifact
     return ensure_elo_json(force=False)
 
 
@@ -132,7 +126,7 @@ def get_elo(
     """
     Leaderboard-only:
       - if week provided: returns team -> elo for that week
-      - else: returns whole artifact (same as /elo/all)
+      - else: returns whole artifact
     """
     data = ensure_elo_json(force=False)
     if week is None:

@@ -2,7 +2,6 @@
 simple_nfl_loader.py
 
 Downloads NFL 2024 fixtures and stores a simplified games table.
-No API key required.
 """
 
 import json
@@ -76,7 +75,7 @@ def load_games(conn: sqlite3.Connection, games):
 
 def main():
     games = fetch_games(URL)
-    conn = sqlite3.connect(str(DB_PATH))  # ✅ use DB_PATH
+    conn = sqlite3.connect(str(DB_PATH))
     try:
         init_db(conn)
         load_games(conn, games)

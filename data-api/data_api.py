@@ -9,16 +9,14 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="NFL Season 2024 API", version="1.0.0")
 
-# If you have a separate UI dev server, CORS helps.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # tighten later if you want
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Relative path so it works on any machine / Docker later
 from pathlib import Path
 
 
@@ -53,9 +51,6 @@ def health() -> Dict[str, Any]:
 
 @app.get("/teams")
 def list_teams() -> Dict[str, Any]:
-    """
-    Returns a deduplicated list of team names from both home_team and away_team.
-    """
     with get_conn() as conn:
         rows = conn.execute(
             """
@@ -81,15 +76,7 @@ def list_games(
     limit: int = Query(default=500, ge=1, le=5000),
     offset: int = Query(default=0, ge=0),
 ) -> Dict[str, Any]:
-    """
-    Returns games as JSON rows from the DB.
-    Optional filters:
-      - week
-      - team (matches home_team OR away_team)
-      - played:
-          true  => home_score and away_score NOT NULL
-          false => either score is NULL
-    """
+
     where: List[str] = []
     params: List[Any] = []
 
