@@ -64,6 +64,40 @@ def http_get_json(url: str, timeout_s: int) -> Dict[str, Any]:
     return r.json()
 
 
+def compute_matchup_matrix(elo_all: Dict[str, Any]) -> Dict[str, Any]:
+    """Build a win-probability matrix from the Elo artifact.
+
+    Uses the pre-computed matrix if present; otherwise derives it from
+    the final-week Elo ratings and the margin OLS model.
+    """
+    if "matchup_matrix" in elo_all:
+        return elo_all["matchup_matrix"]
+
+    elo_blob = elo_all.get("elo", {})
+    margin_model = elo_all.get("margin_model", {})
+    weeks = [int(w) for w in elo_blob if w.isdigit()]
+    if not weeks:
+        return {}
+
+    final_elos = elo_blob[str(max(weeks))]
+    intercept = float(margin_model.get("intercept", 0.0))
+    slope = float(margin_model.get("slope", 0.0))
+
+    teams = sorted(final_elos.keys())
+    matrix: Dict[str, Any] = {}
+    for team_a in teams:
+        matrix[team_a] = {}
+        for team_b in teams:
+            if team_a == team_b:
+                continue
+            elo_a = float(final_elos[team_a])
+            elo_b = float(final_elos[team_b])
+            win_prob = round(1.0 / (1.0 + 10 ** ((elo_b - elo_a) / 400.0)), 3)
+            margin = round(intercept + slope * (elo_a - elo_b), 1)
+            matrix[team_a][team_b] = {"win_prob": win_prob, "predicted_margin": margin}
+    return matrix
+
+
 def resolve_analytics_api_base(configured_base: str, timeout_s: int) -> str:
     """Choose the first reachable analytics endpoint from the supported local variants."""
     candidates: List[str] = []
@@ -187,6 +221,7 @@ def build_site(cfg: SiteConfig) -> None:
     # Render index.html as "latest week"
     index_tpl = env.get_template("index.html")
     latest_rows = leaderboard_rows_for_week(elo_all, latest_week)
+    matchup_matrix = compute_matchup_matrix(elo_all)
     index_html = index_tpl.render(
         week=latest_week,
         season=season,
@@ -194,6 +229,7 @@ def build_site(cfg: SiteConfig) -> None:
         k_factor=k_factor,
         available_weeks=weeks,
         rows=latest_rows,
+        matchup_matrix_json=json.dumps(matchup_matrix, separators=(",", ":")),
     )
     (dist_dir / "index.html").write_text(index_html, encoding="utf-8")
 

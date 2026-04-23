@@ -221,6 +221,25 @@ def compute_weekly_elo(games: List[Dict[str, Any]], teams: List[str], cfg: EloCo
                     1
                 )
 
+    # Win-probability matrix from final-week Elo using the standard Elo formula.
+    # Entry [team_a][team_b] = P(team_a beats team_b) + OLS predicted margin.
+    final_elos = out["elo"][str(cfg.weeks)]
+    matchup_matrix: Dict[str, Any] = {}
+    for team_a in teams:
+        matchup_matrix[team_a] = {}
+        for team_b in teams:
+            if team_a == team_b:
+                continue
+            elo_a = float(final_elos[team_a])
+            elo_b = float(final_elos[team_b])
+            win_prob = round(expected_score(elo_a, elo_b), 3)
+            margin = round(predict_margin(a, b, elo_a - elo_b), 1)
+            matchup_matrix[team_a][team_b] = {
+                "win_prob": win_prob,
+                "predicted_margin": margin,
+            }
+    out["matchup_matrix"] = matchup_matrix
+
     return out
 
 def persist_elo_to_sqlite(

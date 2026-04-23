@@ -773,4 +773,130 @@ a:focus {
     min-width: 0;
     width: 100%;
   }
+
+  .predictor-controls {
+    flex-direction: column;
+  }
+
+  .predictor-vs-badge {
+    text-align: center;
+    padding-bottom: 0;
+    padding-top: 0.25rem;
+  }
+}
+
+/* ── Matchup Predictor ──────────────────────────── */
+
+.predictor-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 1.25rem;
+  padding: 1.5rem 1.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.predictor-side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.predictor-vs-badge {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-size: 1.5rem;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  flex-shrink: 0;
+  padding-bottom: 0.45rem;
+}
+
+.predictor-select {
+  width: 100%;
+}
+
+.predictor-result {
+  padding: 1.5rem 1.75rem;
+  min-height: 140px;
+}
+
+.predictor-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100px;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.predictor-bar-wrap {
+  margin-bottom: 1.5rem;
+}
+
+.predictor-bar {
+  height: 10px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.predictor-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.35s ease;
+}
+
+.predictor-bar-a {
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+
+.predictor-bar-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.predictor-stats {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 1rem;
+  align-items: center;
+}
+
+.predictor-stat-value {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 2.25rem;
+  color: var(--muted-strong);
+  line-height: 1;
+}
+
+.predictor-stat-value.stat-favored {
+  color: var(--accent);
+}
+
+.predictor-stat-label {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 0.3rem;
+}
+
+.predictor-stat-center {
+  text-align: center;
+}
+
+.predictor-stat-right {
+  text-align: right;
+}
+
+.predictor-strength {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text);
 }
