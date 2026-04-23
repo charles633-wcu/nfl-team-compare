@@ -10,10 +10,15 @@ from fastapi import FastAPI, HTTPException, Query
 
 from compute_elo import EloConfig, collect_teams, compute_weekly_elo, fetch_played_games, persist_elo_to_sqlite
 
+# This service accepts both the current and older local env names so the
+# analytics layer can talk to the data API in direct or gateway-style runs.
 app = FastAPI(title="NFL Elo Analytics API", version="1.2.0")
 
 CFG = EloConfig()
-API_BASE = os.getenv("ELO_API_BASE", "http://127.0.0.1:8000")
+
+# OLD env name kept for reference and compatibility:
+# API_BASE = os.getenv("API_BASE", "http://127.0.0.1:8000")
+API_BASE = os.getenv("ELO_API_BASE") or os.getenv("API_BASE", "http://127.0.0.1:8000")
 ELO_JSON_PATH = Path(os.getenv("ELO_JSON_PATH", f"elo/elo_{CFG.season}.json"))
 ELO_DB_DIR = Path(os.getenv("ELO_DB_DIR", "database"))
 ELO_DB_PATH = Path(os.getenv("ELO_DB_PATH", str(ELO_DB_DIR / f"elo_{CFG.season}.db")))

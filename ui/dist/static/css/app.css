@@ -1,412 +1,776 @@
 :root {
-  --bg: #0b1220;
-  --panel: #111b2e;
-  --border: #223253;
-  --text: #eaf0ff;
-  --muted: rgba(234,240,255,0.72);
-  --link: #8bbcff;
+  --bg: #071018;
+  --bg-2: #0d1722;
+  --panel: rgba(16, 25, 37, 0.88);
+  --panel-strong: rgba(22, 32, 46, 0.96);
+  --border: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 179, 71, 0.28);
+  --text: #f5f7fb;
+  --muted: rgba(229, 236, 247, 0.72);
+  --muted-strong: rgba(229, 236, 247, 0.88);
+  --accent: #ffb347;
+  --accent-2: #ffd18c;
+  --success: #73d8a7;
+  --danger: #ff8a8a;
+  --shadow: 0 18px 46px rgba(0, 0, 0, 0.34);
+  --radius-xl: 28px;
+  --radius-lg: 20px;
+  --radius-md: 14px;
 }
 
-* { box-sizing: border-box; }
-/* ---------- Typography ---------- */
-
-/* Headings / display text */
-.h1,
-.h2,
-.brand .title,
-.weektitle {
-  font-family: "Bebas Neue", sans-serif;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  font-weight: 400; /* Bebas is bold by design */
+* {
+  box-sizing: border-box;
 }
 
-
+html {
+  color-scheme: dark;
+}
 
 body {
   margin: 0;
-  background: var(--bg);
+  min-height: 100vh;
   color: var(--text);
-  font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(255, 166, 0, 0.15), transparent 26%),
+    radial-gradient(circle at 85% 8%, rgba(48, 99, 201, 0.18), transparent 22%),
+    linear-gradient(180deg, #050c13 0%, #09121a 46%, #0b141c 100%);
+  font-family: "Inter", "Segoe UI", sans-serif;
 }
 
-
-/* ---------- Top Bar ---------- */
-.topbar {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px 18px;
-  background: rgba(17,27,46,0.92);
-  backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--border);
-}
-
-.brand .title { font-weight: 800; font-size: 24px; letter-spacing: 2px; }
-.brand .subtitle { color: var(--muted); font-family:"Bebas Neue"; font-size: 18px; margin-top: 2px; }
-
-.nav { display: flex; gap: 10px; align-items: center; }
-.navlink { color: var(--muted); text-decoration: none; font-size: 14px; }
-.navlink.active { color: var(--text); font-weight: 700; }
-.navlink.disabled { opacity: 0.5; cursor: not-allowed; }
-.navsep { color: var(--muted); }
-
-/* ---------- Layout ---------- */
-.container {
-  max-width: 1100px;
-  margin: 18px auto;
-  padding: 0 16px;
-}
-
-.card {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 16px;
-  margin-bottom: 14px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
-}
-
-.cardrow {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.h1 { margin: 0; font-size: 26px; }
-.h2 { margin: 0; font-size: 18px; }
-.muted { color: var(--muted); }
-
-.footer {
-  max-width: 1100px;
-  margin: 0 auto 22px;
-  padding: 0 16px;
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-/* ---------- Controls ---------- */
-.controls { display: flex; gap: 10px; align-items: center; }
-.label { color: var(--muted); font-size: 13px; }
-
-.select {
-  background: #0b1220;
-  color: var(--text);
-  border: 1px solid var(--border);
-  padding: 8px 10px;
-  border-radius: 10px;
-}
-
-/* ---------- Links ---------- */
-.link { color: var(--link); text-decoration: none; }
-.link:hover { text-decoration: underline; }
-
-/* ---------- Table Base ---------- */
-.table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.table th,
-.table td {
-  padding: 15px 10px;
-  border-bottom: 1px solid rgba(34,50,83,0.55);
-  font-size: 14px;
-  vertical-align: middle;
-}
-
-.table th {
-  text-align: left;
-  color: var(--muted);
-  font-weight: 700;
-}
-
-.table tr:hover td { background: rgba(139,188,255,0.05); }
-
-/* Numeric columns should be right-aligned everywhere by default */
-.num {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
-/* ---------- Leaderboard table helpers ---------- */
-.rankcol {
-  width: 56px;
-  text-align: center;
-  padding-left: 6px;
-  padding-right: 6px;
-}
-
-.teamcol {
-  /* if you’re using a dedicated team column cell */
-  padding-left: 0;
-}
-
-/* Team link used in leaderboard + team pages */
-.teamlink {
-  display: flex;
-  align-items: center;
-  gap: 10px;                 /* FIXED (no space in px) */
-  color: var(--link);
-  text-decoration: none;
-  min-width: 0;              /* allows ellipsis */
-}
-
-.teamlink:hover { text-decoration: underline; }
-
-.teamname {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Default logo size used in tables (not the big header logo) */
-.logo {
-  width: 40px;               /* FIXED */
-  height: 40px;              /* FIXED */
-  flex-shrink: 0;
-  object-fit: contain;
-}
-
-/* Optional wrapper if you use one */
-.logowrap {
-  width: 40px;               /* FIXED */
-/*  display: flex;
-  justify-content: center;
-  padding-right: 16px; */
-}
-
-/* ---------- Team page header ---------- */
-.teamhero {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.teamhero-left {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  min-width: 320px;
-}
-
-.teamlogo {
-  width: 40px;
-  height: 40px;
-  object-fit: contain;
-}
-
-.teamhero-right {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.statpill {
-  border: 1px solid var(--border);
-  background: rgba(11,18,32,0.55);
-  padding: 10px 12px;
-  border-radius: 12px;
-  min-width: 120px;
-  text-align: center;
-}
-
-.statlabel { color: var(--muted); font-size: 12px; margin-bottom: 2px; }
-.statvalue { font-weight: 800; font-variant-numeric: tabular-nums; font-size: 18px; }
-
-/* ---------- Team page weeks (details “dropdown”) ---------- */
-.accordion {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.weekpanel {
-  border: 1px solid rgba(34,50,83,0.55);
-  border-radius: 12px;
-  padding: 10px 12px;
-  background: rgba(17,27,46,0.6);
-}
-
-.weeksummary {
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  list-style: none;
-}
-
-.weeksummary::-webkit-details-marker { display: none; }
-
-.weektitle { font-weight: 800; }
-.weekmeta { font-size: 13px; }
-
-/* ---------- Team page table alignment lock ---------- */
-/* Add class="table teamtable" on team page tables if you can.
-   If you cannot/don’t want to change HTML, this will still help a bit
-   by targeting tables inside week panels. */
-.weekpanel .table,
-.table.teamtable {
-  table-layout: fixed;
-}
-
-.weekpanel .table th,
-.weekpanel .table td,
-.table.teamtable th,
-.table.teamtable td {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Column sizing: stabilizes H/A..Δ..Post alignment */
-.weekpanel .table th:nth-child(1),
-.weekpanel .table td:nth-child(1) { width: 44%; } /* Opponent */
-.weekpanel .table th:nth-child(2),
-.weekpanel .table td:nth-child(2) { width: 7%;  } /* H/A */
-.weekpanel .table th:nth-child(3),
-.weekpanel .table td:nth-child(3) { width: 12%; } /* Score */
-.weekpanel .table th:nth-child(4),
-.weekpanel .table td:nth-child(4) { width: 9%;  } /* Margin */
-.weekpanel .table th:nth-child(5),
-.weekpanel .table td:nth-child(5) { width: 16%; } /* Predicted Margin */
-.weekpanel .table th:nth-child(6),
-.weekpanel .table td:nth-child(6) { width: 6%;  } /* Δ Elo */
-.weekpanel .table th:nth-child(7),
-.weekpanel .table td:nth-child(7) { width: 6%;  } /* Post */
-
-/* ---------- Small utilities (optional) ---------- */
-.center { text-align: center; }
-
-/* ===============================
-   Team Game History (CSS Grid)
-   =============================== */
-
-.gamegrid {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.gamerow {
-  display: grid;
-  grid-template-columns:
-    3fr    /* Opponent */
-    1fr    /* Location */
-    1fr    /* Score */
-    1fr    /* Margin */
-    1.4fr  /* Predicted Margin */
-    0.8fr  /* Δ Elo */
-    0.8fr; /* Post */
-  align-items: center;
-  gap: 12px;
-}
-
-.gamerow > div {
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-}
-
-.gamerow .opponent {
-  text-align: left;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-
-.gameheader {
-  color: var(--muted);
-  font-weight: 700;
-  padding-bottom: 6px;
-  border-bottom: 1px solid rgba(34,50,83,0.55);
-}
-
-.gamebody {
-  padding: 10px 0;
-  border-bottom: 1px solid rgba(34,50,83,0.35);
-}
-
-
-/* Leaderboard grid (same philosophy as team page rows) */
-.lbgrid {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.lbrow {
-  display: grid;
-  grid-template-columns:
-    0.7fr  /* Rank */
-    3fr    /* Team */
-    1fr    /* Elo */
-    1fr;   /* Δ Elo */
-  align-items: center;
-  gap: 12px;
-}
-
-.lbrow > div {
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-}
-
-.lbrow .opponent {
-  text-align: left;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-
-.lbheader {
-  color: var(--muted);
-  font-weight: 700;
-  padding-bottom: 6px;
-  border-bottom: 1px solid rgba(34,50,83,0.55);
-}
-
-.lbbody {
-  padding: 10px 0;
-  border-bottom: 1px solid rgba(34,50,83,0.35);
-}
-
-.chart-wrap { width: 100%; }
-.btn { padding: 8px 12px; border-radius: 10px; display: inline-block; }
-
-/* === Force ALL links to be white, everywhere === */
 a,
 a:visited,
 a:hover,
 a:active,
 a:focus {
-  color: #ffffff !important;
-  text-decoration: none;
-}
-a:hover {
-  color: #e5e7eb !important; /* soft gray */
-  text-decoration: underline;
+  color: inherit;
 }
 
-.brandlink,
-.brandlink:visited,
-.brandlink:hover,
-.brandlink:active {
+.site-backdrop {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.site-glow {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(80px);
+  opacity: 0.45;
+}
+
+.site-glow-a {
+  top: -140px;
+  left: -60px;
+  width: 380px;
+  height: 380px;
+  background: rgba(255, 179, 71, 0.2);
+}
+
+.site-glow-b {
+  top: 140px;
+  right: -100px;
+  width: 420px;
+  height: 420px;
+  background: rgba(71, 124, 255, 0.12);
+}
+
+.site-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.4), transparent 88%);
+}
+
+.site-frame {
+  position: relative;
+  z-index: 1;
+}
+
+.topbar,
+.container,
+.footer {
+  width: min(1220px, calc(100% - 32px));
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.topbar {
+  position: sticky;
+  top: 12px;
+  z-index: 50;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  margin-top: 12px;
+  padding: 18px 22px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: rgba(7, 12, 19, 0.78);
+  backdrop-filter: blur(16px);
+  box-shadow: var(--shadow);
+}
+
+.brand-kicker,
+.eyebrow,
+.panel-kicker,
+.footer-label,
+.sidecard-label,
+.control-label,
+.mini-label,
+.statlabel,
+.scoreboard-label,
+.sidecard-kicker {
+  color: var(--accent-2);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.brand-title,
+.hero-title,
+.section-title,
+.weektitle {
+  margin: 0;
+  font-family: "Barlow Condensed", "Inter", sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.brand-title {
+  font-size: 2rem;
+  line-height: 0.95;
+}
+
+.brand-subtitle {
+  margin-top: 6px;
+  color: var(--muted);
+  max-width: 30ch;
+}
+
+.brandlink {
+  text-decoration: none;
+}
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.navlink {
+  padding: 10px 14px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.92rem;
+  text-decoration: none;
+  transition: 180ms ease;
+}
+
+.navlink:hover,
+.navlink.active {
+  border-color: rgba(255, 179, 71, 0.32);
+  background: rgba(255, 179, 71, 0.1);
+  color: var(--text);
+}
+
+.navlink.disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.container {
+  padding: 28px 0 36px;
+}
+
+.hero,
+.panel {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 22px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.9fr);
+  gap: 28px;
+  padding: 28px;
+  background:
+    linear-gradient(135deg, rgba(255, 179, 71, 0.1), transparent 35%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 80%),
+    var(--panel-strong);
+}
+
+.hero-static {
+  grid-template-columns: minmax(0, 1.5fr) minmax(240px, 0.8fr);
+}
+
+.hero-team,
+.hero-chart {
+  grid-template-columns: 1fr;
+}
+
+.hero-copy {
+  max-width: 62ch;
+}
+
+.hero-title {
+  margin-top: 10px;
+  font-size: clamp(3rem, 7vw, 5.4rem);
+  line-height: 0.88;
+}
+
+.hero-summary,
+.body-copy,
+.empty-state {
+  color: var(--muted-strong);
+  line-height: 1.7;
+  font-size: 1rem;
+}
+
+.hero-actions,
+.chipset,
+.team-statbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.hero-actions {
+  margin-top: 22px;
+}
+
+.control-group {
+  display: grid;
+  gap: 8px;
+}
+
+.select,
+.btn,
+.chip,
+.statpill,
+.sidecard-highlight,
+.mini-stat,
+.info-card,
+.formula-card,
+.chart-shell,
+.weekpanel,
+.rankbadge {
+  border: 1px solid var(--border);
+}
+
+.select {
+  min-width: 180px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(8, 15, 22, 0.88);
+  color: var(--text);
+  font: inherit;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 18px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent), #ffce73);
+  color: #1b1208;
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(255, 179, 71, 0.18);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+}
+
+.chipset {
+  gap: 10px;
+}
+
+.chip {
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--muted-strong);
+  font-size: 0.9rem;
+}
+
+.chip-active {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.hero-scoreboard,
+.hero-sidecard {
+  display: grid;
+  gap: 14px;
+  align-self: stretch;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: rgba(9, 15, 24, 0.72);
+}
+
+.scoreboard-header,
+.scoreboard-top,
+.panel-header,
+.weeksummary,
+.team-hero-main {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+}
+
+.scoreboard-week,
+.panel-meta,
+.weekmeta,
+.muted {
+  color: var(--muted);
+}
+
+.scoreboard-top {
+  align-items: flex-end;
+  padding: 18px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.scoreboard-rank,
+.scoreboard-elo {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.scoreboard-rank {
+  font-size: 1.1rem;
+  color: var(--accent-2);
+}
+
+.scoreboard-team {
+  margin-top: 6px;
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.scoreboard-elo {
+  font-size: 3rem;
+}
+
+.scoreboard-grid,
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.mini-stat,
+.info-card,
+.formula-card {
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.mini-value,
+.footer-value,
+.statvalue,
+.sidecard-highlight strong {
+  margin-top: 8px;
+  font-weight: 800;
+  font-size: 1.2rem;
+}
+
+.sidecard-highlight {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(255, 179, 71, 0.08);
+}
+
+.panel {
+  padding: 24px;
+}
+
+.panel-highlight {
+  border-color: rgba(255, 179, 71, 0.18);
+}
+
+.panel-split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.section-title {
+  margin-top: 6px;
+  font-size: clamp(1.9rem, 4vw, 2.6rem);
+}
+
+.lbgrid,
+.gamegrid,
+.accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lbrow,
+.gamerow {
+  display: grid;
+  gap: 12px;
+  align-items: center;
+}
+
+.lbrow {
+  grid-template-columns: 0.8fr 3fr 1fr 1fr;
+}
+
+.gamerow {
+  grid-template-columns: 3fr 1fr 1fr 1fr 1.25fr 0.9fr 0.9fr;
+}
+
+.lbheader,
+.gameheader {
+  padding: 0 4px 10px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.lbbody,
+.gamebody {
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.lbbody-top {
+  background: linear-gradient(135deg, rgba(255, 179, 71, 0.11), rgba(255, 255, 255, 0.03));
+  border: 1px solid rgba(255, 179, 71, 0.14);
+}
+
+.lbrow > div,
+.gamerow > div {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.lbrow .opponent,
+.gamerow .opponent {
+  justify-self: start;
+  min-width: 0;
+  text-align: left;
+}
+
+.rankbadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  font-weight: 800;
+}
+
+.teamlink {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
   color: inherit;
   text-decoration: none;
 }
-.brandlink:hover {
+
+.teamlink:hover .teamname,
+.footerlink:hover {
   text-decoration: underline;
+}
+
+.teamname {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.logo {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.teamlogo-large {
+  width: 78px;
+  height: 78px;
+}
+
+.team-identity {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+}
+
+.team-statbar {
+  margin-top: 22px;
+}
+
+.team-directory {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 40px;
+}
+
+.team-card {
+  display: grid;
+  gap: 18px;
+  padding: 20px;
+  border: 1px solid rgba(255, 179, 71, 0.14);
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(255, 179, 71, 0.08), rgba(255, 255, 255, 0.03)),
+    rgba(255, 255, 255, 0.04);
+  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.22);
+}
+
+.team-card-head {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.team-card-title {
+  margin: 0 0 6px;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 1.8rem;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.team-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.statpill {
+  min-width: 150px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+  text-align: left;
+}
+
+.statvalue {
+  font-size: 2rem;
+}
+
+.statnum {
+  font-weight: 800;
+}
+
+.delta-up {
+  color: var(--success);
+}
+
+.delta-down {
+  color: var(--danger);
+}
+
+.weekpanel {
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.weeksummary {
+  cursor: pointer;
+  list-style: none;
+  font-weight: 700;
+}
+
+.weeksummary::-webkit-details-marker {
+  display: none;
+}
+
+.weektitle {
+  font-size: 1.6rem;
+}
+
+.empty-state {
+  padding-top: 14px;
+}
+
+.chart-shell {
+  padding: 18px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+}
+
+.chart-wrap {
+  height: 460px;
+}
+
+.formula-block {
+  margin-top: 10px;
+  color: var(--muted-strong);
+  line-height: 1.85;
+}
+
+.link-list {
+  margin: 14px 0 0;
+  padding-left: 18px;
+  line-height: 1.9;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding: 0 0 28px;
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: flex-end;
+}
+
+.footerlink {
+  color: var(--muted-strong);
+  text-decoration: none;
+}
+
+@media (max-width: 980px) {
+  .topbar,
+  .scoreboard-top,
+  .panel-header,
+  .team-hero-main,
+  .weeksummary,
+  .footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .hero,
+  .panel-split,
+  .scoreboard-grid,
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .team-directory {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nav {
+    justify-content: flex-start;
+  }
+
+  .lbrow {
+    grid-template-columns: 0.8fr 2.8fr 1fr 1fr;
+  }
+
+  .gamerow {
+    grid-template-columns: 2.3fr 0.95fr 0.95fr 0.95fr 1.2fr 0.9fr 0.9fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .topbar,
+  .container,
+  .footer {
+    width: min(100% - 20px, 1220px);
+  }
+
+  .topbar {
+    padding: 16px;
+  }
+
+  .hero,
+  .panel {
+    padding: 18px;
+    border-radius: 22px;
+  }
+
+  .brand-title {
+    font-size: 1.6rem;
+  }
+
+  .hero-title {
+    font-size: 2.7rem;
+  }
+
+  .team-identity {
+    align-items: flex-start;
+  }
+
+  .teamlogo-large {
+    width: 60px;
+    height: 60px;
+  }
+
+  .lbrow,
+  .gamerow {
+    grid-template-columns: 1fr;
+    text-align: left;
+  }
+
+  .team-directory {
+    grid-template-columns: 1fr;
+  }
+
+  .lbheader,
+  .gameheader {
+    display: none;
+  }
+
+  .lbbody,
+  .gamebody {
+    gap: 8px;
+  }
+
+  .lbrow > div,
+  .gamerow > div,
+  .lbrow .opponent,
+  .gamerow .opponent {
+    text-align: left;
+    justify-self: stretch;
+  }
+
+  .statpill {
+    min-width: 0;
+    width: 100%;
+  }
 }

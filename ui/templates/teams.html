@@ -1,0 +1,42 @@
+{% set base_path = "../" %}
+{% set active_page = "teams" %}
+{% extends "_base.html" %}
+
+{% block title %}Teams · NFL Elo{% endblock %}
+
+{% block content %}
+<section class="hero hero-static">
+  <div class="hero-copy">
+    <div class="eyebrow">Team directory</div>
+    <h1 class="hero-title">All teams</h1>
+    <p class="hero-summary">Open the full team profile or jump straight to the Elo trend view.</p>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-kicker">Browse</div>
+      <h2 class="section-title">Team directory</h2>
+    </div>
+  </div>
+
+  <div class="team-directory">
+    {% for team_name in teams %}
+      <article class="team-card">
+        <div class="team-card-head">
+          <img class="teamlogo teamlogo-large" src="{{ base_path }}static/img/logos/{{ team_name|slug }}.png" alt="{{ team_name }} logo" loading="lazy" />
+          <div>
+            <h3 class="team-card-title">{{ team_name }}</h3>
+          </div>
+        </div>
+
+        <div class="team-card-actions">
+          <a class="btn btn-secondary" href="{{ base_path }}team/{{ team_name|slug }}.html">Profile</a>
+          <a class="btn" href="{{ base_path }}elo/{{ team_name|slug }}.html">Chart</a>
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

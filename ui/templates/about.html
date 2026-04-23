@@ -5,29 +5,75 @@
 {% block title %}About · NFL Elo{% endblock %}
 
 {% block content %}
-<section class="card">
-  <h1 class="h1">About</h1>
-  <p class="muted">
-    This NFL Elo dashboard was created by me (a student at West Chester University of Pennsylvania)
-      for the purposes of practicing and demonstrating what I've learned about full-stack development. This project
-      loads season data, stores and computes Elo ratings in the backend, and generates a clean website with
-      charts that are easy to browse.
-  </p>
+<section class="hero hero-static">
+  <div class="hero-copy">
+    <div class="eyebrow">About the project</div>
+    <h1 class="hero-title">Why this platform exists</h1>
+    <p class="hero-summary">
+      This project was built to practice full-stack engineering through a sports analytics system that ingests data, computes Elo ratings, and publishes a deployable frontend.
+    </p>
+  </div>
+
+  <div class="hero-sidecard">
+    <div class="sidecard-label">Project summary</div>
+    <div class="sidecard-highlight">
+      <span class="sidecard-kicker">Stack</span>
+      <strong>Python · FastAPI · SQLite · Jinja</strong>
+      <span>Static site delivery backed by analytics artifacts.</span>
+    </div>
+  </div>
 </section>
 
-<section class="card">
-  <h1 class="h1">Elo Formula</h1>
+<section class="panel panel-split">
+  <div>
+    <div class="panel-kicker">Overview</div>
+    <h2 class="section-title">System intent</h2>
+    <p class="body-copy">
+      This NFL Elo dashboard was created by me, a student at West Chester University of Pennsylvania, for the purpose of practicing and demonstrating full-stack development. The project loads season data, stores and computes Elo ratings in the backend, and generates a website that keeps charts and rankings easy to browse.
+    </p>
+    <p class="body-copy">
+      The goal is not just to display records, but to show the full path from raw game data to analytics output and polished presentation.
+    </p>
+  </div>
 
-  <div class="muted" style="line-height:1.8;">
-    \[
-      E = \frac{1}{1 + 10^{\frac{OppElo - TeamElo}{400}}}
-    \]
-    \[
-      NewElo = OldElo + K \cdot (Result - E)
-    \]
-    \[
-      Result \in \{1, 0.5, 0\}
-    \]
+  <div class="formula-card">
+    <div class="panel-kicker">Model core</div>
+    <h2 class="section-title">Elo formula</h2>
+    <div class="formula-block">
+      \[
+        E = \frac{1}{1 + 10^{\frac{OppElo - TeamElo}{400}}}
+      \]
+      \[
+        NewElo = OldElo + K \cdot (Result - E)
+      \]
+      \[
+        Result \in \{1, 0.5, 0\}
+      \]
+    </div>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-kicker">What it demonstrates</div>
+      <h2 class="section-title">Engineering focus</h2>
+    </div>
+  </div>
+
+  <div class="info-grid">
+    <div class="info-card">
+      <h3>Data flow</h3>
+      <p>Season data ingestion, normalization, and persistence before analytics are computed.</p>
+    </div>
+    <div class="info-card">
+      <h3>Analytics</h3>
+      <p>A batch Elo pipeline produces artifacts that can be served consistently across pages.</p>
+    </div>
+    <div class="info-card">
+      <h3>Delivery</h3>
+      <p>Static site generation turns backend analytics into a deployable frontend that is simple to host and fast to load.</p>
+    </div>
   </div>
 </section>
 
@@ -35,6 +81,4 @@
   window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] } };
 </script>
 <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
-
-
 {% endblock %}

@@ -1,63 +1,62 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-  href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap"
-  rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{% block title %}NFL Elo{% endblock %}</title>
   <link rel="stylesheet" href="{{ base_path }}static/css/app.css" />
 </head>
-<body>
-  <header class="topbar">
-    <div class="brand">
-      <div class="title">
+<body class="broadcast-shell">
+  <div class="site-backdrop" aria-hidden="true">
+    <div class="site-glow site-glow-a"></div>
+    <div class="site-glow site-glow-b"></div>
+    <div class="site-grid"></div>
+  </div>
+
+  <div class="site-frame">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-kicker">Broadcast Premium</div>
+        <div class="brand-title">
           {% if active_page == "leaderboard" %}
-            NFL Elo Dashboard
+            NFL Power Index
           {% else %}
-            <a href="{{ base_path }}leaderboard/week-18.html" class="brandlink">
-              NFL Elo Dashboard
-            </a>
+            <a href="{{ base_path }}leaderboard/week-18.html" class="brandlink">NFL Power Index</a>
           {% endif %}
         </div>
-      <div class="subtitle">2024 Regular Season</div>
-    </div>
-    <nav class="nav">
-      <a href="{{ base_path }}leaderboard/week-18.html" class="navlink {% if active_page == 'leaderboard' %}active{% endif %}">Leaderboard</a>
-      <span class="navsep">•</span>
-      {% if active_page == "team" and team is defined %}
-  <span class="navsep">•</span>
-      <a href="{{ base_path }}team/{{ team|slug }}.html"
-         class="navlink active">
-        Team
-      </a>
-    {% else %}
-      <span class="navsep">•</span>
-      <span class="navlink disabled">Team</span>
-    {% endif %}
+        <div class="brand-subtitle">2024 regular season Elo intelligence</div>
+      </div>
 
-    </nav>
-  </header>
+      <nav class="nav" aria-label="Primary">
+        <a href="{{ base_path }}leaderboard/week-18.html" class="navlink {% if active_page == 'leaderboard' %}active{% endif %}">Leaderboard</a>
+        <a href="{{ base_path }}teams/index.html" class="navlink {% if active_page == 'teams' %}active{% endif %}">Teams</a>
+        <a href="{{ base_path }}about.html" class="navlink {% if active_page == 'about' %}active{% endif %}">About</a>
+        <a href="{{ base_path }}contact.html" class="navlink {% if active_page == 'contact' %}active{% endif %}">Contact</a>
+      </nav>
+    </header>
 
-  <main class="container">
-    {% block content %}{% endblock %}
-  </main>
+    <main class="container">
+      {% block content %}{% endblock %}
+    </main>
 
-  <footer class="footer">
-      <span class="muted">Season {{ season }}</span>
-
-      <span class="footerlinks">
+    <footer class="footer">
+      <div>
+        <div class="footer-label">System</div>
+        <div class="footer-value">Season {{ season }}</div>
+      </div>
+      <div>
+        <div class="footer-label">Project</div>
+        <div class="footer-value">NFL analytics platform</div>
+      </div>
+      <div class="footer-links">
         <a class="footerlink" href="{{ base_path }}about.html">About</a>
-        <span class="navsep">•</span>
         <a class="footerlink" href="{{ base_path }}contact.html">Contact</a>
-        <span class="navsep">•</span>
         <a class="footerlink" href="https://github.com/charles633-wcu/nfl-team-compare/tree/main/ui/build" target="_blank" rel="noopener">GitHub</a>
-      </span>
+      </div>
     </footer>
-
+  </div>
 </body>
 </html>

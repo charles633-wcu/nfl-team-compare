@@ -3,62 +3,79 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-  href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap"
-  rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Los Angeles Chargers · Elo Trend · NFL Elo</title>
   <link rel="stylesheet" href="../static/css/app.css" />
 </head>
-<body>
-  <header class="topbar">
-    <div class="brand">
-      <div class="title">
+<body class="broadcast-shell">
+  <div class="site-backdrop" aria-hidden="true">
+    <div class="site-glow site-glow-a"></div>
+    <div class="site-glow site-glow-b"></div>
+    <div class="site-grid"></div>
+  </div>
+
+  <div class="site-frame">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-kicker">Broadcast Premium</div>
+        <div class="brand-title">
           
-            <a href="../leaderboard/week-18.html" class="brandlink">
-              NFL Elo Dashboard
-            </a>
+            <a href="../leaderboard/week-18.html" class="brandlink">NFL Power Index</a>
           
         </div>
-      <div class="subtitle">2024 Regular Season</div>
-    </div>
-    <nav class="nav">
-      <a href="../leaderboard/week-18.html" class="navlink ">Leaderboard</a>
-      <span class="navsep">•</span>
+        <div class="brand-subtitle">2024 regular season Elo intelligence</div>
+      </div>
+
+      <nav class="nav" aria-label="Primary">
+        <a href="../leaderboard/week-18.html" class="navlink ">Leaderboard</a>
+        <a href="../teams/index.html" class="navlink active">Teams</a>
+        <a href="../about.html" class="navlink ">About</a>
+        <a href="../contact.html" class="navlink ">Contact</a>
+      </nav>
+    </header>
+
+    <main class="container">
       
-  <span class="navsep">•</span>
-      <a href="../team/los-angeles-chargers.html"
-         class="navlink active">
-        Team
-      </a>
-    
-
-    </nav>
-  </header>
-
-  <main class="container">
-    
-<section class="card">
-  <div class="cardrow" style="align-items: baseline;">
-    <div>
-      <h1 class="h1">Los Angeles Chargers Elo By Week</h1>
-      <div class="muted">Regular Season 2024</div>
-    </div>
-
-    <div class="controls">
-      <a class="btn" href="../team/los-angeles-chargers.html">← Back to Los Angeles Chargers</a>
+<section class="hero hero-chart">
+  <div class="hero-copy">
+    <div class="eyebrow">Trend monitor</div>
+    <h1 class="hero-title">Los Angeles Chargers Elo by week</h1>
+    <p class="hero-summary">
+      A weekly Elo trend view with division rivals overlaid for context and the league baseline held in frame.
+    </p>
+    <div class="hero-actions">
+      <a class="btn btn-secondary" href="../team/los-angeles-chargers.html">Back to Los Angeles Chargers</a>
       <a class="btn" href="../index.html">Home</a>
+    </div>
+  </div>
+
+  <div class="hero-sidecard">
+    <div class="sidecard-label">Chart notes</div>
+    <div class="sidecard-highlight">
+      <span class="sidecard-kicker">Baseline</span>
+      <strong>1500</strong>
+      <span>Division rivals are shown as dashed comparison lines.</span>
     </div>
   </div>
 </section>
 
-<section class="card">
-  <div class="chart-wrap" style="height: 420px;">
-    <canvas id="eloChart"></canvas>
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-kicker">Visualization</div>
+      <h2 class="section-title">Elo trajectory</h2>
+    </div>
+    <div class="panel-meta">Regular season 2024</div>
+  </div>
+
+  <div class="chart-shell">
+    <div class="chart-wrap">
+      <canvas id="eloChart"></canvas>
+    </div>
   </div>
 </section>
 
@@ -99,55 +116,51 @@
     "Washington Commanders": "#5A1414"
   };
 
-  const weeks    = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
-  const series   = [{"elos": [1500.0, 1532.0, 1562.0, 1531.0, 1507.0, 1507.0, 1536.0, 1517.0, 1545.0, 1567.0, 1584.0, 1603.0, 1576.0, 1590.0, 1578.0, 1531.0, 1564.0, 1581.0, 1594.0], "team": "Los Angeles Chargers"}, {"elos": [1500.0, 1476.0, 1454.0, 1504.0, 1514.0, 1544.0, 1515.0, 1549.0, 1564.0, 1521.0, 1513.0, 1556.0, 1568.0, 1583.0, 1583.0, 1606.0, 1573.0, 1545.0, 1616.0], "team": "Denver Broncos"}, {"elos": [1500.0, 1526.0, 1533.0, 1552.0, 1576.0, 1606.0, 1606.0, 1630.0, 1639.0, 1653.0, 1661.0, 1629.0, 1635.0, 1638.0, 1649.0, 1660.0, 1677.0, 1701.0, 1631.0], "team": "Kansas City Chiefs"}, {"elos": [1500.0, 1468.0, 1486.0, 1445.0, 1466.0, 1436.0, 1410.0, 1388.0, 1379.0, 1354.0, 1354.0, 1328.0, 1317.0, 1314.0, 1298.0, 1284.0, 1313.0, 1361.0, 1347.0], "team": "Las Vegas Raiders"}];
+  const weeks = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
+  const series = [{"elos": [1500.0, 1532.0, 1562.0, 1531.0, 1507.0, 1507.0, 1536.0, 1517.0, 1545.0, 1567.0, 1584.0, 1603.0, 1576.0, 1590.0, 1578.0, 1531.0, 1564.0, 1581.0, 1594.0], "team": "Los Angeles Chargers"}, {"elos": [1500.0, 1476.0, 1454.0, 1504.0, 1514.0, 1544.0, 1515.0, 1549.0, 1564.0, 1521.0, 1513.0, 1556.0, 1568.0, 1583.0, 1583.0, 1606.0, 1573.0, 1545.0, 1616.0], "team": "Denver Broncos"}, {"elos": [1500.0, 1526.0, 1533.0, 1552.0, 1576.0, 1606.0, 1606.0, 1630.0, 1639.0, 1653.0, 1661.0, 1629.0, 1635.0, 1638.0, 1649.0, 1660.0, 1677.0, 1701.0, 1631.0], "team": "Kansas City Chiefs"}, {"elos": [1500.0, 1468.0, 1486.0, 1445.0, 1466.0, 1436.0, 1410.0, 1388.0, 1379.0, 1354.0, 1354.0, 1328.0, 1317.0, 1314.0, 1298.0, 1284.0, 1313.0, 1361.0, 1347.0], "team": "Las Vegas Raiders"}];
   const teamName = "Los Angeles Chargers";
   const baseline = 1500;
 
-  function hexToRgba(hex, a) {
-    const h = (hex || "").replace("#", "");
-    if (h.length !== 6) return `rgba(255,255,255,${a})`;
-    const r = parseInt(h.slice(0, 2), 16);
-    const g = parseInt(h.slice(2, 4), 16);
-    const b = parseInt(h.slice(4, 6), 16);
-    return `rgba(${r},${g},${b},${a})`;
+  function hexToRgba(hex, alpha) {
+    const cleaned = (hex || "").replace("#", "");
+    if (cleaned.length !== 6) return `rgba(255,255,255,${alpha})`;
+    const r = parseInt(cleaned.slice(0, 2), 16);
+    const g = parseInt(cleaned.slice(2, 4), 16);
+    const b = parseInt(cleaned.slice(4, 6), 16);
+    return `rgba(${r},${g},${b},${alpha})`;
   }
 
-  const labels = weeks.map(w => `W${w}`);
+  const labels = weeks.map((week) => `W${week}`);
+  const mainColor = "#ffb347";
+  const tickColor = "rgba(229, 236, 247, 0.78)";
+  const gridColor = "rgba(255, 255, 255, 0.08)";
 
-  // Writes "Division rivals:" context line
-  const rivals = series.map(s => s.team).filter(t => t !== teamName);
-
-  // Main line is orange; rivals use team primary colors, dimmed
-  const MAIN_COLOR = "rgba(255,165,0,1)";  // orange
-  const RIVAL_ALPHA = 0.65;
-
-  const datasets = series.map(s => {
-    const isMain = (s.team === teamName);
-    const baseHex = TEAM_PRIMARY[s.team] || "#FFFFFF";
-    const rivalColor = hexToRgba(baseHex, RIVAL_ALPHA);
+  const datasets = series.map((entry) => {
+    const isMain = entry.team === teamName;
+    const baseHex = TEAM_PRIMARY[entry.team] || "#ffffff";
 
     return {
-      label: isMain ? `${s.team} (Elo Score)` : `${s.team} (Division rival)`,
-      data: s.elos,
-      borderColor: isMain ? MAIN_COLOR : rivalColor,
+      label: isMain ? `${entry.team} (focus)` : `${entry.team} (division rival)`,
+      data: entry.elos,
+      borderColor: isMain ? mainColor : hexToRgba(baseHex, 0.7),
       backgroundColor: "transparent",
-      tension: 0,
-      pointRadius: isMain ? 2 : 0,
-      borderWidth: isMain ? 3 : 2,
-      borderDash: isMain ? [] : [5, 5]
+      tension: 0.25,
+      pointRadius: isMain ? 2.5 : 0,
+      pointHoverRadius: isMain ? 4 : 0,
+      borderWidth: isMain ? 3.5 : 2,
+      borderDash: isMain ? [] : [7, 7]
     };
   });
 
   datasets.push({
     label: "Baseline",
     data: weeks.map(() => baseline),
-    borderColor: "rgba(255,255,255,0.6)",
+    borderColor: "rgba(255,255,255,0.45)",
     backgroundColor: "transparent",
-    borderDash: [6, 6],
+    borderDash: [5, 5],
     tension: 0,
     pointRadius: 0,
-    borderWidth: 1
+    borderWidth: 1.5
   });
 
   new Chart(document.getElementById("eloChart"), {
@@ -162,40 +175,49 @@
           position: "top",
           align: "start",
           labels: {
-            color: "white",
-            boxWidth: 30,
+            color: "#f5f7fb",
+            boxWidth: 24,
             boxHeight: 2,
-            padding: 16,
-            font: { size: 13, weight: "500" }
+            padding: 18,
+            font: { size: 12, weight: "600" }
           }
         }
       },
       scales: {
-        x: { title: { display: true, text: "Week" } },
+        x: {
+          ticks: { color: tickColor },
+          grid: { color: gridColor },
+          title: { display: true, text: "Week", color: tickColor }
+        },
         y: {
-          title: { display: true, text: "Elo" },
+          ticks: { color: tickColor, stepSize: 100 },
+          grid: { color: gridColor },
+          title: { display: true, text: "Elo", color: tickColor },
           min: 1200,
-          max: 1800,
-          ticks: { stepSize: 100 }
+          max: 1800
         }
       }
     }
   });
 </script>
 
-  </main>
+    </main>
 
-  <footer class="footer">
-      <span class="muted">Season 2024</span>
-
-      <span class="footerlinks">
+    <footer class="footer">
+      <div>
+        <div class="footer-label">System</div>
+        <div class="footer-value">Season 2024</div>
+      </div>
+      <div>
+        <div class="footer-label">Project</div>
+        <div class="footer-value">NFL analytics platform</div>
+      </div>
+      <div class="footer-links">
         <a class="footerlink" href="../about.html">About</a>
-        <span class="navsep">•</span>
         <a class="footerlink" href="../contact.html">Contact</a>
-        <span class="navsep">•</span>
         <a class="footerlink" href="https://github.com/charles633-wcu/nfl-team-compare/tree/main/ui/build" target="_blank" rel="noopener">GitHub</a>
-      </span>
+      </div>
     </footer>
-
+  </div>
 </body>
 </html>

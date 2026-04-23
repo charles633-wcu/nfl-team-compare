@@ -2,6 +2,7 @@ import json
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 
+# These helpers support both the direct analytics service and the APISIX gateway.
 def fetch_json(base_url: str, path: str) -> dict:
     url = base_url.rstrip("/") + path
     req = Request(url, headers={"User-Agent": "ui-build/1.0"})
@@ -14,7 +15,7 @@ def fetch_json(base_url: str, path: str) -> dict:
     except URLError as e:
         raise RuntimeError(
             f"Could not reach Analytics API at {url}. "
-            f"Is uvicorn running on the right port?"
+            f"Check whether either the direct analytics service or the gateway endpoint is running."
         ) from e
 
 def fetch_week_elo(base_url: str, week: int) -> dict:

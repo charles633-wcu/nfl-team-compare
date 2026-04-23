@@ -2,25 +2,36 @@
 {% set active_page = "contact" %}
 {% extends "_base.html" %}
 
-{% block title %}Contact {% endblock %}
+{% block title %}Contact{% endblock %}
 
 {% block content %}
-<section class="card">
-  <h1 class="h1">Contact</h1>
+<section class="hero hero-static">
+  <div class="hero-copy">
+    <div class="eyebrow">Contact</div>
+    <h1 class="hero-title">Reach the builder</h1>
+    <p class="hero-summary">
+      The project links and emails stay the same, but they now live in the same visual system as the rest of the site.
+    </p>
+  </div>
 </section>
 
-<section class="card">
-  <h2 class="h2">Links</h2>
-  <ul class="muted">
-    <li><a class="footerlink" href="https://github.com/charles633-wcu/nfl-team-compare" target="_blank" rel="noopener">GitHub</a></li>
-    <li><a class="footerlink" href="https://linkedin.com/in/charles-wang-3a80961a4" target="_blank" rel="noopener">LinkedIn</a></li>
-  </ul>
-</section>
+<section class="panel panel-split">
+  <div class="info-card">
+    <div class="panel-kicker">Links</div>
+    <h2 class="section-title">Profiles and code</h2>
+    <ul class="link-list">
+      <li><a class="footerlink" href="https://github.com/charles633-wcu/nfl-team-compare" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a class="footerlink" href="https://linkedin.com/in/charles-wang-3a80961a4" target="_blank" rel="noopener">LinkedIn</a></li>
+    </ul>
+  </div>
 
-<section class="card">
-  <h2 class="h2">Email</h2>
-  <p class="muted">
-    You can e-mail me at 2015wangch@gmail.com or cwang633@wcupa.edu.
-  </p>
+  <div class="info-card">
+    <div class="panel-kicker">Email</div>
+    <h2 class="section-title">Direct contact</h2>
+    <p class="body-copy">
+      You can e-mail me at <a class="footerlink" href="mailto:2015wangch@gmail.com">2015wangch@gmail.com</a> or
+      <a class="footerlink" href="mailto:cwang633@wcupa.edu">cwang633@wcupa.edu</a>.
+    </p>
+  </div>
 </section>
 {% endblock %}

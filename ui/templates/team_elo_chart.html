@@ -1,27 +1,46 @@
 {% set base_path = "../" %}
-{% set active_page = "team" %}
+{% set active_page = "teams" %}
 {% extends "_base.html" %}
 
 {% block title %}{{ team }} · Elo Trend · NFL Elo{% endblock %}
 
 {% block content %}
-<section class="card">
-  <div class="cardrow" style="align-items: baseline;">
-    <div>
-      <h1 class="h1">{{ team }} Elo By Week</h1>
-      <div class="muted">Regular Season {{ season }}</div>
-    </div>
-
-    <div class="controls">
-      <a class="btn" href="{{ base_path }}team/{{ team|slug }}.html">← Back to {{ team }}</a>
+<section class="hero hero-chart">
+  <div class="hero-copy">
+    <div class="eyebrow">Trend monitor</div>
+    <h1 class="hero-title">{{ team }} Elo by week</h1>
+    <p class="hero-summary">
+      A weekly Elo trend view with division rivals overlaid for context and the league baseline held in frame.
+    </p>
+    <div class="hero-actions">
+      <a class="btn btn-secondary" href="{{ base_path }}team/{{ team|slug }}.html">Back to {{ team }}</a>
       <a class="btn" href="{{ base_path }}index.html">Home</a>
+    </div>
+  </div>
+
+  <div class="hero-sidecard">
+    <div class="sidecard-label">Chart notes</div>
+    <div class="sidecard-highlight">
+      <span class="sidecard-kicker">Baseline</span>
+      <strong>{{ baseline }}</strong>
+      <span>Division rivals are shown as dashed comparison lines.</span>
     </div>
   </div>
 </section>
 
-<section class="card">
-  <div class="chart-wrap" style="height: 420px;">
-    <canvas id="eloChart"></canvas>
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-kicker">Visualization</div>
+      <h2 class="section-title">Elo trajectory</h2>
+    </div>
+    <div class="panel-meta">Regular season {{ season }}</div>
+  </div>
+
+  <div class="chart-shell">
+    <div class="chart-wrap">
+      <canvas id="eloChart"></canvas>
+    </div>
   </div>
 </section>
 
@@ -62,55 +81,51 @@
     "Washington Commanders": "#5A1414"
   };
 
-  const weeks    = {{ weeks | tojson }};
-  const series   = {{ series | tojson }};
+  const weeks = {{ weeks | tojson }};
+  const series = {{ series | tojson }};
   const teamName = {{ team | tojson }};
   const baseline = {{ baseline | tojson }};
 
-  function hexToRgba(hex, a) {
-    const h = (hex || "").replace("#", "");
-    if (h.length !== 6) return `rgba(255,255,255,${a})`;
-    const r = parseInt(h.slice(0, 2), 16);
-    const g = parseInt(h.slice(2, 4), 16);
-    const b = parseInt(h.slice(4, 6), 16);
-    return `rgba(${r},${g},${b},${a})`;
+  function hexToRgba(hex, alpha) {
+    const cleaned = (hex || "").replace("#", "");
+    if (cleaned.length !== 6) return `rgba(255,255,255,${alpha})`;
+    const r = parseInt(cleaned.slice(0, 2), 16);
+    const g = parseInt(cleaned.slice(2, 4), 16);
+    const b = parseInt(cleaned.slice(4, 6), 16);
+    return `rgba(${r},${g},${b},${alpha})`;
   }
 
-  const labels = weeks.map(w => `W${w}`);
+  const labels = weeks.map((week) => `W${week}`);
+  const mainColor = "#ffb347";
+  const tickColor = "rgba(229, 236, 247, 0.78)";
+  const gridColor = "rgba(255, 255, 255, 0.08)";
 
-  // Writes "Division rivals:" context line
-  const rivals = series.map(s => s.team).filter(t => t !== teamName);
-
-  // Main line is orange; rivals use team primary colors, dimmed
-  const MAIN_COLOR = "rgba(255,165,0,1)";  // orange
-  const RIVAL_ALPHA = 0.65;
-
-  const datasets = series.map(s => {
-    const isMain = (s.team === teamName);
-    const baseHex = TEAM_PRIMARY[s.team] || "#FFFFFF";
-    const rivalColor = hexToRgba(baseHex, RIVAL_ALPHA);
+  const datasets = series.map((entry) => {
+    const isMain = entry.team === teamName;
+    const baseHex = TEAM_PRIMARY[entry.team] || "#ffffff";
 
     return {
-      label: isMain ? `${s.team} (Elo Score)` : `${s.team} (Division rival)`,
-      data: s.elos,
-      borderColor: isMain ? MAIN_COLOR : rivalColor,
+      label: isMain ? `${entry.team} (focus)` : `${entry.team} (division rival)`,
+      data: entry.elos,
+      borderColor: isMain ? mainColor : hexToRgba(baseHex, 0.7),
       backgroundColor: "transparent",
-      tension: 0,
-      pointRadius: isMain ? 2 : 0,
-      borderWidth: isMain ? 3 : 2,
-      borderDash: isMain ? [] : [5, 5]
+      tension: 0.25,
+      pointRadius: isMain ? 2.5 : 0,
+      pointHoverRadius: isMain ? 4 : 0,
+      borderWidth: isMain ? 3.5 : 2,
+      borderDash: isMain ? [] : [7, 7]
     };
   });
 
   datasets.push({
     label: "Baseline",
     data: weeks.map(() => baseline),
-    borderColor: "rgba(255,255,255,0.6)",
+    borderColor: "rgba(255,255,255,0.45)",
     backgroundColor: "transparent",
-    borderDash: [6, 6],
+    borderDash: [5, 5],
     tension: 0,
     pointRadius: 0,
-    borderWidth: 1
+    borderWidth: 1.5
   });
 
   new Chart(document.getElementById("eloChart"), {
@@ -125,21 +140,26 @@
           position: "top",
           align: "start",
           labels: {
-            color: "white",
-            boxWidth: 30,
+            color: "#f5f7fb",
+            boxWidth: 24,
             boxHeight: 2,
-            padding: 16,
-            font: { size: 13, weight: "500" }
+            padding: 18,
+            font: { size: 12, weight: "600" }
           }
         }
       },
       scales: {
-        x: { title: { display: true, text: "Week" } },
+        x: {
+          ticks: { color: tickColor },
+          grid: { color: gridColor },
+          title: { display: true, text: "Week", color: tickColor }
+        },
         y: {
-          title: { display: true, text: "Elo" },
+          ticks: { color: tickColor, stepSize: 100 },
+          grid: { color: gridColor },
+          title: { display: true, text: "Elo", color: tickColor },
           min: 1200,
-          max: 1800,
-          ticks: { stepSize: 100 }
+          max: 1800
         }
       }
     }

@@ -14,13 +14,34 @@ import requests
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 
-DEFAULT_ANALYTICS_API = "http://127.0.0.1:8001"
+# This module builds the static site against whichever local analytics endpoint
+# is actually reachable, so the UI works with either direct uvicorn or gateway-based runs.
+
+# OLD local-only default kept for reference:
+# DEFAULT_ANALYTICS_API = "http://127.0.0.1:8001"
+DEFAULT_ANALYTICS_API = "http://localhost:9080/analytics"
 
 
 @dataclass(frozen=True)
 class SiteConfig:
     analytics_api_base: str
     timeout_s: int = 15
+
+
+def resolve_dist_dir(script_path: Path) -> Path:
+    """Resolve the dist output directory, preferring the main repo when building from a worktree."""
+    env_dist = os.getenv("UI_DIST_DIR")
+    if env_dist:
+        return Path(env_dist).resolve()
+
+    ui_dir = script_path.resolve().parents[1]
+
+    # OLD behavior kept for reference:
+    # dist_dir = ui_dir / "dist"
+    if len(script_path.resolve().parents) >= 5 and script_path.resolve().parents[3].name == ".worktrees":
+        return script_path.resolve().parents[4] / "ui" / "dist"
+
+    return ui_dir / "dist"
 
 
 def slugify(name: str) -> str:
@@ -41,6 +62,36 @@ def http_get_json(url: str, timeout_s: int) -> Dict[str, Any]:
     r = requests.get(url, timeout=timeout_s)
     r.raise_for_status()
     return r.json()
+
+
+def resolve_analytics_api_base(configured_base: str, timeout_s: int) -> str:
+    """Choose the first reachable analytics endpoint from the supported local variants."""
+    candidates: List[str] = []
+
+    def add_candidate(value: str | None) -> None:
+        if not value:
+            return
+        cleaned = value.rstrip("/")
+        if cleaned not in candidates:
+            candidates.append(cleaned)
+
+    add_candidate(configured_base)
+    add_candidate(os.getenv("ANALYTICS_API_BASE"))
+
+    # OLD direct local service default kept in the candidate list for compatibility.
+    add_candidate("http://localhost:9080/analytics")
+    add_candidate("http://127.0.0.1:9080/analytics")
+    add_candidate("http://localhost:8001")
+    add_candidate("http://127.0.0.1:8001")
+
+    for candidate in candidates:
+        try:
+            http_get_json(f"{candidate}/health", timeout_s=timeout_s)
+            return candidate
+        except Exception:
+            continue
+
+    return configured_base.rstrip("/")
 
 
 # Data shaping
@@ -99,14 +150,16 @@ def build_site(cfg: SiteConfig) -> None:
     ui_dir = here.parents[1]  # .../ui
     templates_dir = ui_dir / "templates"
     static_dir = ui_dir / "static"
-    dist_dir = ui_dir / "dist"
+    dist_dir = resolve_dist_dir(here)
 
     leaderboard_out_dir = dist_dir / "leaderboard"
+    teams_out_dir = dist_dir / "teams"
     team_out_dir = dist_dir / "team"
     elo_out_dir = dist_dir / "elo"
 
     dist_dir.mkdir(parents=True, exist_ok=True)
     leaderboard_out_dir.mkdir(parents=True, exist_ok=True)
+    teams_out_dir.mkdir(parents=True, exist_ok=True)
     team_out_dir.mkdir(parents=True, exist_ok=True)
     elo_out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -117,7 +170,8 @@ def build_site(cfg: SiteConfig) -> None:
     env.filters["slug"] = slugify
 
     # Fetch analytics once
-    elo_all_url = f"{cfg.analytics_api_base.rstrip('/')}/elo/all"
+    analytics_api_base = resolve_analytics_api_base(cfg.analytics_api_base, timeout_s=cfg.timeout_s)
+    elo_all_url = f"{analytics_api_base.rstrip('/')}/elo/all"
     elo_all = http_get_json(elo_all_url, timeout_s=cfg.timeout_s)
 
     season = elo_all.get("season")
@@ -162,13 +216,23 @@ def build_site(cfg: SiteConfig) -> None:
     )
     (dist_dir / "contact.html").write_text(contact_html, encoding="utf-8")
 
+    teams_tpl = env.get_template("teams.html")
+    teams_html = teams_tpl.render(
+        season=season,
+        baseline=baseline,
+        k_factor=k_factor,
+        current_week=latest_week,
+        teams=sorted((team for team, _elo, _delta in latest_rows), key=str.lower),
+    )
+    (teams_out_dir / "index.html").write_text(teams_html, encoding="utf-8")
+
     # Build TEAM pages (dist/team/<slug>.html)
     team_tpl = env.get_template("team.html")
 
     failures = []
     for team, _elo, _delta in latest_rows:
         try:
-            payload = fetch_team_timeline(cfg.analytics_api_base, team, timeout_s=cfg.timeout_s)
+            payload = fetch_team_timeline(analytics_api_base, team, timeout_s=cfg.timeout_s)
             weeks_data = enrich_weeks(payload)
             rank, current_elo = compute_rank_and_elo(latest_rows, team)
 

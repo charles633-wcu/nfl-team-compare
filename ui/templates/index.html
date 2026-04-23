@@ -1,33 +1,84 @@
 {% set base_path = "" %}
 {% set active_page = "leaderboard" %}
 {% set current_week = week %}
+{% set leader = rows[0] if rows|length > 0 else none %}
+{% set runner_up = rows[1] if rows|length > 1 else none %}
+{% set third_place = rows[2] if rows|length > 2 else none %}
 {% extends "_base.html" %}
 
 {% block title %}Leaderboard · Week {{ week }} · NFL Elo{% endblock %}
 
 {% block content %}
-<section class="card">
-  <div class="cardrow">
-    <div>
-      <h1 class="h1">Leaderboard</h1>
-      <div class="muted">Week {{ week }} · Season {{ season }}</div>
+<section class="hero hero-leaderboard">
+  <div class="hero-copy">
+    <div class="eyebrow">NFL 2024 Analytics Desk</div>
+    <h1 class="hero-title">Power Index</h1>
+    <p class="hero-summary">
+      Weekly Elo rankings, team movement, and matchup context in a sharper broadcast-style interface.
+    </p>
+    <div class="hero-actions">
+      <label class="control-group">
+        <span class="control-label">Switch week</span>
+        <select id="weekSelect" class="select" onchange="location = this.value;">
+          {% for w in available_weeks %}
+            <option value="leaderboard/week-{{ w }}.html" {% if w == week %}selected{% endif %}>Week {{ w }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <div class="chipset">
+        <span class="chip chip-active">Live snapshot</span>
+        <span class="chip">Regular season</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-scoreboard">
+    <div class="scoreboard-header">
+      <span class="scoreboard-label">Current leader</span>
+      <span class="scoreboard-week">Week {{ week }}</span>
     </div>
 
-    <div class="controls">
-      <select id="weekSelect" class="select" onchange="location = this.value;">
-        {% for w in available_weeks %}
-          <option value="leaderboard/week-{{ w }}.html" {% if w == week %}selected{% endif %}>
-            Week {{ w }}
-          </option>
-        {% endfor %}
-      </select>
+    {% if leader %}
+      <div class="scoreboard-top">
+        <div>
+          <div class="scoreboard-rank">#1</div>
+          <div class="scoreboard-team">{{ leader[0] }}</div>
+        </div>
+        <div class="scoreboard-elo">{{ leader[1] }}</div>
+      </div>
+    {% endif %}
+
+    <div class="scoreboard-grid">
+      {% if runner_up %}
+        <div class="mini-stat">
+          <div class="mini-label">#2</div>
+          <div class="mini-value">{{ runner_up[0] }}</div>
+        </div>
+      {% endif %}
+      {% if third_place %}
+        <div class="mini-stat">
+          <div class="mini-label">#3</div>
+          <div class="mini-value">{{ third_place[0] }}</div>
+        </div>
+      {% endif %}
+      <div class="mini-stat">
+        <div class="mini-label">Baseline</div>
+        <div class="mini-value">{{ baseline }}</div>
+      </div>
     </div>
   </div>
 </section>
 
-<section class="card">
-  <div class="lbgrid">
+<section class="panel panel-highlight">
+  <div class="panel-header">
+    <div>
+      <div class="panel-kicker">Broadcast board</div>
+      <h2 class="section-title">League leaderboard</h2>
+    </div>
+    <div class="panel-meta">32 teams · Week {{ week }} snapshot</div>
+  </div>
 
+  <div class="lbgrid">
     <div class="lbrow lbheader">
       <div>Rank</div>
       <div class="opponent">Team</div>
@@ -36,35 +87,29 @@
     </div>
 
     {% for team, elo, delta in rows %}
-    <div class="lbrow lbbody">
-      <div>{{ loop.index }}</div>
+      <div class="lbrow lbbody {% if loop.index <= 3 %}lbbody-top{% endif %}">
+        <div><span class="rankbadge">{{ loop.index }}</span></div>
 
-      <div class="opponent">
-        <a class="teamlink" href="team/{{ team|slug }}.html">
-          <img
-            class="logo"
-            src="static/img/logos/{{ team|slug }}.png"
-            alt="{{ team }} logo"
-            loading="lazy"
-          />
-          <span class="teamname">{{ team }}</span>
-        </a>
+        <div class="opponent">
+          <a class="teamlink" href="team/{{ team|slug }}.html">
+            <img class="logo" src="static/img/logos/{{ team|slug }}.png" alt="{{ team }} logo" loading="lazy" />
+            <span class="teamname">{{ team }}</span>
+          </a>
+        </div>
+
+        <div class="statnum">{{ elo }}</div>
+
+        <div class="delta {% if delta is not none and delta > 0 %}delta-up{% elif delta is not none and delta < 0 %}delta-down{% endif %}">
+          {% if delta is none %}
+            —
+          {% elif delta > 0 %}
+            +{{ delta }}
+          {% else %}
+            {{ delta }}
+          {% endif %}
+        </div>
       </div>
-
-      <div>{{ elo }}</div>
-
-      <div>
-        {% if delta is none %}
-          —
-        {% elif delta > 0 %}
-          +{{ delta }}
-        {% else %}
-          {{ delta }}
-        {% endif %}
-      </div>
-    </div>
     {% endfor %}
-
   </div>
 </section>
 {% endblock %}

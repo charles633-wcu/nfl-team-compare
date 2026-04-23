@@ -3,83 +3,83 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-  href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap"
-  rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Pittsburgh Steelers · Team Dashboard · NFL Elo</title>
   <link rel="stylesheet" href="../static/css/app.css" />
 </head>
-<body>
-  <header class="topbar">
-    <div class="brand">
-      <div class="title">
+<body class="broadcast-shell">
+  <div class="site-backdrop" aria-hidden="true">
+    <div class="site-glow site-glow-a"></div>
+    <div class="site-glow site-glow-b"></div>
+    <div class="site-grid"></div>
+  </div>
+
+  <div class="site-frame">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-kicker">Broadcast Premium</div>
+        <div class="brand-title">
           
-            <a href="../leaderboard/week-18.html" class="brandlink">
-              NFL Elo Dashboard
-            </a>
+            <a href="../leaderboard/week-18.html" class="brandlink">NFL Power Index</a>
           
         </div>
-      <div class="subtitle">2024 Regular Season</div>
-    </div>
-    <nav class="nav">
-      <a href="../leaderboard/week-18.html" class="navlink ">Leaderboard</a>
-      <span class="navsep">•</span>
+        <div class="brand-subtitle">2024 regular season Elo intelligence</div>
+      </div>
+
+      <nav class="nav" aria-label="Primary">
+        <a href="../leaderboard/week-18.html" class="navlink ">Leaderboard</a>
+        <a href="../teams/index.html" class="navlink active">Teams</a>
+        <a href="../about.html" class="navlink ">About</a>
+        <a href="../contact.html" class="navlink ">Contact</a>
+      </nav>
+    </header>
+
+    <main class="container">
       
-  <span class="navsep">•</span>
-      <a href="../team/pittsburgh-steelers.html"
-         class="navlink active">
-        Team
-      </a>
-    
-
-    </nav>
-  </header>
-
-  <main class="container">
-    
-<section class="card">
-  <div class="teamhero">
-    <div class="teamhero-left">
-      <img
-        class="teamlogo"
-        src="../static/img/logos/pittsburgh-steelers.png"
-        alt="Pittsburgh Steelers logo"
-        loading="lazy"
-      />
+<section class="hero hero-team">
+  <div class="team-hero-main">
+    <div class="team-identity">
+      <img class="teamlogo teamlogo-large" src="../static/img/logos/pittsburgh-steelers.png" alt="Pittsburgh Steelers logo" loading="lazy" />
       <div>
-        <h1 class="h1" style="margin-bottom: 4px;">Pittsburgh Steelers</h1>
-        <div class="muted">Season 2024 · Through Week 18</div>
+        <div class="eyebrow">Team intelligence file</div>
+        <h1 class="hero-title">Pittsburgh Steelers</h1>
+        <p class="hero-summary">Season 2024 through Week 18 with Elo movement and per-game context.</p>
       </div>
     </div>
 
-    <div class="teamhero-right">
-      <div class="statpill">
-        <div class="statlabel">Rank</div>
-        <div class="statvalue">#15</div>
-      </div>
-      <div class="statpill">
-        <div class="statlabel">Final Elo</div>
-        <div class="statvalue">1521</div>
-      </div>
-        <a class="statpill" href="../elo/pittsburgh-steelers.html" style="text-decoration:none;">
-        <div class="statlabel">Chart</div>
-        <div class="statvalue">Elo Trend</div>
-      </a>
+    <div class="hero-actions">
+      <a class="btn btn-secondary" href="../leaderboard/week-18.html">Back to week 18</a>
+      <a class="btn" href="../elo/pittsburgh-steelers.html">Open trend chart</a>
+    </div>
+  </div>
 
+  <div class="team-statbar">
+    <div class="statpill">
+      <div class="statlabel">Rank</div>
+      <div class="statvalue">#15</div>
+    </div>
+    <div class="statpill">
+      <div class="statlabel">Final Elo</div>
+      <div class="statvalue">1521</div>
+    </div>
+    <div class="statpill">
+      <div class="statlabel">Weeks tracked</div>
+      <div class="statvalue">18</div>
     </div>
   </div>
 </section>
 
-<section class="card">
-  <div class="cardrow" style="align-items: baseline;">
+<section class="panel">
+  <div class="panel-header">
     <div>
-      <h2 class="h2">Game History</h2>
+      <div class="panel-kicker">Game history</div>
+      <h2 class="section-title">Week-by-week breakdown</h2>
     </div>
+    <div class="panel-meta">All regular-season weeks remain preserved</div>
   </div>
 
   <div class="accordion">
@@ -87,7 +87,7 @@
       <details class="weekpanel" open>
         <summary class="weeksummary">
           <span class="weektitle">Week 1</span>
-          <span class="weekmeta muted">Elo (End of Week): 1527</span>
+          <span class="weekmeta">End-of-week Elo: 1527</span>
         </summary>
 
         
@@ -97,57 +97,48 @@
               <div>Location</div>
               <div>Score</div>
               <div>Margin</div>
-              <div>Predicted Margin</div>
+              <div>Predicted</div>
               <div>Δ Elo</div>
               <div>Post</div>
             </div>
 
             
-            <div class="gamerow gamebody">
-              <div class="opponent">
-                <a class="teamlink" href="../team/atlanta-falcons.html">
-                  <img
-                    class="logo"
-                    src="../static/img/logos/atlanta-falcons.png"
-                    alt="Atlanta Falcons logo"
-                    loading="lazy"
-                  />
-                  <span class="teamname">Atlanta Falcons</span>
-                </a>
-              </div>
+              <div class="gamerow gamebody">
+                <div class="opponent">
+                  <a class="teamlink" href="../team/atlanta-falcons.html">
+                    <img class="logo" src="../static/img/logos/atlanta-falcons.png" alt="Atlanta Falcons logo" loading="lazy" />
+                    <span class="teamname">Atlanta Falcons</span>
+                  </a>
+                </div>
 
-              <div>Away</div>
+                <div>Away</div>
 
-              <div>
-                
-                  18–10
-                
-              </div>
+                <div>
+                  
+                    18–10
+                  
+                </div>
 
-              <div>
-                
-                  8
-                
-              </div>
+                <div class="delta-up">
+                  
+                    8
+                  
+                </div>
 
-              <div>
-                
-                  1.8
-                
-              </div>
+                <div>
+                  
+                    1.8
+                  
+                </div>
 
-              <div>
-                
-                  +27
-                
-              </div>
+                <div class="delta-up">
+                  
+                    +27
+                  
+                </div>
 
-              <div>
-                
-                  1527
-                
+                <div>1527</div>
               </div>
-            </div>
             
           </div>
         
@@ -156,7 +147,7 @@
       <details class="weekpanel" open>
         <summary class="weeksummary">
           <span class="weektitle">Week 2</span>
-          <span class="weekmeta muted">Elo (End of Week): 1549</span>
+          <span class="weekmeta">End-of-week Elo: 1549</span>
         </summary>
 
         
@@ -166,57 +157,48 @@
               <div>Location</div>
               <div>Score</div>
               <div>Margin</div>
-              <div>Predicted Margin</div>
+              <div>Predicted</div>
               <div>Δ Elo</div>
               <div>Post</div>
             </div>
 
             
-            <div class="gamerow gamebody">
-              <div class="opponent">
-                <a class="teamlink" href="../team/denver-broncos.html">
-                  <img
-                    class="logo"
-                    src="../static/img/logos/denver-broncos.png"
-                    alt="Denver Broncos logo"
-                    loading="lazy"
-                  />
-                  <span class="teamname">Denver Broncos</span>
-                </a>
-              </div>
+              <div class="gamerow gamebody">
+                <div class="opponent">
+                  <a class="teamlink" href="../team/denver-broncos.html">
+                    <img class="logo" src="../static/img/logos/denver-broncos.png" alt="Denver Broncos logo" loading="lazy" />
+                    <span class="teamname">Denver Broncos</span>
+                  </a>
+                </div>
 
-              <div>Away</div>
+                <div>Away</div>
 
-              <div>
-                
-                  13–6
-                
-              </div>
+                <div>
+                  
+                    13–6
+                  
+                </div>
 
-              <div>
-                
-                  7
-                
-              </div>
+                <div class="delta-up">
+                  
+                    7
+                  
+                </div>
 
-              <div>
-                
-                  4.3
-                
-              </div>
+                <div>
+                  
+                    4.3
+                  
+                </div>
 
-              <div>
-                
-                  +22
-                
-              </div>
+                <div class="delta-up">
+                  
+                    +22
+                  
+                </div>
 
-              <div>
-                
-                  1549
-                
+                <div>1549</div>
               </div>
-            </div>
             
           </div>
         
@@ -225,7 +207,7 @@
       <details class="weekpanel" open>
         <summary class="weeksummary">
           <span class="weektitle">Week 3</span>
-          <span class="weekmeta muted">Elo (End of Week): 1580</span>
+          <span class="weekmeta">End-of-week Elo: 1580</span>
         </summary>
 
         
@@ -235,57 +217,48 @@
               <div>Location</div>
               <div>Score</div>
               <div>Margin</div>
-              <div>Predicted Margin</div>
+              <div>Predicted</div>
               <div>Δ Elo</div>
               <div>Post</div>
             </div>
 
             
-            <div class="gamerow gamebody">
-              <div class="opponent">
-                <a class="teamlink" href="../team/los-angeles-chargers.html">
-                  <img
-                    class="logo"
-                    src="../static/img/logos/los-angeles-chargers.png"
-                    alt="Los Angeles Chargers logo"
-                    loading="lazy"
-                  />
-                  <span class="teamname">Los Angeles Chargers</span>
-                </a>
-              </div>
+              <div class="gamerow gamebody">
+                <div class="opponent">
+                  <a class="teamlink" href="../team/los-angeles-chargers.html">
+                    <img class="logo" src="../static/img/logos/los-angeles-chargers.png" alt="Los Angeles Chargers logo" loading="lazy" />
+                    <span class="teamname">Los Angeles Chargers</span>
+                  </a>
+                </div>
 
-              <div>Home</div>
+                <div>Home</div>
 
-              <div>
-                
-                  20–10
-                
-              </div>
+                <div>
+                  
+                    20–10
+                  
+                </div>
 
-              <div>
-                
-                  10
-                
-              </div>
+                <div class="delta-up">
+                  
+                    10
+                  
+                </div>
 
-              <div>
-                
-                  1.2
-                
-              </div>
+                <div>
+                  
+                    1.2
+                  
+                </div>
 
-              <div>
-                
-                  +31
-                
-              </div>
+                <div class="delta-up">
+                  
+                    +31
+                  
+                </div>
 
-              <div>
-                
-                  1580
-                
+                <div>1580</div>
               </div>
-            </div>
             
           </div>
         
@@ -294,7 +267,7 @@
       <details class="weekpanel" open>
         <summary class="weeksummary">
           <span class="weektitle">Week 4</span>
-          <span class="weekmeta muted">Elo (End of Week): 1558</span>
+          <span class="weekmeta">End-of-week Elo: 1558</span>
         </summary>
 
         
@@ -304,57 +277,48 @@
               <div>Location</div>
               <div>Score</div>
               <div>Margin</div>
-              <div>Predicted Margin</div>
+              <div>Predicted</div>
               <div>Δ Elo</div>
               <div>Post</div>
             </div>
 
             
-            <div class="gamerow gamebody">
-              <div class="opponent">
-                <a class="teamlink" href="../team/indianapolis-colts.html">
-                  <img
-                    class="logo"
-                    src="../static/img/logos/indianapolis-colts.png"
-                    alt="Indianapolis Colts logo"
-                    loading="lazy"
-                  />
-                  <span class="teamname">Indianapolis Colts</span>
-                </a>
-              </div>
+              <div class="gamerow gamebody">
+                <div class="opponent">
+                  <a class="teamlink" href="../team/indianapolis-colts.html">
+                    <img class="logo" src="../static/img/logos/indianapolis-colts.png" alt="Indianapolis Colts logo" loading="lazy" />
+                    <span class="teamname">Indianapolis Colts</span>
+                  </a>
+                </div>
 
-              <div>Away</div>
+                <div>Away</div>
 
-              <div>
-                
-                  24–27
-                
-              </div>
+                <div>
+                  
+                    24–27
+                  
+                </div>
 
-              <div>
-                
-                  -3
-                
-              </div>
+                <div class="delta-down">
+                  
+                    -3
+                  
+                </div>
 
-              <div>
-                
-                  6.4
-                
-              </div>
+                <div>
+                  
+                    6.4
+                  
+                </div>
 
-              <div>
-                
-                  -22
-                
-              </div>
+                <div class="delta-down">
+                  
+                    -22
+                  
+                </div>
 
-              <div>
-                
-                  1558
-                
+                <div>1558</div>
               </div>
-            </div>
             
           </div>
         
@@ -363,7 +327,7 @@
       <details class="weekpanel" open>
         <summary class="weeksummary">
           <span class="weektitle">Week 5</span>
-          <span class="weekmeta muted">Elo (End of Week): 1537</span>
+          <span class="weekmeta">End-of-week Elo: 1537</span>
         </summary>
 
         
@@ -373,57 +337,48 @@
               <div>Location</div>
               <div>Score</div>
               <div>Margin</div>
-              <div>Predicted Margin</div>
+              <div>Predicted</div>
               <div>Δ Elo</div>
               <div>Post</div>
             </div>
 
             
-            <div class="gamerow gamebody">
-              <div class="opponent">
-                <a class="teamlink" href="../team/dallas-cowboys.html">
-                  <img
-                    class="logo"
-                    src="../static/img/logos/dallas-cowboys.png"
-                    alt="Dallas Cowboys logo"
-                    loading="lazy"
-                  />
-                  <span class="teamname">Dallas Cowboys</span>
-                </a>
-              </div>
+              <div class="gamerow gamebody">
+                <div class="opponent">
+                  <a class="teamlink" href="../team/dallas-cowboys.html">
+                    <img class="logo" src="../static/img/logos/dallas-cowboys.png" alt="Dallas Cowboys logo" loading="lazy" />
+                    <span class="teamname">Dallas Cowboys</span>
+                  </a>
+                </div>
 
-              <div>Home</div>
+                <div>Home</div>
 
-              <div>
-                
-                  17–20
-                
-              </div>
+                <div>
+                  
+                    17–20
+                  
+                </div>
 
-              <div>
-                
-                  -3
-                
-              </div>
+                <div class="delta-down">
+                  
+                    -3
+                  
+                </div>
 
-              <div>
-                
-                  4.8
-                
-              </div>
+                <div>
+                  
+                    4.8
+                  
+                </div>
 
-              <div>
-                
-                  -21
-                
-              </div>
+                <div class="delta-down">
+                  
+                    -21
+                  
+                </div>
 
-              <div>
-                
-                  1537
-                
+                <div>1537</div>
               </div>
-            </div>
             
           </div>
         
@@ -432,7 +387,7 @@
       <details class="weekpanel" open>
         <summary class="weeksummary">
           <span class="weektitle">Week 6</span>
-          <span class="weekmeta muted">Elo (End of Week): 1562</span>
+          <span class="weekmeta">End-of-week Elo: 1562</span>
         </summary>
 
         
@@ -442,57 +397,48 @@
               <div>Location</div>
               <div>Score</div>
               <div>Margin</div>
-              <div>Predicted Margin</div>
+              <div>Predicted</div>
               <div>Δ Elo</div>
               <div>Post</div>
             </div>
 
             
-            <div class="gamerow gamebody">
-              <div class="opponent">
-                <a class="teamlink" href="../team/las-vegas-raiders.html">
-                  <img
-                    class="logo"
-                    src="../static/img/logos/las-vegas-raiders.png"
-                    alt="Las Vegas Raiders logo"
-                    loading="lazy"
-                  />
-                  <span class="teamname">Las Vegas Raiders</span>
-                </a>
-              </div>
+              <div class="gamerow gamebody">
+                <div class="opponent">
+                  <a class="teamlink" href="../team/las-vegas-raiders.html">
+                    <img class="logo" src="../static/img/logos/las-vegas-raiders.png" alt="Las Vegas Raiders logo" loading="lazy" />
+                    <span class="teamname">Las Vegas Raiders</span>
+                  </a>
+                </div>
 
-              <div>Away</div>
+                <div>Away</div>
 
-              <div>
-                
-                  32–13
-                
-              </div>
+                <div>
+                  
+                    32–13
+                  
+                </div>
 
-              <div>
-                
-                  19
-                
-              </div>
+                <div class="delta-up">
+                  
+                    19
+                  
+                </div>
 
-              <div>
-                
-                  6.8
-                
-              </div>
+                <div>
+                  
+                    6.8
+                  
+                </div>
 
-              <div>
-                
-                  +25
-                
-              </div>
+                <div class="delta-up">
+                  
+                    +25
+                  
+                </div>
 
-              <div>
-                
-                  1562
-                
+                <div>1562</div>
               </div>
-            </div>
             
           </div>
         
@@ -501,7 +447,7 @@
       <details class="weekpanel" open>
         <summary class="weeksummary">
           <span class="weektitle">Week 7</span>
-          <span class="weekmeta muted">Elo (End of Week): 1593</span>
+          <span class="weekmeta">End-of-week Elo: 1593</span>
         </summary>
 
         
@@ -511,57 +457,48 @@
               <div>Location</div>
               <div>Score</div>
               <div>Margin</div>
-              <div>Predicted Margin</div>
+              <div>Predicted</div>
               <div>Δ Elo</div>
               <div>Post</div>
             </div>
 
             
-            <div class="gamerow gamebody">
-              <div class="opponent">
-                <a class="teamlink" href="../team/new-york-jets.html">
-                  <img
-                    class="logo"
-                    src="../static/img/logos/new-york-jets.png"
-                    alt="New York Jets logo"
-                    loading="lazy"
-                  />
-                  <span class="teamname">New York Jets</span>
-                </a>
-              </div>
+              <div class="gamerow gamebody">
+                <div class="opponent">
+                  <a class="teamlink" href="../team/new-york-jets.html">
+                    <img class="logo" src="../static/img/logos/new-york-jets.png" alt="New York Jets logo" loading="lazy" />
+                    <span class="teamname">New York Jets</span>
+                  </a>
+                </div>
 
-              <div>Home</div>
+                <div>Home</div>
 
-              <div>
-                
-                  37–15
-                
-              </div>
+                <div>
+                  
+                    37–15
+                  
+                </div>
 
-              <div>
-                
-                  22
-                
-              </div>
+                <div class="delta-up">
+                  
+                    22
+                  
+                </div>
 
-              <div>
-                
-                  5.4
-                
-              </div>
+                <div>
+                  
+                    5.4
+                  
+                </div>
 
-              <div>
-                
-                  +31
-                
-              </div>
+                <div class="delta-up">
+                  
+                    +31
+                  
+                </div>
 
-              <div>
-                
-                  1593
-                
+                <div>1593</div>
               </div>
-            </div>
             
           </div>
         
@@ -570,7 +507,7 @@
       <details class="weekpanel" open>
         <summary class="weeksummary">
           <span class="weektitle">Week 8</span>
-          <span class="weekmeta muted">Elo (End of Week): 1606</span>
+          <span class="weekmeta">End-of-week Elo: 1606</span>
         </summary>
 
         
@@ -580,57 +517,48 @@
               <div>Location</div>
               <div>Score</div>
               <div>Margin</div>
-              <div>Predicted Margin</div>
+              <div>Predicted</div>
               <div>Δ Elo</div>
               <div>Post</div>
             </div>
 
             
-            <div class="gamerow gamebody">
-              <div class="opponent">
-                <a class="teamlink" href="../team/new-york-giants.html">
-                  <img
-                    class="logo"
-                    src="../static/img/logos/new-york-giants.png"
-                    alt="New York Giants logo"
-                    loading="lazy"
-                  />
-                  <span class="teamname">New York Giants</span>
-                </a>
-              </div>
+              <div class="gamerow gamebody">
+                <div class="opponent">
+                  <a class="teamlink" href="../team/new-york-giants.html">
+                    <img class="logo" src="../static/img/logos/new-york-giants.png" alt="New York Giants logo" loading="lazy" />
+                    <span class="teamname">New York Giants</span>
+                  </a>
+                </div>
 
-              <div>Home</div>
+                <div>Home</div>
 
-              <div>
-                
-                  26–18
-                
-              </div>
+                <div>
+                  
+                    26–18
+                  
+                </div>
 
-              <div>
-                
-                  8
-                
-              </div>
+                <div class="delta-up">
+                  
+                    8
+                  
+                </div>
 
-              <div>
-                
-                  10.3
-                
-              </div>
+                <div>
+                  
+                    10.3
+                  
+                </div>
 
-              <div>
-                
-                  +13
-                
-              </div>
+                <div class="delta-up">
+                  
+                    +13
+                  
+                </div>
 
-              <div>
-                
-                  1606
-                
+                <div>1606</div>
               </div>
-            </div>
             
           </div>
         
@@ -639,18 +567,18 @@
       <details class="weekpanel" open>
         <summary class="weeksummary">
           <span class="weektitle">Week 9</span>
-          <span class="weekmeta muted">Elo (End of Week): 1606</span>
+          <span class="weekmeta">End-of-week Elo: 1606</span>
         </summary>
 
         
-          <div class="muted" style="padding: 10px 0;">Bye week</div>
+          <div class="empty-state">Bye week</div>
         
       </details>
     
       <details class="weekpanel" open>
         <summary class="weeksummary">
           <span class="weektitle">Week 10</span>
-          <span class="weekmeta muted">Elo (End of Week): 1615</span>
+          <span class="weekmeta">End-of-week Elo: 1615</span>
         </summary>
 
         
@@ -660,57 +588,48 @@
               <div>Location</div>
               <div>Score</div>
               <div>Margin</div>
-              <div>Predicted Margin</div>
+              <div>Predicted</div>
               <div>Δ Elo</div>
               <div>Post</div>
             </div>
 
             
-            <div class="gamerow gamebody">
-              <div class="opponent">
-                <a class="teamlink" href="../team/washington-commanders.html">
-                  <img
-                    class="logo"
-                    src="../static/img/logos/washington-commanders.png"
-                    alt="Washington Commanders logo"
-                    loading="lazy"
-                  />
-                  <span class="teamname">Washington Commanders</span>
-                </a>
-              </div>
+              <div class="gamerow gamebody">
+                <div class="opponent">
+                  <a class="teamlink" href="../team/washington-commanders.html">
+                    <img class="logo" src="../static/img/logos/washington-commanders.png" alt="Washington Commanders logo" loading="lazy" />
+                    <span class="teamname">Washington Commanders</span>
+                  </a>
+                </div>
 
-              <div>Away</div>
+                <div>Away</div>
 
-              <div>
-                
-                  28–27
-                
-              </div>
+                <div>
+                  
+                    28–27
+                  
+                </div>
 
-              <div>
-                
-                  1
-                
-              </div>
+                <div class="delta-up">
+                  
+                    1
+                  
+                </div>
 
-              <div>
-                
-                  2.5
-                
-              </div>
+                <div>
+                  
+                    2.5
+                  
+                </div>
 
-              <div>
-                
-                  +9
-                
-              </div>
+                <div class="delta-up">
+                  
+                    +9
+                  
+                </div>
 
-              <div>
-                
-                  1615
-                
+                <div>1615</div>
               </div>
-            </div>
             
           </div>
         
@@ -719,7 +638,7 @@
       <details class="weekpanel" open>
         <summary class="weeksummary">
           <span class="weektitle">Week 11</span>
-          <span class="weekmeta muted">Elo (End of Week): 1628</span>
+          <span class="weekmeta">End-of-week Elo: 1628</span>
         </summary>
 
         
@@ -729,57 +648,48 @@
               <div>Location</div>
               <div>Score</div>
               <div>Margin</div>
-              <div>Predicted Margin</div>
+              <div>Predicted</div>
               <div>Δ Elo</div>
               <div>Post</div>
             </div>
 
             
-            <div class="gamerow gamebody">
-              <div class="opponent">
-                <a class="teamlink" href="../team/baltimore-ravens.html">
-                  <img
-                    class="logo"
-                    src="../static/img/logos/baltimore-ravens.png"
-                    alt="Baltimore Ravens logo"
-                    loading="lazy"
-                  />
-                  <span class="teamname">Baltimore Ravens</span>
-                </a>
-              </div>
+              <div class="gamerow gamebody">
+                <div class="opponent">
+                  <a class="teamlink" href="../team/baltimore-ravens.html">
+                    <img class="logo" src="../static/img/logos/baltimore-ravens.png" alt="Baltimore Ravens logo" loading="lazy" />
+                    <span class="teamname">Baltimore Ravens</span>
+                  </a>
+                </div>
 
-              <div>Home</div>
+                <div>Home</div>
 
-              <div>
-                
-                  18–16
-                
-              </div>
+                <div>
+                  
+                    18–16
+                  
+                </div>
 
-              <div>
-                
-                  2
-                
-              </div>
+                <div class="delta-up">
+                  
+                    2
+                  
+                </div>
 
-              <div>
-                
-                  1.9
-                
-              </div>
+                <div>
+                  
+                    1.9
+                  
+                </div>
 
-              <div>
-                
-                  +13
-                
-              </div>
+                <div class="delta-up">
+                  
+                    +13
+                  
+                </div>
 
-              <div>
-                
-                  1628
-                
+                <div>1628</div>
               </div>
-            </div>
             
           </div>
         
@@ -788,7 +698,7 @@
       <details class="weekpanel" open>
         <summary class="weeksummary">
           <span class="weektitle">Week 12</span>
-          <span class="weekmeta muted">Elo (End of Week): 1586</span>
+          <span class="weekmeta">End-of-week Elo: 1586</span>
         </summary>
 
         
@@ -798,57 +708,48 @@
               <div>Location</div>
               <div>Score</div>
               <div>Margin</div>
-              <div>Predicted Margin</div>
+              <div>Predicted</div>
               <div>Δ Elo</div>
               <div>Post</div>
             </div>
 
             
-            <div class="gamerow gamebody">
-              <div class="opponent">
-                <a class="teamlink" href="../team/cleveland-browns.html">
-                  <img
-                    class="logo"
-                    src="../static/img/logos/cleveland-browns.png"
-                    alt="Cleveland Browns logo"
-                    loading="lazy"
-                  />
-                  <span class="teamname">Cleveland Browns</span>
-                </a>
-              </div>
+              <div class="gamerow gamebody">
+                <div class="opponent">
+                  <a class="teamlink" href="../team/cleveland-browns.html">
+                    <img class="logo" src="../static/img/logos/cleveland-browns.png" alt="Cleveland Browns logo" loading="lazy" />
+                    <span class="teamname">Cleveland Browns</span>
+                  </a>
+                </div>
 
-              <div>Away</div>
+                <div>Away</div>
 
-              <div>
-                
-                  19–24
-                
-              </div>
+                <div>
+                  
+                    19–24
+                  
+                </div>
 
-              <div>
-                
-                  -5
-                
-              </div>
+                <div class="delta-down">
+                  
+                    -5
+                  
+                </div>
 
-              <div>
-                
-                  14.9
-                
-              </div>
+                <div>
+                  
+                    14.9
+                  
+                </div>
 
-              <div>
-                
-                  -42
-                
-              </div>
+                <div class="delta-down">
+                  
+                    -42
+                  
+                </div>
 
-              <div>
-                
-                  1586
-                
+                <div>1586</div>
               </div>
-            </div>
             
           </div>
         
@@ -857,7 +758,7 @@
       <details class="weekpanel" open>
         <summary class="weeksummary">
           <span class="weektitle">Week 13</span>
-          <span class="weekmeta muted">Elo (End of Week): 1603</span>
+          <span class="weekmeta">End-of-week Elo: 1603</span>
         </summary>
 
         
@@ -867,57 +768,48 @@
               <div>Location</div>
               <div>Score</div>
               <div>Margin</div>
-              <div>Predicted Margin</div>
+              <div>Predicted</div>
               <div>Δ Elo</div>
               <div>Post</div>
             </div>
 
             
-            <div class="gamerow gamebody">
-              <div class="opponent">
-                <a class="teamlink" href="../team/cincinnati-bengals.html">
-                  <img
-                    class="logo"
-                    src="../static/img/logos/cincinnati-bengals.png"
-                    alt="Cincinnati Bengals logo"
-                    loading="lazy"
-                  />
-                  <span class="teamname">Cincinnati Bengals</span>
-                </a>
-              </div>
+              <div class="gamerow gamebody">
+                <div class="opponent">
+                  <a class="teamlink" href="../team/cincinnati-bengals.html">
+                    <img class="logo" src="../static/img/logos/cincinnati-bengals.png" alt="Cincinnati Bengals logo" loading="lazy" />
+                    <span class="teamname">Cincinnati Bengals</span>
+                  </a>
+                </div>
 
-              <div>Away</div>
+                <div>Away</div>
 
-              <div>
-                
-                  44–38
-                
-              </div>
+                <div>
+                  
+                    44–38
+                  
+                </div>
 
-              <div>
-                
-                  6
-                
-              </div>
+                <div class="delta-up">
+                  
+                    6
+                  
+                </div>
 
-              <div>
-                
-                  7.1
-                
-              </div>
+                <div>
+                  
+                    7.1
+                  
+                </div>
 
-              <div>
-                
-                  +17
-                
-              </div>
+                <div class="delta-up">
+                  
+                    +17
+                  
+                </div>
 
-              <div>
-                
-                  1603
-                
+                <div>1603</div>
               </div>
-            </div>
             
           </div>
         
@@ -926,7 +818,7 @@
       <details class="weekpanel" open>
         <summary class="weeksummary">
           <span class="weektitle">Week 14</span>
-          <span class="weekmeta muted">Elo (End of Week): 1616</span>
+          <span class="weekmeta">End-of-week Elo: 1616</span>
         </summary>
 
         
@@ -936,57 +828,48 @@
               <div>Location</div>
               <div>Score</div>
               <div>Margin</div>
-              <div>Predicted Margin</div>
+              <div>Predicted</div>
               <div>Δ Elo</div>
               <div>Post</div>
             </div>
 
             
-            <div class="gamerow gamebody">
-              <div class="opponent">
-                <a class="teamlink" href="../team/cleveland-browns.html">
-                  <img
-                    class="logo"
-                    src="../static/img/logos/cleveland-browns.png"
-                    alt="Cleveland Browns logo"
-                    loading="lazy"
-                  />
-                  <span class="teamname">Cleveland Browns</span>
-                </a>
-              </div>
+              <div class="gamerow gamebody">
+                <div class="opponent">
+                  <a class="teamlink" href="../team/cleveland-browns.html">
+                    <img class="logo" src="../static/img/logos/cleveland-browns.png" alt="Cleveland Browns logo" loading="lazy" />
+                    <span class="teamname">Cleveland Browns</span>
+                  </a>
+                </div>
 
-              <div>Home</div>
+                <div>Home</div>
 
-              <div>
-                
-                  27–14
-                
-              </div>
+                <div>
+                  
+                    27–14
+                  
+                </div>
 
-              <div>
-                
-                  13
-                
-              </div>
+                <div class="delta-up">
+                  
+                    13
+                  
+                </div>
 
-              <div>
-                
-                  12.4
-                
-              </div>
+                <div>
+                  
+                    12.4
+                  
+                </div>
 
-              <div>
-                
-                  +13
-                
-              </div>
+                <div class="delta-up">
+                  
+                    +13
+                  
+                </div>
 
-              <div>
-                
-                  1616
-                
+                <div>1616</div>
               </div>
-            </div>
             
           </div>
         
@@ -995,7 +878,7 @@
       <details class="weekpanel" open>
         <summary class="weeksummary">
           <span class="weektitle">Week 15</span>
-          <span class="weekmeta muted">Elo (End of Week): 1590</span>
+          <span class="weekmeta">End-of-week Elo: 1590</span>
         </summary>
 
         
@@ -1005,57 +888,48 @@
               <div>Location</div>
               <div>Score</div>
               <div>Margin</div>
-              <div>Predicted Margin</div>
+              <div>Predicted</div>
               <div>Δ Elo</div>
               <div>Post</div>
             </div>
 
             
-            <div class="gamerow gamebody">
-              <div class="opponent">
-                <a class="teamlink" href="../team/philadelphia-eagles.html">
-                  <img
-                    class="logo"
-                    src="../static/img/logos/philadelphia-eagles.png"
-                    alt="Philadelphia Eagles logo"
-                    loading="lazy"
-                  />
-                  <span class="teamname">Philadelphia Eagles</span>
-                </a>
-              </div>
+              <div class="gamerow gamebody">
+                <div class="opponent">
+                  <a class="teamlink" href="../team/philadelphia-eagles.html">
+                    <img class="logo" src="../static/img/logos/philadelphia-eagles.png" alt="Philadelphia Eagles logo" loading="lazy" />
+                    <span class="teamname">Philadelphia Eagles</span>
+                  </a>
+                </div>
 
-              <div>Away</div>
+                <div>Away</div>
 
-              <div>
-                
-                  13–27
-                
-              </div>
+                <div>
+                  
+                    13–27
+                  
+                </div>
 
-              <div>
-                
-                  -14
-                
-              </div>
+                <div class="delta-down">
+                  
+                    -14
+                  
+                </div>
 
-              <div>
-                
-                  -1.5
-                
-              </div>
+                <div>
+                  
+                    -1.5
+                  
+                </div>
 
-              <div>
-                
-                  -26
-                
-              </div>
+                <div class="delta-down">
+                  
+                    -26
+                  
+                </div>
 
-              <div>
-                
-                  1590
-                
+                <div>1590</div>
               </div>
-            </div>
             
           </div>
         
@@ -1064,7 +938,7 @@
       <details class="weekpanel" open>
         <summary class="weeksummary">
           <span class="weektitle">Week 16</span>
-          <span class="weekmeta muted">Elo (End of Week): 1557</span>
+          <span class="weekmeta">End-of-week Elo: 1557</span>
         </summary>
 
         
@@ -1074,57 +948,48 @@
               <div>Location</div>
               <div>Score</div>
               <div>Margin</div>
-              <div>Predicted Margin</div>
+              <div>Predicted</div>
               <div>Δ Elo</div>
               <div>Post</div>
             </div>
 
             
-            <div class="gamerow gamebody">
-              <div class="opponent">
-                <a class="teamlink" href="../team/baltimore-ravens.html">
-                  <img
-                    class="logo"
-                    src="../static/img/logos/baltimore-ravens.png"
-                    alt="Baltimore Ravens logo"
-                    loading="lazy"
-                  />
-                  <span class="teamname">Baltimore Ravens</span>
-                </a>
-              </div>
+              <div class="gamerow gamebody">
+                <div class="opponent">
+                  <a class="teamlink" href="../team/baltimore-ravens.html">
+                    <img class="logo" src="../static/img/logos/baltimore-ravens.png" alt="Baltimore Ravens logo" loading="lazy" />
+                    <span class="teamname">Baltimore Ravens</span>
+                  </a>
+                </div>
 
-              <div>Away</div>
+                <div>Away</div>
 
-              <div>
-                
-                  17–34
-                
-              </div>
+                <div>
+                  
+                    17–34
+                  
+                </div>
 
-              <div>
-                
-                  -17
-                
-              </div>
+                <div class="delta-down">
+                  
+                    -17
+                  
+                </div>
 
-              <div>
-                
-                  0.5
-                
-              </div>
+                <div>
+                  
+                    0.5
+                  
+                </div>
 
-              <div>
-                
-                  -33
-                
-              </div>
+                <div class="delta-down">
+                  
+                    -33
+                  
+                </div>
 
-              <div>
-                
-                  1557
-                
+                <div>1557</div>
               </div>
-            </div>
             
           </div>
         
@@ -1133,7 +998,7 @@
       <details class="weekpanel" open>
         <summary class="weeksummary">
           <span class="weektitle">Week 17</span>
-          <span class="weekmeta muted">Elo (End of Week): 1533</span>
+          <span class="weekmeta">End-of-week Elo: 1533</span>
         </summary>
 
         
@@ -1143,57 +1008,48 @@
               <div>Location</div>
               <div>Score</div>
               <div>Margin</div>
-              <div>Predicted Margin</div>
+              <div>Predicted</div>
               <div>Δ Elo</div>
               <div>Post</div>
             </div>
 
             
-            <div class="gamerow gamebody">
-              <div class="opponent">
-                <a class="teamlink" href="../team/kansas-city-chiefs.html">
-                  <img
-                    class="logo"
-                    src="../static/img/logos/kansas-city-chiefs.png"
-                    alt="Kansas City Chiefs logo"
-                    loading="lazy"
-                  />
-                  <span class="teamname">Kansas City Chiefs</span>
-                </a>
-              </div>
+              <div class="gamerow gamebody">
+                <div class="opponent">
+                  <a class="teamlink" href="../team/kansas-city-chiefs.html">
+                    <img class="logo" src="../static/img/logos/kansas-city-chiefs.png" alt="Kansas City Chiefs logo" loading="lazy" />
+                    <span class="teamname">Kansas City Chiefs</span>
+                  </a>
+                </div>
 
-              <div>Home</div>
+                <div>Home</div>
 
-              <div>
-                
-                  10–29
-                
-              </div>
+                <div>
+                  
+                    10–29
+                  
+                </div>
 
-              <div>
-                
-                  -19
-                
-              </div>
+                <div class="delta-down">
+                  
+                    -19
+                  
+                </div>
 
-              <div>
-                
-                  -4.1
-                
-              </div>
+                <div>
+                  
+                    -4.1
+                  
+                </div>
 
-              <div>
-                
-                  -24
-                
-              </div>
+                <div class="delta-down">
+                  
+                    -24
+                  
+                </div>
 
-              <div>
-                
-                  1533
-                
+                <div>1533</div>
               </div>
-            </div>
             
           </div>
         
@@ -1202,7 +1058,7 @@
       <details class="weekpanel" open>
         <summary class="weeksummary">
           <span class="weektitle">Week 18</span>
-          <span class="weekmeta muted">Elo (End of Week): 1521</span>
+          <span class="weekmeta">End-of-week Elo: 1521</span>
         </summary>
 
         
@@ -1212,57 +1068,48 @@
               <div>Location</div>
               <div>Score</div>
               <div>Margin</div>
-              <div>Predicted Margin</div>
+              <div>Predicted</div>
               <div>Δ Elo</div>
               <div>Post</div>
             </div>
 
             
-            <div class="gamerow gamebody">
-              <div class="opponent">
-                <a class="teamlink" href="../team/cincinnati-bengals.html">
-                  <img
-                    class="logo"
-                    src="../static/img/logos/cincinnati-bengals.png"
-                    alt="Cincinnati Bengals logo"
-                    loading="lazy"
-                  />
-                  <span class="teamname">Cincinnati Bengals</span>
-                </a>
-              </div>
+              <div class="gamerow gamebody">
+                <div class="opponent">
+                  <a class="teamlink" href="../team/cincinnati-bengals.html">
+                    <img class="logo" src="../static/img/logos/cincinnati-bengals.png" alt="Cincinnati Bengals logo" loading="lazy" />
+                    <span class="teamname">Cincinnati Bengals</span>
+                  </a>
+                </div>
 
-              <div>Home</div>
+                <div>Home</div>
 
-              <div>
-                
-                  17–19
-                
-              </div>
+                <div>
+                  
+                    17–19
+                  
+                </div>
 
-              <div>
-                
-                  -2
-                
-              </div>
+                <div class="delta-down">
+                  
+                    -2
+                  
+                </div>
 
-              <div>
-                
-                  0.7
-                
-              </div>
+                <div>
+                  
+                    0.7
+                  
+                </div>
 
-              <div>
-                
-                  -12
-                
-              </div>
+                <div class="delta-down">
+                  
+                    -12
+                  
+                </div>
 
-              <div>
-                
-                  1521
-                
+                <div>1521</div>
               </div>
-            </div>
             
           </div>
         
@@ -1271,19 +1118,23 @@
   </div>
 </section>
 
-  </main>
+    </main>
 
-  <footer class="footer">
-      <span class="muted">Season 2024</span>
-
-      <span class="footerlinks">
+    <footer class="footer">
+      <div>
+        <div class="footer-label">System</div>
+        <div class="footer-value">Season 2024</div>
+      </div>
+      <div>
+        <div class="footer-label">Project</div>
+        <div class="footer-value">NFL analytics platform</div>
+      </div>
+      <div class="footer-links">
         <a class="footerlink" href="../about.html">About</a>
-        <span class="navsep">•</span>
         <a class="footerlink" href="../contact.html">Contact</a>
-        <span class="navsep">•</span>
         <a class="footerlink" href="https://github.com/charles633-wcu/nfl-team-compare/tree/main/ui/build" target="_blank" rel="noopener">GitHub</a>
-      </span>
+      </div>
     </footer>
-
+  </div>
 </body>
 </html>
