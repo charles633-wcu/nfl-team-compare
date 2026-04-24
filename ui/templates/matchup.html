@@ -298,277 +298,417 @@ function renderMatchup() {
     : `${eloDiff > 0 ? teamA : teamB} +${Math.abs(eloDiff)} Elo`;
 }
 
-/* ── Playoff Bracket ── */
-
-let bracketState = null;
+/* ── Playoff Bracket — State Machine ── */
 
 const ROUND_NAMES = ['Wild Card', 'Divisional', 'Conference Championship', 'Super Bowl'];
+let bracketState = null;
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 function buildInitialState() {
   const week18Key = String(Math.max(...Object.keys(WEEKLY_ELOS).map(Number)));
   const w18 = WEEKLY_ELOS[week18Key] || {};
 
-  const teamElos = {};
+  const teamElos = {}, originalSeeds = {};
   for (const conf of ['AFC', 'NFC']) {
     for (const s of PLAYOFF_SEEDS[conf]) {
       teamElos[s.team] = w18[s.team] || 1500;
+      originalSeeds[s.team] = s.seed;
     }
   }
 
-  function wcMatchups(conf) {
-    const seeds = {};
-    for (const s of PLAYOFF_SEEDS[conf]) seeds[s.seed] = s.team;
+  const byeTeams = {
+    AFC: PLAYOFF_SEEDS.AFC.find(s => s.bye).team,
+    NFC: PLAYOFF_SEEDS.NFC.find(s => s.bye).team,
+  };
+
+  function seedMap(conf) {
+    const m = {};
+    for (const s of PLAYOFF_SEEDS[conf]) m[s.seed] = s.team;
+    return m;
+  }
+
+  function wcSlots(conf) {
+    const sm = seedMap(conf);
     return [
-      { id: `${conf}-wc-1`, conf, homeSeed: 2, awaySeed: 7, home: seeds[2], away: seeds[7], winner: null, forced: false },
-      { id: `${conf}-wc-2`, conf, homeSeed: 3, awaySeed: 6, home: seeds[3], away: seeds[6], winner: null, forced: false },
-      { id: `${conf}-wc-3`, conf, homeSeed: 4, awaySeed: 5, home: seeds[4], away: seeds[5], winner: null, forced: false },
+      { id: `${conf}-wc-0`, conf, type: 'bye',  team: sm[1], seed: 1 },
+      { id: `${conf}-wc-1`, conf, type: 'game', home: sm[2], homeSeed: 2, away: sm[7], awaySeed: 7 },
+      { id: `${conf}-wc-2`, conf, type: 'game', home: sm[3], homeSeed: 3, away: sm[6], awaySeed: 6 },
+      { id: `${conf}-wc-3`, conf, type: 'game', home: sm[4], homeSeed: 4, away: sm[5], awaySeed: 5 },
     ];
+  }
+
+  function emptySlots(conf, key, count) {
+    return Array.from({ length: count }, (_, i) => ({
+      id: `${conf}-${key}-${i}`, conf, type: 'game',
+      home: null, homeSeed: null, away: null, awaySeed: null,
+    }));
   }
 
   return {
-    round: 0,
+    allRounds: [
+      [...wcSlots('AFC'), ...wcSlots('NFC')],
+      [...emptySlots('AFC','div',2), ...emptySlots('NFC','div',2)],
+      [...emptySlots('AFC','conf',1), ...emptySlots('NFC','conf',1)],
+      [{ id:'SB', conf:'SB', type:'game', home:null, homeSeed:null, away:null, awaySeed:null }],
+    ],
+    results:      [undefined, undefined, undefined, undefined],
     teamElos,
-    currentMatchups: [...wcMatchups('AFC'), ...wcMatchups('NFC')],
-    byeTeams: {
-      AFC: PLAYOFF_SEEDS.AFC.find(s => s.bye).team,
-      NFC: PLAYOFF_SEEDS.NFC.find(s => s.bye).team,
-    },
-    originalSeeds: (() => {
-      const m = {};
-      for (const conf of ['AFC', 'NFC'])
-        for (const s of PLAYOFF_SEEDS[conf]) m[s.team] = s.seed;
-      return m;
-    })(),
-    completedRounds: [],
-    champion: null,
+    originalSeeds,
+    byeTeams,
+    forced:       {},
+    round:        0,
+    animating:    false,
+    champion:     null,
   };
 }
 
-function reseedRound(winners, conf, byeTeam, state) {
-  const surviving = byeTeam ? [byeTeam, ...winners] : [...winners];
-  surviving.sort((a, b) => state.originalSeeds[a] - state.originalSeeds[b]);
-
-  const matchups = [];
-  let lo = 0, hi = surviving.length - 1;
-  while (lo < hi) {
-    const home = surviving[lo], away = surviving[hi];
-    matchups.push({
-      id: `${conf}-r${state.round + 1}-${lo}`,
-      conf,
-      home, away,
-      homeSeed: state.originalSeeds[home],
-      awaySeed: state.originalSeeds[away],
-      winner: null, forced: false,
-    });
-    lo++; hi--;
+function populateNextRound(completedIdx, roundResults) {
+  const winners = { AFC: [], NFC: [] };
+  for (const r of roundResults) {
+    const slot = bracketState.allRounds[completedIdx].find(s => s.id === r.id);
+    if (slot && slot.type === 'game') winners[slot.conf].push(r.winner);
   }
-  return matchups;
+
+  const nextRound = bracketState.allRounds[completedIdx + 1];
+  if (!nextRound) return;
+
+  if (completedIdx === 2) {
+    const sb = nextRound.find(s => s.id === 'SB');
+    if (sb) {
+      sb.home = winners.AFC[0]; sb.homeSeed = bracketState.originalSeeds[winners.AFC[0]];
+      sb.away = winners.NFC[0]; sb.awaySeed = bracketState.originalSeeds[winners.NFC[0]];
+    }
+    return;
+  }
+
+  for (const conf of ['AFC', 'NFC']) {
+    let surviving = [...winners[conf]];
+    if (completedIdx === 0) surviving.push(bracketState.byeTeams[conf]);
+    surviving.sort((a, b) => bracketState.originalSeeds[a] - bracketState.originalSeeds[b]);
+
+    const confSlots = nextRound.filter(s => s.conf === conf);
+    let lo = 0, hi = surviving.length - 1, idx = 0;
+    while (lo < hi && idx < confSlots.length) {
+      confSlots[idx].home     = surviving[lo];
+      confSlots[idx].homeSeed = bracketState.originalSeeds[surviving[lo]];
+      confSlots[idx].away     = surviving[hi];
+      confSlots[idx].awaySeed = bracketState.originalSeeds[surviving[hi]];
+      lo++; hi--; idx++;
+    }
+  }
 }
 
-function runRound() {
-  if (!bracketState || bracketState.champion) return;
-
+function renderBracket() {
+  const grid = document.getElementById('bracketGrid');
+  if (!grid) return;
   const state = bracketState;
-  const newElos = { ...state.teamElos };
-  const results = state.currentMatchups.map(m => {
-    let winner, loser;
-    if (m.forced && m.winner) {
-      winner = m.winner;
-      loser  = winner === m.home ? m.away : m.home;
-    } else {
-      const roll = simulateGame(newElos[m.home], newElos[m.away]);
-      winner = roll === 'A' ? m.home : m.away;
-      loser  = roll === 'A' ? m.away : m.home;
-    }
-    const updated = updateElo(newElos[winner], newElos[loser]);
-    newElos[winner] = updated.newWinnerElo;
-    newElos[loser]  = updated.newLoserElo;
-    return { ...m, winner };
-  });
 
-  const completedRounds = [...state.completedRounds, results];
-  const newRound = state.round + 1;
-
-  if (newRound === 3) {
-    const afcChamp = results.find(m => m.conf === 'AFC').winner;
-    const nfcChamp = results.find(m => m.conf === 'NFC').winner;
-    bracketState = {
-      ...state,
-      round: newRound,
-      teamElos: newElos,
-      completedRounds,
-      currentMatchups: [{
-        id: 'sb', conf: 'SB',
-        home: afcChamp, away: nfcChamp,
-        homeSeed: state.originalSeeds[afcChamp],
-        awaySeed: state.originalSeeds[nfcChamp],
-        winner: null, forced: false,
-      }],
-    };
-  } else if (newRound === 4) {
-    const sbResult = results[0];
-    bracketState = { ...state, round: newRound, teamElos: newElos, completedRounds, currentMatchups: [], champion: sbResult.winner };
-  } else {
-    const afcWinners = results.filter(m => m.conf === 'AFC').map(m => m.winner);
-    const nfcWinners = results.filter(m => m.conf === 'NFC').map(m => m.winner);
-    const byeAFC = newRound === 1 ? state.byeTeams.AFC : null;
-    const byeNFC = newRound === 1 ? state.byeTeams.NFC : null;
-    const nextMatchups = [
-      ...reseedRound(afcWinners, 'AFC', byeAFC, state),
-      ...reseedRound(nfcWinners, 'NFC', byeNFC, state),
-    ];
-    bracketState = { ...state, round: newRound, teamElos: newElos, completedRounds, currentMatchups: nextMatchups };
+  if (state.champion) {
+    grid.innerHTML = renderChampionCard(state.champion, state);
+    return;
   }
 
-  renderBracket();
-  document.getElementById('btnRunRound').disabled = !!bracketState.champion;
+  let html = '';
+  for (let ri = 0; ri < 4; ri++) {
+    const isCurrent = ri === state.round;
+    const slots     = state.allRounds[ri];
+    const roundRes  = state.results[ri];
+    const afcSlots  = ri === 3 ? [] : slots.filter(s => s.conf === 'AFC');
+    const nfcSlots  = ri === 3 ? [] : slots.filter(s => s.conf === 'NFC');
+
+    html += `<div class="bracket-col${isCurrent ? ' bracket-col-active' : ''}">`;
+    html += `<div class="bracket-col-header">
+      <span class="bracket-col-round">${ROUND_NAMES[ri]}</span>
+      ${isCurrent ? '<span class="bracket-col-current">Current Round</span>' : ''}
+    </div>`;
+
+    if (ri === 3) {
+      html += `<div class="bracket-sb-section">`;
+      html += `<div class="bracket-connector">${renderMatchupCard(slots[0], ri, roundRes, state)}</div>`;
+      html += `</div>`;
+    } else {
+      for (const [conf, confSlots] of [['AFC', afcSlots], ['NFC', nfcSlots]]) {
+        html += `<div class="bracket-conf-section">
+          <div class="bracket-conf-label">${conf}</div>`;
+        for (const slot of confSlots) {
+          html += `<div class="bracket-connector">${renderMatchupCard(slot, ri, roundRes, state)}</div>`;
+        }
+        html += `</div>`;
+        if (conf === 'AFC') html += `<hr class="bracket-conf-divider" />`;
+      }
+    }
+
+    html += `</div>`;
+  }
+
+  grid.innerHTML = html;
+}
+
+function renderMatchupCard(slot, roundIdx, roundRes, state) {
+  if (slot.type === 'bye') {
+    return `<div class="bracket-matchup bye" data-slot-id="${slot.id}">
+      <div class="bracket-team-row">
+        <span class="bracket-seed">${slot.seed}</span>
+        <img class="bracket-team-logo" src="static/img/logos/${slugify(slot.team)}.png" alt="${slot.team}" />
+        <span class="bracket-team-name">${slot.team}</span>
+        <span class="bracket-team-elo">${state.teamElos[slot.team] || 1500}</span>
+      </div>
+      <div class="bracket-bye-label">BYE — enters Divisional</div>
+    </div>`;
+  }
+
+  if (slot.home === null) {
+    return `<div class="bracket-matchup tbd" data-slot-id="${slot.id}">
+      <div class="bracket-matchup-header"><span class="bracket-round-name">${ROUND_NAMES[roundIdx]}</span></div>
+      <div class="bracket-team-row"><span class="bracket-team-name">TBD</span><span class="bracket-score">—</span></div>
+      <div class="bracket-team-row"><span class="bracket-team-name">TBD</span><span class="bracket-score">—</span></div>
+    </div>`;
+  }
+
+  const result    = roundRes && roundRes.find(r => r.id === slot.id);
+  const isResolved = !!result;
+  const homeElo   = state.teamElos[slot.home] || 1500;
+  const awayElo   = state.teamElos[slot.away] || 1500;
+  const homeWinP  = (computeWinProb(homeElo, awayElo) * 100).toFixed(0);
+  const awayWinP  = (100 - homeWinP).toFixed(0);
+  const margin    = computeMargin(homeElo, awayElo);
+  const absMarg   = Math.abs(margin);
+  const sign      = margin >= 0 ? '+' : '';
+  const isForced  = !!state.forced[slot.id];
+
+  const loserSc   = 17;
+  const winnerSc  = Math.round(loserSc + absMarg);
+  const homeProj  = Number(homeWinP) >= 50 ? winnerSc : loserSc;
+  const awayProj  = Number(homeWinP) >= 50 ? loserSc  : winnerSc;
+
+  let homeClass = '', awayClass = '', homeScore = homeProj, awayScore = awayProj, barHtml = '';
+  if (isResolved) {
+    homeClass  = result.winner === slot.home ? 'winner' : 'loser';
+    awayClass  = result.winner === slot.away ? 'winner' : 'loser';
+    homeScore  = result.winner === slot.home ? result.winnerScore : result.loserScore;
+    awayScore  = result.winner === slot.away ? result.winnerScore : result.loserScore;
+    barHtml    = `<div class="bracket-winner-bar" style="width:100%"></div>`;
+  }
+
+  const upsetBtn = (!isResolved && roundIdx === state.round)
+    ? `<button class="bracket-upset-btn${isForced ? ' forced' : ''}"
+         onclick="forceUpset('${slot.id}')">${isForced ? 'Forced ✕' : '↺ Upset'}</button>`
+    : '';
+
+  const confLabel = slot.conf !== 'SB' ? `${slot.conf} · ` : '';
+
+  return `<div class="bracket-matchup ${isResolved ? 'resolved' : 'pending'}" data-slot-id="${slot.id}">
+    <div class="bracket-matchup-header">
+      <span class="bracket-round-name">${confLabel}${ROUND_NAMES[roundIdx]}</span>
+      <span class="bracket-header-right">
+        ${!isResolved ? `<span class="bracket-proj">Proj. ${sign}${margin.toFixed(1)} pts</span>` : ''}
+        ${upsetBtn}
+      </span>
+    </div>
+    <div class="bracket-team-row ${homeClass}" data-team="home">
+      <span class="bracket-seed">${slot.homeSeed ?? ''}</span>
+      <img class="bracket-team-logo" src="static/img/logos/${slugify(slot.home)}.png" alt="${slot.home}" />
+      <span class="bracket-team-name">${slot.home}</span>
+      <span class="bracket-team-elo">${homeElo}</span>
+      <span class="bracket-score" data-score-home>${homeScore}</span>
+      <span class="bracket-prob">${homeWinP}%</span>
+    </div>
+    <div class="bracket-team-row ${awayClass}" data-team="away">
+      <span class="bracket-seed">${slot.awaySeed ?? ''}</span>
+      <img class="bracket-team-logo" src="static/img/logos/${slugify(slot.away)}.png" alt="${slot.away}" />
+      <span class="bracket-team-name">${slot.away}</span>
+      <span class="bracket-team-elo">${awayElo}</span>
+      <span class="bracket-score" data-score-away>${awayScore}</span>
+      <span class="bracket-prob">${awayWinP}%</span>
+    </div>
+    ${barHtml}
+  </div>`;
+}
+
+function renderChampionCard(champion, state) {
+  const sbSlot   = state.allRounds[3][0];
+  const opponent = sbSlot.home === champion ? sbSlot.away : sbSlot.home;
+  const champElo = state.teamElos[champion] || 1500;
+  const oppElo   = state.teamElos[opponent] || 1500;
+  const winP     = (computeWinProb(champElo, oppElo) * 100).toFixed(0);
+
+  return `<div class="bracket-champion-card">
+    <div class="bracket-champion-eyebrow">🏆 Super Bowl Champion</div>
+    <img class="bracket-champion-logo" src="static/img/logos/${slugify(champion)}.png" alt="${champion}" />
+    <div class="bracket-champion-name">${champion}</div>
+    <div class="bracket-champion-meta">Elo ${champElo} · ${winP}% win prob vs ${opponent}</div>
+    <div class="bracket-shimmer"></div>
+  </div>`;
 }
 
 function forceUpset(matchupId) {
-  const m = bracketState.currentMatchups.find(x => x.id === matchupId);
-  if (!m) return;
-  const underdog = computeWinProb(bracketState.teamElos[m.home], bracketState.teamElos[m.away]) >= 0.5 ? m.away : m.home;
+  if (bracketState.animating) return;
+  const slot = bracketState.allRounds[bracketState.round].find(s => s.id === matchupId);
+  if (!slot || slot.type !== 'game') return;
 
-  bracketState = {
-    ...bracketState,
-    currentMatchups: bracketState.currentMatchups.map(x =>
-      x.id !== matchupId ? x : {
-        ...x,
-        forced: !x.forced,
-        winner: !x.forced ? underdog : null,
-      }
-    ),
-  };
+  const homeElo  = bracketState.teamElos[slot.home] || 1500;
+  const awayElo  = bracketState.teamElos[slot.away] || 1500;
+  const underdog = computeWinProb(homeElo, awayElo) >= 0.5 ? slot.away : slot.home;
+
+  if (bracketState.forced[matchupId]) {
+    delete bracketState.forced[matchupId];
+  } else {
+    bracketState.forced[matchupId] = underdog;
+  }
   renderBracket();
 }
 
 function resetBracket() {
+  if (bracketState && bracketState.animating) return;
   bracketState = buildInitialState();
   document.getElementById('btnRunRound').disabled = false;
   renderBracket();
 }
 
+function countUpScores(homeEl, awayEl, homeTarget, awayTarget, durationMs) {
+  return new Promise(resolve => {
+    const start = performance.now();
+    function tick(now) {
+      const p = Math.min((now - start) / durationMs, 1);
+      homeEl.textContent = Math.round(homeTarget * p);
+      awayEl.textContent = Math.round(awayTarget * p);
+      if (p < 1) requestAnimationFrame(tick);
+      else { homeEl.textContent = homeTarget; awayEl.textContent = awayTarget; resolve(); }
+    }
+    requestAnimationFrame(tick);
+  });
+}
+
+async function runRound() {
+  if (!bracketState || bracketState.animating || bracketState.champion) return;
+  bracketState.animating = true;
+  const btn = document.getElementById('btnRunRound');
+  btn.disabled = true;
+
+  const roundIdx  = bracketState.round;
+  const gameSlots = bracketState.allRounds[roundIdx].filter(s => s.type === 'game');
+  const newElos   = { ...bracketState.teamElos };
+  const roundResults = [];
+
+  for (const slot of gameSlots) {
+    let winner, loser;
+    if (bracketState.forced[slot.id]) {
+      winner = bracketState.forced[slot.id];
+      loser  = winner === slot.home ? slot.away : slot.home;
+    } else {
+      const roll = simulateGame(newElos[slot.home] || 1500, newElos[slot.away] || 1500);
+      winner = roll === 'A' ? slot.home : slot.away;
+      loser  = roll === 'A' ? slot.away : slot.home;
+    }
+    const updated = updateElo(newElos[winner] || 1500, newElos[loser] || 1500);
+    newElos[winner] = updated.newWinnerElo;
+    newElos[loser]  = updated.newLoserElo;
+
+    const absMarg  = Math.abs(computeMargin(newElos[winner], newElos[loser]));
+    const loserSc  = 17;
+    const winnerSc = Math.round(loserSc + absMarg);
+    roundResults.push({ id: slot.id, winner, loser, winnerScore: winnerSc, loserScore: loserSc });
+  }
+
+  for (const result of roundResults) {
+    const cardEl = document.querySelector(`[data-slot-id="${result.id}"]`);
+    if (!cardEl) continue;
+
+    const homeRow  = cardEl.querySelector('[data-team="home"]');
+    const awayRow  = cardEl.querySelector('[data-team="away"]');
+    const homeScEl = cardEl.querySelector('[data-score-home]');
+    const awayScEl = cardEl.querySelector('[data-score-away]');
+    const slot     = gameSlots.find(s => s.id === result.id);
+    const homeScore = result.winner === slot.home ? result.winnerScore : result.loserScore;
+    const awayScore = result.winner === slot.away ? result.winnerScore : result.loserScore;
+
+    cardEl.classList.add('spotlighting');
+    await delay(100);
+
+    if (homeScEl && awayScEl) {
+      homeScEl.style.color = 'var(--accent)';
+      awayScEl.style.color = 'var(--accent)';
+      homeScEl.textContent = '0';
+      awayScEl.textContent = '0';
+      await countUpScores(homeScEl, awayScEl, homeScore, awayScore, 600);
+    }
+
+    cardEl.classList.remove('spotlighting');
+    cardEl.classList.add('resolved');
+    const isHomeWin = result.winner === slot.home;
+    if (homeRow) homeRow.classList.add(isHomeWin ? 'winner' : 'loser');
+    if (awayRow) awayRow.classList.add(isHomeWin ? 'loser' : 'winner');
+    if (homeScEl) homeScEl.style.color = '';
+    if (awayScEl) awayScEl.style.color = '';
+
+    const bar = document.createElement('div');
+    bar.className = 'bracket-winner-bar';
+    cardEl.style.position = 'relative';
+    cardEl.appendChild(bar);
+    bar.getBoundingClientRect();
+    bar.style.width = '100%';
+    await delay(200);
+
+    await delay(300);
+  }
+
+  bracketState.results[roundIdx] = roundResults;
+  bracketState.teamElos = newElos;
+  bracketState.forced   = {};
+
+  const isSuperBowl = roundIdx === 3;
+
+  if (!isSuperBowl) {
+    populateNextRound(roundIdx, roundResults);
+    bracketState.round = roundIdx + 1;
+    renderBracket();
+
+    const nextGameSlots = bracketState.allRounds[bracketState.round].filter(s => s.home !== null);
+    for (const s of nextGameSlots) {
+      const el = document.querySelector(`[data-slot-id="${s.id}"]`);
+      if (el) {
+        el.classList.add('advance-in');
+        el.addEventListener('animationend', () => el.classList.remove('advance-in'), { once: true });
+        await delay(150);
+      }
+    }
+  } else {
+    bracketState.champion = roundResults[0].winner;
+    renderBracket();
+    launchConfetti();
+  }
+
+  bracketState.animating = false;
+  if (!isSuperBowl) btn.disabled = false;
+}
+
+function launchConfetti() {
+  const container = document.getElementById('bracketGrid');
+  if (!container) return;
+  container.style.position = 'relative';
+  const colors = ['#FFB347','#ffffff','#9ab8c8','#7ec8e3','#f97316','#a3e635'];
+  for (let i = 0; i < 120; i++) {
+    const el    = document.createElement('div');
+    el.className = 'confetti-particle';
+    const size   = 6 + Math.random() * 6;
+    el.style.cssText = `
+      left:${Math.random()*100}%;top:0;
+      width:${size}px;height:${size}px;
+      background:${colors[i % colors.length]};
+      border-radius:${Math.random() > 0.5 ? '50%' : '2px'};
+      animation:confettiFall ${2 + Math.random()}s ${Math.random()*0.8}s ease-in both;
+      --drift:${(Math.random()-0.5)*120}px;
+      --rot:${Math.random()*720-360}deg;
+    `;
+    container.appendChild(el);
+    el.addEventListener('animationend', () => el.remove());
+  }
+}
+
 function initBracket() {
   bracketState = buildInitialState();
   renderBracket();
-}
-
-function renderBracket() {
-  const state = bracketState;
-  const shell = document.getElementById('bracketShell');
-  const sbSlot = document.getElementById('superBowlSlot');
-  const roundLabel = document.getElementById('bracketRoundLabel');
-
-  roundLabel.textContent = ROUND_NAMES[Math.min(state.round, ROUND_NAMES.length - 1)];
-
-  shell.innerHTML = '';
-
-  if (state.champion) {
-    sbSlot.style.display = '';
-    sbSlot.innerHTML = `
-      <div class="bracket-sb-label">Super Bowl Champion</div>
-      <div class="bracket-sb-teams">${state.champion}</div>
-      <div class="bracket-champion">
-        <img class="bracket-team-logo" src="static/img/logos/${slugify(state.champion)}.png" alt="${state.champion}" style="width:48px;height:48px;" />
-      </div>`;
-    return;
-  }
-
-  sbSlot.style.display = 'none';
-
-  const afcMatchups = state.currentMatchups.filter(m => m.conf === 'AFC');
-  const nfcMatchups = state.currentMatchups.filter(m => m.conf === 'NFC');
-  const sbMatchup   = state.currentMatchups.find(m => m.conf === 'SB');
-
-  if (sbMatchup) {
-    shell.style.gridTemplateColumns = '1fr';
-    shell.innerHTML = `
-      <div class="bracket-conf-col">
-        <div class="bracket-conf-label">Super Bowl</div>
-        ${renderSlot(sbMatchup, state)}
-      </div>`;
-    return;
-  }
-
-  shell.style.gridTemplateColumns = '1fr 1fr';
-
-  for (const [conf, matchups] of [['AFC', afcMatchups], ['NFC', nfcMatchups]]) {
-    let byeHtml = '';
-    if (state.round === 0) {
-      const byeTeam = state.byeTeams[conf];
-      const byeElo  = state.teamElos[byeTeam] || 1500;
-      byeHtml = `
-        <div class="bracket-slot bracket-slot-bye">
-          <div class="bracket-team-row">
-            <span class="bracket-seed">1</span>
-            <img class="bracket-team-logo" src="static/img/logos/${slugify(byeTeam)}.png" alt="${byeTeam}" />
-            <span class="bracket-team-name">${byeTeam}</span>
-            <span class="bracket-team-elo">${byeElo}</span>
-          </div>
-          <div style="color:var(--muted);font-size:0.8rem;">BYE — enters Divisional</div>
-        </div>`;
-    }
-
-    const slotsHtml = matchups.map(m => renderSlot(m, state)).join('');
-    shell.innerHTML += `
-      <div class="bracket-conf-col">
-        <div class="bracket-conf-label">${conf}</div>
-        ${byeHtml}
-        ${slotsHtml}
-      </div>`;
-  }
-
-  if (state.completedRounds.length > 0) {
-    const summaryEl = document.createElement('div');
-    summaryEl.style.gridColumn = '1 / -1';
-    summaryEl.style.marginTop = '24px';
-    summaryEl.innerHTML = state.completedRounds.map((round, ri) => `
-      <details style="margin-bottom:8px;">
-        <summary style="cursor:pointer;color:var(--muted);font-size:0.85rem;">${ROUND_NAMES[ri]} results</summary>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">
-          ${round.map(m => `<span style="background:var(--panel-strong);border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-size:0.82rem;">
-            <strong>${m.winner}</strong> def. ${m.winner === m.home ? m.away : m.home}
-          </span>`).join('')}
-        </div>
-      </details>`).join('');
-    shell.appendChild(summaryEl);
-  }
-}
-
-function renderSlot(m, state) {
-  const homeElo   = state.teamElos[m.home] || 1500;
-  const awayElo   = state.teamElos[m.away] || 1500;
-  const homeWinP  = (computeWinProb(homeElo, awayElo) * 100).toFixed(0);
-  const awayWinP  = (100 - homeWinP).toFixed(0);
-  const isForced  = m.forced;
-
-  const upsetBtnHtml = !m.winner
-    ? `<button class="bracket-upset-btn ${isForced ? 'forced' : ''}" onclick="forceUpset('${m.id}')" title="Force upset">
-        ${isForced ? 'Forced' : 'Upset?'}
-       </button>`
-    : '';
-
-  const homeClass = m.winner ? (m.winner === m.home ? 'winner' : 'loser') : '';
-  const awayClass = m.winner ? (m.winner === m.away ? 'winner' : 'loser') : '';
-
-  return `
-    <div class="bracket-slot">
-      ${upsetBtnHtml}
-      <div class="bracket-team-row ${homeClass}">
-        <span class="bracket-seed">${m.homeSeed || ''}</span>
-        <img class="bracket-team-logo" src="static/img/logos/${slugify(m.home)}.png" alt="${m.home}" />
-        <span class="bracket-team-name">${m.home}</span>
-        <span class="bracket-team-elo">${homeElo}</span>
-        ${!m.winner ? `<span class="bracket-prob">${homeWinP}%</span>` : ''}
-      </div>
-      <div class="bracket-team-row ${awayClass}">
-        <span class="bracket-seed">${m.awaySeed || ''}</span>
-        <img class="bracket-team-logo" src="static/img/logos/${slugify(m.away)}.png" alt="${m.away}" />
-        <span class="bracket-team-name">${m.away}</span>
-        <span class="bracket-team-elo">${awayElo}</span>
-        ${!m.winner ? `<span class="bracket-prob">${awayWinP}%</span>` : ''}
-      </div>
-    </div>`;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
