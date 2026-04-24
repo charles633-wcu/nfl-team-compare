@@ -1,0 +1,579 @@
+{% set base_path = "" %}
+{% set active_page = "matchup" %}
+{% extends "_base.html" %}
+{% block title %}Matchup Simulator · NFL Elo{% endblock %}
+{% block content %}
+<section class="hero hero-static">
+  <div class="hero-copy">
+    <div class="eyebrow">Interactive analytics</div>
+    <h1 class="hero-title">Matchup Simulator</h1>
+    <p class="hero-summary">Compare any two teams at any point in the season, or simulate the full 2024 playoff bracket.</p>
+  </div>
+</section>
+
+<!-- Tab bar -->
+<div class="sim-tabs" role="tablist">
+  <button class="sim-tab sim-tab-active" role="tab" id="tab-matchup" aria-selected="true"  aria-controls="panel-matchup"  onclick="switchTab('matchup')">Matchup Simulator</button>
+  <button class="sim-tab"               role="tab" id="tab-bracket" aria-selected="false" aria-controls="panel-bracket"  onclick="switchTab('bracket')">Playoff Bracket</button>
+</div>
+
+<!-- ═══════════ Tab 1: Matchup Simulator ═══════════ -->
+<section class="panel" id="panel-matchup" role="tabpanel" aria-labelledby="tab-matchup">
+  <div class="panel-header">
+    <div>
+      <div class="panel-kicker">Head-to-head</div>
+      <h2 class="section-title">Team comparison</h2>
+    </div>
+    <label class="control-group sim-week-control">
+      <span class="control-label">Through week</span>
+      <select id="weekSelect" class="select"></select>
+    </label>
+  </div>
+
+  <!-- Team cards -->
+  <div class="sim-matchup-grid">
+    <!-- Team A -->
+    <div class="sim-team-card" id="card-a">
+      <select class="select sim-team-select" id="teamA"></select>
+      <img class="sim-team-logo" id="logoA" src="" alt="" />
+      <div class="sim-team-name" id="nameA">—</div>
+      <div class="sim-team-stats">
+        <div class="sim-stat"><span class="sim-stat-label">Elo</span><span class="sim-stat-val" id="eloA">—</span></div>
+        <div class="sim-stat"><span class="sim-stat-label">Avg margin</span><span class="sim-stat-val" id="marginA">—</span></div>
+        <div class="sim-stat"><span class="sim-stat-label">Last 3</span><span class="sim-stat-val sim-form" id="formA">—</span></div>
+      </div>
+    </div>
+
+    <!-- VS divider -->
+    <div class="sim-vs-col">
+      <div class="sim-vs-badge">VS</div>
+    </div>
+
+    <!-- Team B -->
+    <div class="sim-team-card" id="card-b">
+      <select class="select sim-team-select" id="teamB"></select>
+      <img class="sim-team-logo" id="logoB" src="" alt="" />
+      <div class="sim-team-name" id="nameB">—</div>
+      <div class="sim-team-stats">
+        <div class="sim-stat"><span class="sim-stat-label">Elo</span><span class="sim-stat-val" id="eloB">—</span></div>
+        <div class="sim-stat"><span class="sim-stat-label">Avg margin</span><span class="sim-stat-val" id="marginB">—</span></div>
+        <div class="sim-stat"><span class="sim-stat-label">Last 3</span><span class="sim-stat-val sim-form" id="formB">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- H2H strip -->
+  <div class="sim-h2h" id="h2hStrip">—</div>
+
+  <!-- Prediction panel -->
+  <div class="sim-prediction" id="predictionPanel">
+    <div class="sim-pred-row">
+      <span class="sim-pred-label">Win probability</span>
+      <div class="sim-prob-bar-wrap">
+        <div class="sim-prob-bar-a" id="probBarA" style="width:50%"></div>
+        <div class="sim-prob-bar-b" id="probBarB" style="width:50%"></div>
+      </div>
+      <span class="sim-pred-pct" id="probPctA">50%</span>
+      <span class="sim-pred-sep">·</span>
+      <span class="sim-pred-pct" id="probPctB">50%</span>
+    </div>
+    <div class="sim-pred-row">
+      <span class="sim-pred-label">Predicted margin</span>
+      <span class="sim-pred-val" id="predMargin">—</span>
+    </div>
+    <div class="sim-pred-row">
+      <span class="sim-pred-label">Elo edge</span>
+      <span class="sim-pred-val" id="eloEdge">—</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ Tab 2: Playoff Bracket ═══════════ -->
+<section class="panel sim-hidden" id="panel-bracket" role="tabpanel" aria-labelledby="tab-bracket">
+  <div class="panel-header">
+    <div>
+      <div class="panel-kicker">2024 playoffs</div>
+      <h2 class="section-title">Playoff bracket</h2>
+    </div>
+    <div class="bracket-controls">
+      <button class="btn" id="btnRunRound" onclick="runRound()">Run round</button>
+      <button class="btn btn-secondary" id="btnReset" onclick="resetBracket()">Reset</button>
+    </div>
+  </div>
+  <div class="bracket-grid" id="bracketGrid">
+    <!-- Rendered by renderBracket() -->
+  </div>
+</section>
+
+<!-- ═══════════ Embedded data ═══════════ -->
+<script>
+const WEEKLY_ELOS    = {{ weekly_elos_json | safe }};
+const GAMES_BY_TEAM  = {{ games_by_team_json | safe }};
+const MARGIN_MODEL   = {{ margin_model_json | safe }};
+const PLAYOFF_SEEDS  = {{ playoff_seeds_json | safe }};
+const K_FACTOR       = {{ k_factor }};
+</script>
+
+<!-- ═══════════ JS Engine + UI ═══════════ -->
+<script>
+/* ── Tab switching ── */
+function switchTab(name) {
+  document.querySelectorAll('.sim-tab').forEach(t => {
+    t.classList.toggle('sim-tab-active', t.id === 'tab-' + name);
+    t.setAttribute('aria-selected', t.id === 'tab-' + name ? 'true' : 'false');
+  });
+  document.querySelectorAll('[role="tabpanel"]').forEach(p => {
+    p.classList.toggle('sim-hidden', p.id !== 'panel-' + name);
+  });
+}
+
+/* ── Elo / prediction engine ── */
+
+function computeWinProb(eloA, eloB) {
+  return 1 / (1 + Math.pow(10, (eloB - eloA) / 400));
+}
+
+function computeMargin(eloA, eloB) {
+  const diff = eloA - eloB;
+  return MARGIN_MODEL.intercept + MARGIN_MODEL.slope * diff;
+}
+
+function simulateGame(eloA, eloB) {
+  return Math.random() < computeWinProb(eloA, eloB) ? 'A' : 'B';
+}
+
+function updateElo(winnerElo, loserElo) {
+  const pWin = computeWinProb(winnerElo, loserElo);
+  return {
+    newWinnerElo: Math.round(winnerElo + K_FACTOR * (1 - pWin)),
+    newLoserElo:  Math.round(loserElo  + K_FACTOR * (0 - (1 - pWin))),
+  };
+}
+
+/* ── Team stats helpers ── */
+
+function getTeamElo(team, week) {
+  const w = String(week);
+  return (WEEKLY_ELOS[w] && WEEKLY_ELOS[w][team]) ? WEEKLY_ELOS[w][team] : 1500;
+}
+
+function getTeamStats(team, week) {
+  const teamData = GAMES_BY_TEAM[team] || {};
+  let totalMargin = 0, gameCount = 0;
+  const allGames = [];
+
+  for (let w = 1; w <= week; w++) {
+    const weekData = teamData[String(w)];
+    if (!weekData) continue;
+    for (const g of weekData.games) {
+      totalMargin += g.margin;
+      gameCount++;
+      allGames.push(g);
+    }
+  }
+
+  const avgMargin = gameCount > 0 ? (totalMargin / gameCount).toFixed(1) : '—';
+  const last3 = allGames.slice(-3).reverse().map(g => g.margin > 0 ? 'W' : 'L');
+
+  return { elo: getTeamElo(team, week), avgMargin, recentForm: last3 };
+}
+
+function getH2H(teamA, teamB, upToWeek) {
+  const teamData = GAMES_BY_TEAM[teamA] || {};
+  let found = null;
+  for (let w = 1; w <= upToWeek; w++) {
+    const weekData = teamData[String(w)];
+    if (!weekData) continue;
+    for (const g of weekData.games) {
+      if (g.opponent === teamB) {
+        found = { week: w, margin: g.margin, homeTeam: g.home ? teamA : teamB };
+      }
+    }
+  }
+  return found;
+}
+
+function slugify(name) {
+  return name.trim().toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/['']/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+/* ── Matchup Simulator UI ── */
+
+const ALL_TEAMS = Object.keys(WEEKLY_ELOS['0'] || WEEKLY_ELOS[Object.keys(WEEKLY_ELOS)[0]] || {}).sort();
+const ALL_WEEKS = Object.keys(WEEKLY_ELOS)
+  .map(Number).filter(w => w >= 1).sort((a, b) => a - b);
+
+function initMatchupSimulator() {
+  const weekSel = document.getElementById('weekSelect');
+  const teamASel = document.getElementById('teamA');
+  const teamBSel = document.getElementById('teamB');
+
+  ALL_WEEKS.forEach(w => {
+    const opt = document.createElement('option');
+    opt.value = w;
+    opt.textContent = `Week ${w}`;
+    if (w === ALL_WEEKS[ALL_WEEKS.length - 1]) opt.selected = true;
+    weekSel.appendChild(opt);
+  });
+
+  ALL_TEAMS.forEach(team => {
+    [teamASel, teamBSel].forEach(sel => {
+      const opt = document.createElement('option');
+      opt.value = team;
+      opt.textContent = team;
+      sel.appendChild(opt);
+    });
+  });
+
+  teamASel.value = ALL_TEAMS.includes('Buffalo Bills') ? 'Buffalo Bills' : ALL_TEAMS[0];
+  teamBSel.value = ALL_TEAMS.includes('Kansas City Chiefs') ? 'Kansas City Chiefs' : ALL_TEAMS[1];
+
+  weekSel.addEventListener('change', renderMatchup);
+  teamASel.addEventListener('change', renderMatchup);
+  teamBSel.addEventListener('change', renderMatchup);
+  renderMatchup();
+}
+
+function setFormBadges(el, form) {
+  el.innerHTML = form.map(r =>
+    `<span style="background:${r==='W'?'var(--success)':'var(--danger)'};color:#071018;border-radius:4px;padding:1px 6px;font-size:0.8rem;font-weight:700;">${r}</span>`
+  ).join('');
+  if (form.length === 0) el.textContent = '—';
+}
+
+function renderMatchup() {
+  const week  = Number(document.getElementById('weekSelect').value);
+  const teamA = document.getElementById('teamA').value;
+  const teamB = document.getElementById('teamB').value;
+
+  const statsA = getTeamStats(teamA, week);
+  const statsB = getTeamStats(teamB, week);
+
+  document.getElementById('logoA').src = `static/img/logos/${slugify(teamA)}.png`;
+  document.getElementById('logoA').alt = teamA;
+  document.getElementById('logoB').src = `static/img/logos/${slugify(teamB)}.png`;
+  document.getElementById('logoB').alt = teamB;
+
+  document.getElementById('nameA').textContent = teamA;
+  document.getElementById('nameB').textContent = teamB;
+
+  document.getElementById('eloA').textContent = statsA.elo;
+  document.getElementById('eloB').textContent = statsB.elo;
+  document.getElementById('marginA').textContent =
+    statsA.avgMargin !== '—' ? (statsA.avgMargin > 0 ? `+${statsA.avgMargin}` : statsA.avgMargin) : '—';
+  document.getElementById('marginB').textContent =
+    statsB.avgMargin !== '—' ? (statsB.avgMargin > 0 ? `+${statsB.avgMargin}` : statsB.avgMargin) : '—';
+  setFormBadges(document.getElementById('formA'), statsA.recentForm);
+  setFormBadges(document.getElementById('formB'), statsB.recentForm);
+
+  const h2h = getH2H(teamA, teamB, week);
+  const h2hEl = document.getElementById('h2hStrip');
+  if (!h2h) {
+    h2hEl.textContent = 'No matchup between these teams this season.';
+  } else {
+    const winner = h2h.margin > 0 ? teamA : teamB;
+    const margin = Math.abs(h2h.margin);
+    h2hEl.textContent = `H2H this season (Wk ${h2h.week}): ${winner} won by ${margin}`;
+  }
+
+  const winProbA = computeWinProb(statsA.elo, statsB.elo);
+  const winProbB = 1 - winProbA;
+  const margin   = computeMargin(statsA.elo, statsB.elo);
+  const eloDiff  = statsA.elo - statsB.elo;
+  const leader   = margin > 0 ? teamA : teamB;
+  const absMargin = Math.abs(margin).toFixed(1);
+
+  document.getElementById('probBarA').style.width  = `${(winProbA * 100).toFixed(1)}%`;
+  document.getElementById('probBarB').style.width  = `${(winProbB * 100).toFixed(1)}%`;
+  document.getElementById('probPctA').textContent  = `${(winProbA * 100).toFixed(0)}%`;
+  document.getElementById('probPctB').textContent  = `${(winProbB * 100).toFixed(0)}%`;
+  document.getElementById('predMargin').textContent = `${leader} by ${absMargin} pts`;
+  document.getElementById('eloEdge').textContent    =
+    eloDiff === 0 ? 'Even'
+    : `${eloDiff > 0 ? teamA : teamB} +${Math.abs(eloDiff)} Elo`;
+}
+
+/* ── Playoff Bracket ── */
+
+let bracketState = null;
+
+const ROUND_NAMES = ['Wild Card', 'Divisional', 'Conference Championship', 'Super Bowl'];
+
+function buildInitialState() {
+  const week18Key = String(Math.max(...Object.keys(WEEKLY_ELOS).map(Number)));
+  const w18 = WEEKLY_ELOS[week18Key] || {};
+
+  const teamElos = {};
+  for (const conf of ['AFC', 'NFC']) {
+    for (const s of PLAYOFF_SEEDS[conf]) {
+      teamElos[s.team] = w18[s.team] || 1500;
+    }
+  }
+
+  function wcMatchups(conf) {
+    const seeds = {};
+    for (const s of PLAYOFF_SEEDS[conf]) seeds[s.seed] = s.team;
+    return [
+      { id: `${conf}-wc-1`, conf, homeSeed: 2, awaySeed: 7, home: seeds[2], away: seeds[7], winner: null, forced: false },
+      { id: `${conf}-wc-2`, conf, homeSeed: 3, awaySeed: 6, home: seeds[3], away: seeds[6], winner: null, forced: false },
+      { id: `${conf}-wc-3`, conf, homeSeed: 4, awaySeed: 5, home: seeds[4], away: seeds[5], winner: null, forced: false },
+    ];
+  }
+
+  return {
+    round: 0,
+    teamElos,
+    currentMatchups: [...wcMatchups('AFC'), ...wcMatchups('NFC')],
+    byeTeams: {
+      AFC: PLAYOFF_SEEDS.AFC.find(s => s.bye).team,
+      NFC: PLAYOFF_SEEDS.NFC.find(s => s.bye).team,
+    },
+    originalSeeds: (() => {
+      const m = {};
+      for (const conf of ['AFC', 'NFC'])
+        for (const s of PLAYOFF_SEEDS[conf]) m[s.team] = s.seed;
+      return m;
+    })(),
+    completedRounds: [],
+    champion: null,
+  };
+}
+
+function reseedRound(winners, conf, byeTeam, state) {
+  const surviving = byeTeam ? [byeTeam, ...winners] : [...winners];
+  surviving.sort((a, b) => state.originalSeeds[a] - state.originalSeeds[b]);
+
+  const matchups = [];
+  let lo = 0, hi = surviving.length - 1;
+  while (lo < hi) {
+    const home = surviving[lo], away = surviving[hi];
+    matchups.push({
+      id: `${conf}-r${state.round + 1}-${lo}`,
+      conf,
+      home, away,
+      homeSeed: state.originalSeeds[home],
+      awaySeed: state.originalSeeds[away],
+      winner: null, forced: false,
+    });
+    lo++; hi--;
+  }
+  return matchups;
+}
+
+function runRound() {
+  if (!bracketState || bracketState.champion) return;
+
+  const state = bracketState;
+  const newElos = { ...state.teamElos };
+  const results = state.currentMatchups.map(m => {
+    let winner, loser;
+    if (m.forced && m.winner) {
+      winner = m.winner;
+      loser  = winner === m.home ? m.away : m.home;
+    } else {
+      const roll = simulateGame(newElos[m.home], newElos[m.away]);
+      winner = roll === 'A' ? m.home : m.away;
+      loser  = roll === 'A' ? m.away : m.home;
+    }
+    const updated = updateElo(newElos[winner], newElos[loser]);
+    newElos[winner] = updated.newWinnerElo;
+    newElos[loser]  = updated.newLoserElo;
+    return { ...m, winner };
+  });
+
+  const completedRounds = [...state.completedRounds, results];
+  const newRound = state.round + 1;
+
+  if (newRound === 3) {
+    const afcChamp = results.find(m => m.conf === 'AFC').winner;
+    const nfcChamp = results.find(m => m.conf === 'NFC').winner;
+    bracketState = {
+      ...state,
+      round: newRound,
+      teamElos: newElos,
+      completedRounds,
+      currentMatchups: [{
+        id: 'sb', conf: 'SB',
+        home: afcChamp, away: nfcChamp,
+        homeSeed: state.originalSeeds[afcChamp],
+        awaySeed: state.originalSeeds[nfcChamp],
+        winner: null, forced: false,
+      }],
+    };
+  } else if (newRound === 4) {
+    const sbResult = results[0];
+    bracketState = { ...state, round: newRound, teamElos: newElos, completedRounds, currentMatchups: [], champion: sbResult.winner };
+  } else {
+    const afcWinners = results.filter(m => m.conf === 'AFC').map(m => m.winner);
+    const nfcWinners = results.filter(m => m.conf === 'NFC').map(m => m.winner);
+    const byeAFC = newRound === 1 ? state.byeTeams.AFC : null;
+    const byeNFC = newRound === 1 ? state.byeTeams.NFC : null;
+    const nextMatchups = [
+      ...reseedRound(afcWinners, 'AFC', byeAFC, state),
+      ...reseedRound(nfcWinners, 'NFC', byeNFC, state),
+    ];
+    bracketState = { ...state, round: newRound, teamElos: newElos, completedRounds, currentMatchups: nextMatchups };
+  }
+
+  renderBracket();
+  document.getElementById('btnRunRound').disabled = !!bracketState.champion;
+}
+
+function forceUpset(matchupId) {
+  const m = bracketState.currentMatchups.find(x => x.id === matchupId);
+  if (!m) return;
+  const underdog = computeWinProb(bracketState.teamElos[m.home], bracketState.teamElos[m.away]) >= 0.5 ? m.away : m.home;
+
+  bracketState = {
+    ...bracketState,
+    currentMatchups: bracketState.currentMatchups.map(x =>
+      x.id !== matchupId ? x : {
+        ...x,
+        forced: !x.forced,
+        winner: !x.forced ? underdog : null,
+      }
+    ),
+  };
+  renderBracket();
+}
+
+function resetBracket() {
+  bracketState = buildInitialState();
+  document.getElementById('btnRunRound').disabled = false;
+  renderBracket();
+}
+
+function initBracket() {
+  bracketState = buildInitialState();
+  renderBracket();
+}
+
+function renderBracket() {
+  const state = bracketState;
+  const shell = document.getElementById('bracketShell');
+  const sbSlot = document.getElementById('superBowlSlot');
+  const roundLabel = document.getElementById('bracketRoundLabel');
+
+  roundLabel.textContent = ROUND_NAMES[Math.min(state.round, ROUND_NAMES.length - 1)];
+
+  shell.innerHTML = '';
+
+  if (state.champion) {
+    sbSlot.style.display = '';
+    sbSlot.innerHTML = `
+      <div class="bracket-sb-label">Super Bowl Champion</div>
+      <div class="bracket-sb-teams">${state.champion}</div>
+      <div class="bracket-champion">
+        <img class="bracket-team-logo" src="static/img/logos/${slugify(state.champion)}.png" alt="${state.champion}" style="width:48px;height:48px;" />
+      </div>`;
+    return;
+  }
+
+  sbSlot.style.display = 'none';
+
+  const afcMatchups = state.currentMatchups.filter(m => m.conf === 'AFC');
+  const nfcMatchups = state.currentMatchups.filter(m => m.conf === 'NFC');
+  const sbMatchup   = state.currentMatchups.find(m => m.conf === 'SB');
+
+  if (sbMatchup) {
+    shell.style.gridTemplateColumns = '1fr';
+    shell.innerHTML = `
+      <div class="bracket-conf-col">
+        <div class="bracket-conf-label">Super Bowl</div>
+        ${renderSlot(sbMatchup, state)}
+      </div>`;
+    return;
+  }
+
+  shell.style.gridTemplateColumns = '1fr 1fr';
+
+  for (const [conf, matchups] of [['AFC', afcMatchups], ['NFC', nfcMatchups]]) {
+    let byeHtml = '';
+    if (state.round === 0) {
+      const byeTeam = state.byeTeams[conf];
+      const byeElo  = state.teamElos[byeTeam] || 1500;
+      byeHtml = `
+        <div class="bracket-slot bracket-slot-bye">
+          <div class="bracket-team-row">
+            <span class="bracket-seed">1</span>
+            <img class="bracket-team-logo" src="static/img/logos/${slugify(byeTeam)}.png" alt="${byeTeam}" />
+            <span class="bracket-team-name">${byeTeam}</span>
+            <span class="bracket-team-elo">${byeElo}</span>
+          </div>
+          <div style="color:var(--muted);font-size:0.8rem;">BYE — enters Divisional</div>
+        </div>`;
+    }
+
+    const slotsHtml = matchups.map(m => renderSlot(m, state)).join('');
+    shell.innerHTML += `
+      <div class="bracket-conf-col">
+        <div class="bracket-conf-label">${conf}</div>
+        ${byeHtml}
+        ${slotsHtml}
+      </div>`;
+  }
+
+  if (state.completedRounds.length > 0) {
+    const summaryEl = document.createElement('div');
+    summaryEl.style.gridColumn = '1 / -1';
+    summaryEl.style.marginTop = '24px';
+    summaryEl.innerHTML = state.completedRounds.map((round, ri) => `
+      <details style="margin-bottom:8px;">
+        <summary style="cursor:pointer;color:var(--muted);font-size:0.85rem;">${ROUND_NAMES[ri]} results</summary>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">
+          ${round.map(m => `<span style="background:var(--panel-strong);border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-size:0.82rem;">
+            <strong>${m.winner}</strong> def. ${m.winner === m.home ? m.away : m.home}
+          </span>`).join('')}
+        </div>
+      </details>`).join('');
+    shell.appendChild(summaryEl);
+  }
+}
+
+function renderSlot(m, state) {
+  const homeElo   = state.teamElos[m.home] || 1500;
+  const awayElo   = state.teamElos[m.away] || 1500;
+  const homeWinP  = (computeWinProb(homeElo, awayElo) * 100).toFixed(0);
+  const awayWinP  = (100 - homeWinP).toFixed(0);
+  const isForced  = m.forced;
+
+  const upsetBtnHtml = !m.winner
+    ? `<button class="bracket-upset-btn ${isForced ? 'forced' : ''}" onclick="forceUpset('${m.id}')" title="Force upset">
+        ${isForced ? 'Forced' : 'Upset?'}
+       </button>`
+    : '';
+
+  const homeClass = m.winner ? (m.winner === m.home ? 'winner' : 'loser') : '';
+  const awayClass = m.winner ? (m.winner === m.away ? 'winner' : 'loser') : '';
+
+  return `
+    <div class="bracket-slot">
+      ${upsetBtnHtml}
+      <div class="bracket-team-row ${homeClass}">
+        <span class="bracket-seed">${m.homeSeed || ''}</span>
+        <img class="bracket-team-logo" src="static/img/logos/${slugify(m.home)}.png" alt="${m.home}" />
+        <span class="bracket-team-name">${m.home}</span>
+        <span class="bracket-team-elo">${homeElo}</span>
+        ${!m.winner ? `<span class="bracket-prob">${homeWinP}%</span>` : ''}
+      </div>
+      <div class="bracket-team-row ${awayClass}">
+        <span class="bracket-seed">${m.awaySeed || ''}</span>
+        <img class="bracket-team-logo" src="static/img/logos/${slugify(m.away)}.png" alt="${m.away}" />
+        <span class="bracket-team-name">${m.away}</span>
+        <span class="bracket-team-elo">${awayElo}</span>
+        ${!m.winner ? `<span class="bracket-prob">${awayWinP}%</span>` : ''}
+      </div>
+    </div>`;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initMatchupSimulator();
+  initBracket();
+});
+</script>
+{% endblock %}
