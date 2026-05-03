@@ -22,7 +22,7 @@ ui/.test-dist-*/
 ui/.test-build-*/
 *.log
 
-# Local AI assistant and agent tooling
+# claude tooling
 .claude/
 .claudeignore
 CLAUDE.md
@@ -31,3 +31,6 @@ claudetemplate.md
 AGENTS.md
 .superpowers/
 docs/superpowers/
+docs/superpowers/specs
+
+interviewquestinos.txt
