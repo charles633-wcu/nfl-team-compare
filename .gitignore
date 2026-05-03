@@ -1,2 +1,33 @@
 endpoints.txt
 .worktrees/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+
+# IDE/editor state
+.idea/
+
+# Local runtime data
+database/*.db
+loader/data/*.db
+*.sqlite
+*.sqlite3
+
+# Generated UI output and local test artifacts
+ui/dist/
+ui/.test-dist-*/
+ui/.test-build-*/
+*.log
+
+# Local AI assistant and agent tooling
+.claude/
+.claudeignore
+CLAUDE.md
+claudetemplate.md
+.agents/
+AGENTS.md
+.superpowers/
+docs/superpowers/
