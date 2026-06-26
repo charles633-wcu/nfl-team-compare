@@ -20,6 +20,9 @@ class EloConfig:
     baseline: int = 1500
     k_factor: int = 25
     weeks: int = 18
+    hfa: int = 55  # Elo points added to home team before computing expected score
+                   # Equivalent to ~3–4 pp win-prob boost for even matchups.
+                   # Source: FiveThirtyEight NFL Elo methodology (Glickman & Jones 1999)
 
 
 def expected_score(r_a: float, r_b: float) -> float:
@@ -136,8 +139,8 @@ def compute_weekly_elo(games: List[Dict[str, Any]], teams: List[str], cfg: EloCo
             x_elo_diff.append(home_pre - away_pre)
             y_margin.append(hs - aws)
 
-            # Expected + actual
-            e_home = expected_score(home_pre, away_pre)
+            # Expected + actual (home gets HFA boost only for win-prob; raw Elos used for training data)
+            e_home = expected_score(home_pre + cfg.hfa, away_pre)
             s_home, _ = actual_score(hs, aws)
 
             # Margin from each perspective

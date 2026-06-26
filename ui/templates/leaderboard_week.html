@@ -11,30 +11,84 @@
   <div class="hero-copy">
     <div class="eyebrow">Weekly snapshot</div>
     <h1 class="hero-title">Week {{ week }} leaderboard</h1>
-    <p class="hero-summary">
-      Browse every ranking window from preseason baseline to the final regular-season board without losing the premium shell.
-    </p>
   </div>
 
-  <div class="hero-sidecard">
-    <div class="sidecard-label">Week control</div>
-    <label class="control-group">
-      <span class="control-label">Choose a week</span>
-      <select id="weekSelect" class="select" onchange="location = this.value;">
-        {% for w in available_weeks %}
-          <option value="week-{{ w }}.html" {% if w == week %}selected{% endif %}>Week {{ w }}</option>
-        {% endfor %}
-      </select>
-    </label>
-    {% if leader %}
-      <div class="sidecard-highlight">
-        <span class="sidecard-kicker">Top rank</span>
-        <strong>{{ leader[0] }}</strong>
-        <span>{{ leader[1] }} Elo</span>
+  <div class="hero-sidecard wk-picker-card">
+    <div class="wk-picker-eyebrow">
+      <span class="wk-picker-eyebrow-label">Week</span>
+      <span class="wk-picker-eyebrow-week">{{ week }}</span>
+    </div>
+    <div class="wk-picker-wrap">
+      <div class="wk-picker" id="wkPicker">
+        <div class="wk-picker-inner" id="wkPickerInner">
+          {% for w in available_weeks %}
+            <div class="wk-picker-row{% if w == week %} wk-current{% endif %}"
+                 data-url="week-{{ w }}.html"
+                 data-week="{{ w }}">
+              <span class="wk-num">{{ w }}</span>
+              {% if w == week %}<span class="wk-dot" aria-hidden="true"></span>{% endif %}
+            </div>
+          {% endfor %}
+        </div>
       </div>
-    {% endif %}
+      <div class="wk-picker-rail" aria-hidden="true"></div>
+    </div>
   </div>
 </section>
+
+<script>
+(function () {
+  const picker = document.getElementById('wkPicker');
+  const inner  = document.getElementById('wkPickerInner');
+  if (!picker || !inner) return;
+
+  const ITEM_H   = 36;
+  const rows     = Array.from(inner.querySelectorAll('.wk-picker-row'));
+  const currIdx  = rows.findIndex(r => r.classList.contains('wk-current'));
+
+  // Scroll to current week immediately (no animation on init)
+  picker.scrollTop = Math.max(0, currIdx) * ITEM_H;
+
+  function centeredIdx() {
+    return Math.max(0, Math.min(rows.length - 1, Math.round(picker.scrollTop / ITEM_H)));
+  }
+
+  function applyActive(idx) {
+    rows.forEach((r, i) => {
+      const dist = Math.abs(i - idx);
+      r.classList.toggle('wk-active', i === idx);
+      r.style.setProperty('--dist', dist);
+    });
+  }
+
+  applyActive(currIdx);
+
+  let navTimer = null;
+
+  picker.addEventListener('scroll', () => {
+    const idx = centeredIdx();
+    applyActive(idx);
+    clearTimeout(navTimer);
+    if (idx !== currIdx) {
+      navTimer = setTimeout(() => {
+        window.location.href = rows[idx].dataset.url;
+      }, 500);
+    }
+  }, { passive: true });
+
+  rows.forEach((row, idx) => {
+    row.addEventListener('click', () => {
+      clearTimeout(navTimer);
+      picker.scrollTo({ top: idx * ITEM_H, behavior: 'smooth' });
+      if (idx !== currIdx) {
+        navTimer = setTimeout(() => {
+          window.location.href = row.dataset.url;
+        }, 320);
+      }
+    });
+  });
+})();
+</script>
 
 <section class="panel">
   <div class="panel-header">

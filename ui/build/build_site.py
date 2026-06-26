@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import random
 import re
 import shutil
 from chart_builder import build_elo_chart_pages
@@ -20,6 +21,49 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 # OLD local-only default kept for reference:
 # DEFAULT_ANALYTICS_API = "http://127.0.0.1:8001"
 DEFAULT_ANALYTICS_API = "http://localhost:9080/analytics"
+
+HOMEPAGE_FEATURES = [
+    {
+        "eyebrow": "Rankings",
+        "title": "Weekly Leaderboards",
+        "description": "Track weekly risers, fallers, and every shift in the season's power structure.",
+        "href": "leaderboard/week-{latest_week}.html",
+        "image": "static/img/homepage/leaderboard.png",
+        "accent": "Power index",
+    },
+    {
+        "eyebrow": "Directory",
+        "title": "Teams Hub",
+        "description": "Move through every franchise and jump straight into profile or Elo chart views.",
+        "href": "teams/index.html",
+        "image": "static/img/homepage/teams.png",
+        "accent": "Browse all teams",
+    },
+    {
+        "eyebrow": "Profiles",
+        "title": "Team Profiles",
+        "description": "Follow each week, each game, and the rating changes that shaped the year.",
+        "href": "team/philadelphia-eagles.html",
+        "image": "static/img/homepage/team-profile.png",
+        "accent": "Game-by-game lens",
+    },
+    {
+        "eyebrow": "Trends",
+        "title": "Elo Trend Charts",
+        "description": "See full-season movement and compare each team against division rivals over time.",
+        "href": "elo/philadelphia-eagles.html",
+        "image": "static/img/homepage/elo-chart.png",
+        "accent": "Season trajectory",
+    },
+    {
+        "eyebrow": "Simulation",
+        "title": "Matchup Simulator",
+        "description": "Compare any two teams with win probabilities, expected margin, and playoff views.",
+        "href": "matchup.html",
+        "image": "static/img/homepage/matchup.png",
+        "accent": "Forecast engine",
+    },
+]
 
 
 @dataclass(frozen=True)
@@ -96,6 +140,68 @@ def compute_matchup_matrix(elo_all: Dict[str, Any]) -> Dict[str, Any]:
             margin = round(intercept + slope * (elo_a - elo_b), 1)
             matrix[team_a][team_b] = {"win_prob": win_prob, "predicted_margin": margin}
     return matrix
+
+
+PLAYOFF_SEEDS_2024 = {
+    "AFC": [
+        {"seed": 1, "team": "Kansas City Chiefs",      "bye": True},
+        {"seed": 2, "team": "Buffalo Bills",            "bye": False},
+        {"seed": 3, "team": "Baltimore Ravens",         "bye": False},
+        {"seed": 4, "team": "Houston Texans",           "bye": False},
+        {"seed": 5, "team": "Los Angeles Chargers",     "bye": False},
+        {"seed": 6, "team": "Pittsburgh Steelers",      "bye": False},
+        {"seed": 7, "team": "Denver Broncos",           "bye": False},
+    ],
+    "NFC": [
+        {"seed": 1, "team": "Detroit Lions",            "bye": True},
+        {"seed": 2, "team": "Philadelphia Eagles",      "bye": False},
+        {"seed": 3, "team": "Los Angeles Rams",         "bye": False},
+        {"seed": 4, "team": "Tampa Bay Buccaneers",     "bye": False},
+        {"seed": 5, "team": "Washington Commanders",    "bye": False},
+        {"seed": 6, "team": "Minnesota Vikings",        "bye": False},
+        {"seed": 7, "team": "Green Bay Packers",        "bye": False},
+    ],
+}
+
+PLAYOFF_OUTCOME_2024 = {
+    "champion": "Philadelphia Eagles",
+    "runner_up": "Kansas City Chiefs",
+    "conference_championship_runners_up": ["Buffalo Bills", "Washington Commanders"],
+}
+
+PLAYOFF_HOME_FIELD_ADV = 65
+PLAYOFF_MARGIN_STD_DEV = 13.45
+PLAYOFF_SIMULATION_COUNT = 100_000
+PLAYOFF_SIMULATION_SEED = 42
+_PLAYOFF_SIM_CACHE: Dict[Tuple[Tuple[str, int], int, int, float, float, int], Dict[str, Any]] = {}
+
+
+def build_matchup_page(
+    env,
+    elo_all: Dict[str, Any],
+    dist_dir: Path,
+    season: Any,
+) -> None:
+    """Render matchup.html with all simulator data embedded as JSON."""
+    weekly_elos = elo_all.get("elo", {})
+    games_by_team = elo_all.get("teams", {})
+    mm = elo_all.get("margin_model", {})
+    margin_model = {
+        "intercept": float(mm.get("intercept", 0.0)),
+        "slope": float(mm.get("slope", 0.0)),
+    }
+    k_factor = int(elo_all.get("k_factor", 25))
+
+    tpl = env.get_template("matchup.html")
+    html = tpl.render(
+        season=season,
+        weekly_elos_json=json.dumps(weekly_elos, separators=(",", ":")),
+        games_by_team_json=json.dumps(games_by_team, separators=(",", ":")),
+        margin_model_json=json.dumps(margin_model, separators=(",", ":")),
+        playoff_seeds_json=json.dumps(PLAYOFF_SEEDS_2024, separators=(",", ":")),
+        k_factor=k_factor,
+    )
+    (dist_dir / "matchup.html").write_text(html, encoding="utf-8")
 
 
 def resolve_analytics_api_base(configured_base: str, timeout_s: int) -> str:
@@ -179,6 +285,166 @@ def leaderboard_rows_for_week(
     return rows
 
 
+def latest_elo_map(elo_all: Dict[str, Any]) -> Dict[str, int]:
+    weeks = parse_weeks_from_elo_all(elo_all)
+    if not weeks:
+        return {}
+
+    latest = elo_all["elo"][str(max(weeks))]
+    result: Dict[str, int] = {}
+    for team, elo_val in latest.items():
+        try:
+            result[team] = int(elo_val)
+        except Exception:
+            result[team] = int(float(elo_val))
+    return result
+
+
+def playoff_win_probability(elo_a: float, elo_b: float) -> float:
+    return 1.0 / (1.0 + 10 ** ((elo_b - elo_a) / 400.0))
+
+
+def update_playoff_elo(winner_elo: int, loser_elo: int, k_factor: int) -> Tuple[int, int]:
+    p_win = playoff_win_probability(winner_elo, loser_elo)
+    return (
+        round(winner_elo + k_factor * (1 - p_win)),
+        round(loser_elo + k_factor * (0 - (1 - p_win))),
+    )
+
+
+def simulate_playoff_bracket(
+    initial_elos: Dict[str, int],
+    margin_model: Dict[str, float],
+    k_factor: int,
+    rng: random.Random,
+) -> str:
+    elos = {
+        seed["team"]: initial_elos.get(seed["team"], 1500)
+        for seeds in PLAYOFF_SEEDS_2024.values()
+        for seed in seeds
+    }
+    original_seeds = {
+        seed["team"]: seed["seed"]
+        for seeds in PLAYOFF_SEEDS_2024.values()
+        for seed in seeds
+    }
+    bye_teams = {
+        conf: next(seed["team"] for seed in seeds if seed["bye"])
+        for conf, seeds in PLAYOFF_SEEDS_2024.items()
+    }
+
+    def seed_map(conf: str) -> Dict[int, str]:
+        return {seed["seed"]: seed["team"] for seed in PLAYOFF_SEEDS_2024[conf]}
+
+    def play(home: str, away: str, neutral: bool = False) -> str:
+        hfa = 0 if neutral else PLAYOFF_HOME_FIELD_ADV
+        expected_margin = margin_model["intercept"] + margin_model["slope"] * (
+            elos[home] + hfa - elos[away]
+        )
+        winner, loser = (home, away) if rng.gauss(expected_margin, PLAYOFF_MARGIN_STD_DEV) >= 0 else (away, home)
+        elos[winner], elos[loser] = update_playoff_elo(elos[winner], elos[loser], k_factor)
+        return winner
+
+    wild_card_winners: Dict[str, List[str]] = {"AFC": [], "NFC": []}
+    for conf in ("AFC", "NFC"):
+        seeds = seed_map(conf)
+        for home_seed, away_seed in [(2, 7), (3, 6), (4, 5)]:
+            wild_card_winners[conf].append(play(seeds[home_seed], seeds[away_seed]))
+
+    divisional_winners: Dict[str, List[str]] = {"AFC": [], "NFC": []}
+    for conf in ("AFC", "NFC"):
+        survivors = sorted(
+            wild_card_winners[conf] + [bye_teams[conf]],
+            key=lambda team: original_seeds[team],
+        )
+        divisional_winners[conf].append(play(survivors[0], survivors[3]))
+        divisional_winners[conf].append(play(survivors[1], survivors[2]))
+
+    conference_winners = {}
+    for conf in ("AFC", "NFC"):
+        survivors = sorted(divisional_winners[conf], key=lambda team: original_seeds[team])
+        conference_winners[conf] = play(survivors[0], survivors[1])
+
+    return play(conference_winners["AFC"], conference_winners["NFC"], neutral=True)
+
+
+def run_playoff_monte_carlo(
+    initial_elos: Dict[str, int],
+    margin_model: Dict[str, float],
+    k_factor: int,
+    simulation_count: int = PLAYOFF_SIMULATION_COUNT,
+    seed: int = PLAYOFF_SIMULATION_SEED,
+) -> Dict[str, Any]:
+    cache_key = (
+        tuple(sorted(initial_elos.items())),
+        k_factor,
+        simulation_count,
+        margin_model["intercept"],
+        margin_model["slope"],
+        seed,
+    )
+    if cache_key in _PLAYOFF_SIM_CACHE:
+        return _PLAYOFF_SIM_CACHE[cache_key]
+
+    rng = random.Random(seed)
+    wins_by_team: Dict[str, int] = {}
+    for _ in range(simulation_count):
+        champion = simulate_playoff_bracket(initial_elos, margin_model, k_factor, rng)
+        wins_by_team[champion] = wins_by_team.get(champion, 0) + 1
+
+    result = {"simulation_count": simulation_count, "wins_by_team": wins_by_team}
+    _PLAYOFF_SIM_CACHE[cache_key] = result
+    return result
+
+
+def build_season_pulse(elo_all: Dict[str, Any]) -> Dict[str, Any]:
+    elos = latest_elo_map(elo_all)
+    mm = elo_all.get("margin_model", {})
+    margin_model = {
+        "intercept": float(mm.get("intercept", 0.0)),
+        "slope": float(mm.get("slope", 0.0)),
+    }
+    k_factor = int(elo_all.get("k_factor", 25))
+    simulation = run_playoff_monte_carlo(elos, margin_model, k_factor)
+
+    champion = PLAYOFF_OUTCOME_2024["champion"]
+    runner_up = PLAYOFF_OUTCOME_2024["runner_up"]
+    third_place = max(
+        PLAYOFF_OUTCOME_2024["conference_championship_runners_up"],
+        key=lambda team: elos.get(team, 0),
+    )
+    eagles_wins = simulation["wins_by_team"].get(champion, 0)
+    eagles_odds = eagles_wins / simulation["simulation_count"] * 100
+
+    def card(rank: str, team: str, label: str) -> Dict[str, Any]:
+        return {
+            "rank": rank,
+            "team": team,
+            "label": label,
+            "elo": elos.get(team, 1500),
+            "logo": f"static/img/logos/{slugify(team)}.png",
+        }
+
+    return {
+        "cards": [
+            card("Champion", champion, "Super Bowl champion"),
+            card("Runner-up", runner_up, "Super Bowl runner-up"),
+            card("Third", third_place, "Highest-Elo conference championship runner-up"),
+        ],
+        "odds_label": f"{eagles_odds:.1f}%",
+        "simulation_label": f"{simulation['simulation_count']:,} Elo playoff simulations",
+    }
+
+
+def resolve_homepage_features(latest_week: int) -> List[Dict[str, str]]:
+    features: List[Dict[str, str]] = []
+    for feature in HOMEPAGE_FEATURES:
+        resolved = dict(feature)
+        resolved["href"] = resolved["href"].format(latest_week=latest_week)
+        features.append(resolved)
+    return features
+
+
 def build_site(cfg: SiteConfig) -> None:
     here = Path(__file__).resolve()
     ui_dir = here.parents[1]  # .../ui
@@ -218,18 +484,23 @@ def build_site(cfg: SiteConfig) -> None:
 
     latest_week = max(weeks)
 
-    # Render index.html as "latest week"
+    # Render index.html as the landing page
     index_tpl = env.get_template("index.html")
     latest_rows = leaderboard_rows_for_week(elo_all, latest_week)
-    matchup_matrix = compute_matchup_matrix(elo_all)
+    homepage_features = resolve_homepage_features(latest_week)
+    season_pulse = build_season_pulse(elo_all)
     index_html = index_tpl.render(
-        week=latest_week,
         season=season,
         baseline=baseline,
         k_factor=k_factor,
-        available_weeks=weeks,
-        rows=latest_rows,
-        matchup_matrix_json=json.dumps(matchup_matrix, separators=(",", ":")),
+        current_week=latest_week,
+        active_page="home",
+        page_name="home",
+        homepage_features=homepage_features,
+        season_pulse=season_pulse,
+        primary_cta_href="teams/index.html",
+        secondary_cta_href="matchup.html",
+        rankings_cta_href=f"leaderboard/week-{latest_week}.html",
     )
     (dist_dir / "index.html").write_text(index_html, encoding="utf-8")
 
@@ -251,6 +522,8 @@ def build_site(cfg: SiteConfig) -> None:
         current_week=latest_week,
     )
     (dist_dir / "contact.html").write_text(contact_html, encoding="utf-8")
+
+    build_matchup_page(env, elo_all, dist_dir, season)
 
     teams_tpl = env.get_template("teams.html")
     teams_html = teams_tpl.render(

@@ -23,17 +23,18 @@
   <div class="site-frame">
     <header class="topbar">
       <div class="brand">
-        <div class="brand-kicker">Broadcast Premium</div>
         <div class="brand-title">
           
             NFL Power Index
           
         </div>
-        <div class="brand-subtitle">2024 regular season Elo intelligence</div>
+        <div class="brand-subtitle">2024 NFL SEASON</div>
       </div>
 
       <nav class="nav" aria-label="Primary">
+        <a href="../index.html" class="navlink ">Home</a>
         <a href="../leaderboard/week-18.html" class="navlink active">Leaderboard</a>
+        <a href="../matchup.html" class="navlink ">Matchup</a>
         <a href="../teams/index.html" class="navlink ">Teams</a>
         <a href="../about.html" class="navlink ">About</a>
         <a href="../contact.html" class="navlink ">Contact</a>
@@ -46,66 +47,210 @@
   <div class="hero-copy">
     <div class="eyebrow">Weekly snapshot</div>
     <h1 class="hero-title">Week 15 leaderboard</h1>
-    <p class="hero-summary">
-      Browse every ranking window from preseason baseline to the final regular-season board without losing the premium shell.
-    </p>
   </div>
 
-  <div class="hero-sidecard">
-    <div class="sidecard-label">Week control</div>
-    <label class="control-group">
-      <span class="control-label">Choose a week</span>
-      <select id="weekSelect" class="select" onchange="location = this.value;">
-        
-          <option value="week-0.html" >Week 0</option>
-        
-          <option value="week-1.html" >Week 1</option>
-        
-          <option value="week-2.html" >Week 2</option>
-        
-          <option value="week-3.html" >Week 3</option>
-        
-          <option value="week-4.html" >Week 4</option>
-        
-          <option value="week-5.html" >Week 5</option>
-        
-          <option value="week-6.html" >Week 6</option>
-        
-          <option value="week-7.html" >Week 7</option>
-        
-          <option value="week-8.html" >Week 8</option>
-        
-          <option value="week-9.html" >Week 9</option>
-        
-          <option value="week-10.html" >Week 10</option>
-        
-          <option value="week-11.html" >Week 11</option>
-        
-          <option value="week-12.html" >Week 12</option>
-        
-          <option value="week-13.html" >Week 13</option>
-        
-          <option value="week-14.html" >Week 14</option>
-        
-          <option value="week-15.html" selected>Week 15</option>
-        
-          <option value="week-16.html" >Week 16</option>
-        
-          <option value="week-17.html" >Week 17</option>
-        
-          <option value="week-18.html" >Week 18</option>
-        
-      </select>
-    </label>
-    
-      <div class="sidecard-highlight">
-        <span class="sidecard-kicker">Top rank</span>
-        <strong>Philadelphia Eagles</strong>
-        <span>1711 Elo</span>
+  <div class="hero-sidecard wk-picker-card">
+    <div class="wk-picker-eyebrow">
+      <span class="wk-picker-eyebrow-label">Week</span>
+      <span class="wk-picker-eyebrow-week">15</span>
+    </div>
+    <div class="wk-picker-wrap">
+      <div class="wk-picker" id="wkPicker">
+        <div class="wk-picker-inner" id="wkPickerInner">
+          
+            <div class="wk-picker-row"
+                 data-url="week-0.html"
+                 data-week="0">
+              <span class="wk-num">0</span>
+              
+            </div>
+          
+            <div class="wk-picker-row"
+                 data-url="week-1.html"
+                 data-week="1">
+              <span class="wk-num">1</span>
+              
+            </div>
+          
+            <div class="wk-picker-row"
+                 data-url="week-2.html"
+                 data-week="2">
+              <span class="wk-num">2</span>
+              
+            </div>
+          
+            <div class="wk-picker-row"
+                 data-url="week-3.html"
+                 data-week="3">
+              <span class="wk-num">3</span>
+              
+            </div>
+          
+            <div class="wk-picker-row"
+                 data-url="week-4.html"
+                 data-week="4">
+              <span class="wk-num">4</span>
+              
+            </div>
+          
+            <div class="wk-picker-row"
+                 data-url="week-5.html"
+                 data-week="5">
+              <span class="wk-num">5</span>
+              
+            </div>
+          
+            <div class="wk-picker-row"
+                 data-url="week-6.html"
+                 data-week="6">
+              <span class="wk-num">6</span>
+              
+            </div>
+          
+            <div class="wk-picker-row"
+                 data-url="week-7.html"
+                 data-week="7">
+              <span class="wk-num">7</span>
+              
+            </div>
+          
+            <div class="wk-picker-row"
+                 data-url="week-8.html"
+                 data-week="8">
+              <span class="wk-num">8</span>
+              
+            </div>
+          
+            <div class="wk-picker-row"
+                 data-url="week-9.html"
+                 data-week="9">
+              <span class="wk-num">9</span>
+              
+            </div>
+          
+            <div class="wk-picker-row"
+                 data-url="week-10.html"
+                 data-week="10">
+              <span class="wk-num">10</span>
+              
+            </div>
+          
+            <div class="wk-picker-row"
+                 data-url="week-11.html"
+                 data-week="11">
+              <span class="wk-num">11</span>
+              
+            </div>
+          
+            <div class="wk-picker-row"
+                 data-url="week-12.html"
+                 data-week="12">
+              <span class="wk-num">12</span>
+              
+            </div>
+          
+            <div class="wk-picker-row"
+                 data-url="week-13.html"
+                 data-week="13">
+              <span class="wk-num">13</span>
+              
+            </div>
+          
+            <div class="wk-picker-row"
+                 data-url="week-14.html"
+                 data-week="14">
+              <span class="wk-num">14</span>
+              
+            </div>
+          
+            <div class="wk-picker-row wk-current"
+                 data-url="week-15.html"
+                 data-week="15">
+              <span class="wk-num">15</span>
+              <span class="wk-dot" aria-hidden="true"></span>
+            </div>
+          
+            <div class="wk-picker-row"
+                 data-url="week-16.html"
+                 data-week="16">
+              <span class="wk-num">16</span>
+              
+            </div>
+          
+            <div class="wk-picker-row"
+                 data-url="week-17.html"
+                 data-week="17">
+              <span class="wk-num">17</span>
+              
+            </div>
+          
+            <div class="wk-picker-row"
+                 data-url="week-18.html"
+                 data-week="18">
+              <span class="wk-num">18</span>
+              
+            </div>
+          
+        </div>
       </div>
-    
+      <div class="wk-picker-rail" aria-hidden="true"></div>
+    </div>
   </div>
 </section>
+
+<script>
+(function () {
+  const picker = document.getElementById('wkPicker');
+  const inner  = document.getElementById('wkPickerInner');
+  if (!picker || !inner) return;
+
+  const ITEM_H   = 36;
+  const rows     = Array.from(inner.querySelectorAll('.wk-picker-row'));
+  const currIdx  = rows.findIndex(r => r.classList.contains('wk-current'));
+
+  // Scroll to current week immediately (no animation on init)
+  picker.scrollTop = Math.max(0, currIdx) * ITEM_H;
+
+  function centeredIdx() {
+    return Math.max(0, Math.min(rows.length - 1, Math.round(picker.scrollTop / ITEM_H)));
+  }
+
+  function applyActive(idx) {
+    rows.forEach((r, i) => {
+      const dist = Math.abs(i - idx);
+      r.classList.toggle('wk-active', i === idx);
+      r.style.setProperty('--dist', dist);
+    });
+  }
+
+  applyActive(currIdx);
+
+  let navTimer = null;
+
+  picker.addEventListener('scroll', () => {
+    const idx = centeredIdx();
+    applyActive(idx);
+    clearTimeout(navTimer);
+    if (idx !== currIdx) {
+      navTimer = setTimeout(() => {
+        window.location.href = rows[idx].dataset.url;
+      }, 500);
+    }
+  }, { passive: true });
+
+  rows.forEach((row, idx) => {
+    row.addEventListener('click', () => {
+      clearTimeout(navTimer);
+      picker.scrollTo({ top: idx * ITEM_H, behavior: 'smooth' });
+      if (idx !== currIdx) {
+        navTimer = setTimeout(() => {
+          window.location.href = row.dataset.url;
+        }, 320);
+      }
+    });
+  });
+})();
+</script>
 
 <section class="panel">
   <div class="panel-header">
@@ -739,20 +884,13 @@
     </main>
 
     <footer class="footer">
-      <div>
-        <div class="footer-label">System</div>
-        <div class="footer-value">Season 2024</div>
-      </div>
-      <div>
-        <div class="footer-label">Project</div>
-        <div class="footer-value">NFL analytics platform</div>
-      </div>
       <div class="footer-links">
         <a class="footerlink" href="../about.html">About</a>
         <a class="footerlink" href="../contact.html">Contact</a>
-        <a class="footerlink" href="https://github.com/charles633-wcu/nfl-team-compare/tree/main/ui/build" target="_blank" rel="noopener">GitHub</a>
+        <a class="footerlink" href="https://github.com/charles633-wcu" target="_blank" rel="noopener">GitHub</a>
       </div>
     </footer>
   </div>
+  
 </body>
 </html>

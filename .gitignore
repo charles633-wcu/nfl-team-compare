@@ -33,4 +33,10 @@ AGENTS.md
 docs/superpowers/
 docs/superpowers/specs
 
+# Local context / memory (human-readable working notes — not for the repo)
+context/
+
+# Local-only notes and raw data sources (CSV in loader/data is the source of record)
+interviewquestions.txt
 interviewquestinos.txt
+season2025.txt

@@ -5,26 +5,17 @@
 {% block title %}About · NFL Elo{% endblock %}
 
 {% block content %}
-<section class="hero hero-static">
+<section class="hero hero-static hero-team">
   <div class="hero-copy">
     <div class="eyebrow">About the project</div>
     <h1 class="hero-title">Why this platform exists</h1>
     <p class="hero-summary">
-      This project was built to practice full-stack engineering through a sports analytics system that ingests data, computes Elo ratings, and publishes a deployable frontend.
+      As a fan, this project came from the same questions fans ask all season: which teams are actually better, why certain matchups swing the way they do, and how differently the playoff picture might have looked if a few moments changed. The goal is to turn those questions into something you can explore with real context through rankings, team-by-team history, and matchup tools that make the season easier to break down.
     </p>
-  </div>
-
-  <div class="hero-sidecard">
-    <div class="sidecard-label">Project summary</div>
-    <div class="sidecard-highlight">
-      <span class="sidecard-kicker">Stack</span>
-      <strong>Python · FastAPI · SQLite · Jinja</strong>
-      <span>Static site delivery backed by analytics artifacts.</span>
-    </div>
   </div>
 </section>
 
-<section class="panel panel-split">
+<section class="panel">
   <div>
     <div class="panel-kicker">Overview</div>
     <h2 class="section-title">System intent</h2>
@@ -32,48 +23,282 @@
       This NFL Elo dashboard was created by me, a student at West Chester University of Pennsylvania, for the purpose of practicing and demonstrating full-stack development. The project loads season data, stores and computes Elo ratings in the backend, and generates a website that keeps charts and rankings easy to browse.
     </p>
     <p class="body-copy">
-      The goal is not just to display records, but to show the full path from raw game data to analytics output and polished presentation.
+      The goal is not just to display records, but to show the full path from raw game data to analytics output and a polished presentation.
     </p>
-  </div>
-
-  <div class="formula-card">
-    <div class="panel-kicker">Model core</div>
-    <h2 class="section-title">Elo formula</h2>
-    <div class="formula-block">
-      \[
-        E = \frac{1}{1 + 10^{\frac{OppElo - TeamElo}{400}}}
-      \]
-      \[
-        NewElo = OldElo + K \cdot (Result - E)
-      \]
-      \[
-        Result \in \{1, 0.5, 0\}
-      \]
-    </div>
   </div>
 </section>
 
 <section class="panel">
   <div class="panel-header">
     <div>
-      <div class="panel-kicker">What it demonstrates</div>
-      <h2 class="section-title">Engineering focus</h2>
+      <div class="panel-kicker">Architecture</div>
+      <h2 class="section-title">Tech stack</h2>
+    </div>
+  </div>
+  <div class="stack-layers">
+    <div class="stack-layer stack-layer-data">
+      <div class="stack-layer-label">Data</div>
+      <div class="stack-layer-pills">
+        <span class="stack-pill">Python 3.11</span>
+        <span class="stack-pill">SQLite</span>
+        <span class="stack-pill">httpx</span>
+        <span class="stack-pill">requests</span>
+      </div>
+    </div>
+    <div class="stack-layer stack-layer-api">
+      <div class="stack-layer-label">API</div>
+      <div class="stack-layer-pills">
+        <span class="stack-pill">FastAPI</span>
+        <span class="stack-pill">Uvicorn</span>
+        <span class="stack-pill">Pydantic</span>
+      </div>
+    </div>
+    <div class="stack-layer stack-layer-build">
+      <div class="stack-layer-label">Build</div>
+      <div class="stack-layer-pills">
+        <span class="stack-pill">Jinja2</span>
+        <span class="stack-pill">Python build scripts</span>
+        <span class="stack-pill">Docker</span>
+      </div>
+    </div>
+    <div class="stack-layer stack-layer-frontend">
+      <div class="stack-layer-label">Frontend</div>
+      <div class="stack-layer-pills">
+        <span class="stack-pill">Vanilla JS (ES6+)</span>
+        <span class="stack-pill">Custom CSS</span>
+        <span class="stack-pill">Google Fonts</span>
+        <span class="stack-pill">MathJax</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="methodology">
+  <div class="panel-header">
+    <div>
+      <div class="panel-kicker">Statistical models</div>
+      <h2 class="section-title">Full methodology</h2>
     </div>
   </div>
 
-  <div class="info-grid">
-    <div class="info-card">
-      <h3>Data flow</h3>
-      <p>Season data ingestion, normalization, and persistence before analytics are computed.</p>
+  <div class="methodology-grid">
+
+    <div class="method-card">
+      <div class="method-label">Win Probability</div>
+      <h3 class="method-title">Expected Score (Elo)</h3>
+      <p class="method-desc">The probability that Team A beats Team B, derived from the standard Elo formula. A 200-point Elo gap gives the stronger team roughly 76% win probability.</p>
+      <div class="formula-block">
+        \[
+          E_A = \frac{1}{1 + 10^{\frac{R_B - R_A}{400}}}
+        \]
+      </div>
+      <ul class="method-params">
+        <li><strong>\(R_A, R_B\):</strong> Elo ratings of teams A and B</li>
+        <li><strong>400:</strong> scale constant (standard Elo)</li>
+      </ul>
     </div>
-    <div class="info-card">
-      <h3>Analytics</h3>
-      <p>A batch Elo pipeline produces artifacts that can be served consistently across pages.</p>
+
+    <div class="method-card">
+      <div class="method-label">Home-Field Advantage</div>
+      <h3 class="method-title">HFA Adjustment</h3>
+      <p class="method-desc">Before computing win probability, the home team receives a temporary Elo point boost that is not stored in the rating. Two calibrated values are used: <strong>+55 pts</strong> for regular-season Elo computation (Glickman &amp; Jones 1999), and <strong>+65 pts</strong> in the playoff bracket simulator (FiveThirtyEight NFL playoff calibration). The Super Bowl uses no HFA — it is played at a neutral site.</p>
+      <div class="formula-block">
+        \[
+          E_{home} = \frac{1}{1 + 10^{\frac{R_{away} - (R_{home} + \delta)}{400}}}
+        \]
+      </div>
+      <ul class="method-params">
+        <li><strong>\(\delta = 55\)</strong>: regular-season Elo rating computation</li>
+        <li><strong>\(\delta = 65\)</strong>: playoff bracket simulation (home = higher seed)</li>
+        <li><strong>\(\delta = 0\)</strong>: Super Bowl (neutral site)</li>
+        <li>Source: Glickman &amp; Jones (1999), FiveThirtyEight NFL Elo</li>
+      </ul>
     </div>
-    <div class="info-card">
-      <h3>Delivery</h3>
-      <p>Static site generation turns backend analytics into a deployable frontend that is simple to host and fast to load.</p>
+
+    <div class="method-card">
+      <div class="method-label">Elo Update Rule</div>
+      <h3 class="method-title">Rating Adjustment</h3>
+      <p class="method-desc">After each game, both teams' ratings shift by the K-factor (25) scaled by the surprise of the result and a margin-of-victory multiplier. Blowout wins are worth more than narrow ones.</p>
+      <div class="formula-block">
+        \[
+          \Delta_{home} = K \cdot M \cdot (S_{home} - E_{home})
+        \]
+        \[
+          S_{home} \in \{1,\; 0.5,\; 0\}, \quad K = 25
+        \]
+      </div>
+      <ul class="method-params">
+        <li><strong>\(S\):</strong> actual result (win=1, draw=0.5, loss=0)</li>
+        <li><strong>\(M\):</strong> margin-of-victory multiplier (see below)</li>
+      </ul>
     </div>
+
+    <div class="method-card">
+      <div class="method-label">Margin of Victory</div>
+      <h3 class="method-title">MOV Multiplier</h3>
+      <p class="method-desc">Straight Elo treats a 1-point win the same as a 40-point blowout. The FiveThirtyEight MOV multiplier scales the update by point differential while correcting for the fact that dominant teams already have high Elo ratings.</p>
+      <div class="formula-block">
+        \[
+          M = \frac{\ln(|PD| + 1) \cdot 2.2}{0.001 \cdot (\text{ELO}_W - \text{ELO}_L) + 2.2}
+        \]
+      </div>
+      <ul class="method-params">
+        <li><strong>\(PD\):</strong> absolute point differential</li>
+        <li><strong>\(\text{ELO}_W, \text{ELO}_L\):</strong> pre-game ratings of winner and loser</li>
+        <li>Denominator shrinks the multiplier when the favored team wins big (autocorrelation correction)</li>
+      </ul>
+    </div>
+
+    <div class="method-card">
+      <div class="method-label">Score Prediction</div>
+      <h3 class="method-title">OLS Margin Model</h3>
+      <p class="method-desc">After computing all season Elo ratings, an ordinary least-squares regression is fit over every game, predicting point differential from pre-game Elo difference. This gives interpretable, calibrated margin estimates for any matchup.</p>
+      <div class="formula-block">
+        \[
+          \hat{m} = \alpha + \beta \cdot (\text{ELO}_A - \text{ELO}_B)
+        \]
+      </div>
+      <ul class="method-params">
+        <li><strong>\(\alpha\):</strong> intercept (home-field bias in margins)</li>
+        <li><strong>\(\beta\):</strong> slope ≈ points per 100 Elo difference</li>
+        <li>Fit on all 2024 regular-season games (n ≈ 272)</li>
+      </ul>
+    </div>
+
+    <div class="method-card">
+      <div class="method-label">Game Simulation</div>
+      <h3 class="method-title">Score Simulation</h3>
+      <p class="method-desc">To simulate a final score, the expected margin is used as the mean of a Normal distribution (σ = 13.45, the historical NFL game margin std dev). Total points are drawn from a separate Normal (μ = 43.5, σ = 10). Random draws use the Box-Muller transform for true Normal sampling.</p>
+      <div class="formula-block">
+        \[
+          \text{margin} \sim \mathcal{N}(\hat{m},\; \sigma_m = 13.45)
+        \]
+        \[
+          \text{total} \sim \mathcal{N}(43.5,\; \sigma_t = 10)
+        \]
+        \[
+          Z = \sqrt{-2\ln u_1}\,\cos(2\pi u_2), \quad u_1, u_2 \sim U(0,1)
+        \]
+      </div>
+      <ul class="method-params">
+        <li><strong>\(\sigma_m = 13.45\):</strong> historical NFL margin standard deviation</li>
+        <li><strong>43.5 pts total:</strong> 2024 season average combined score</li>
+        <li>Box-Muller: transforms two uniform random numbers into one Normal variate</li>
+      </ul>
+    </div>
+
+    <div class="method-card method-card-wide">
+      <div class="method-label">Model Validation</div>
+      <h3 class="method-title">Monte Carlo Confirmation</h3>
+      <p class="method-desc">To validate the playoff simulator, 100,000 full bracket simulations were run using the 2024 seedings and Week 18 Elo ratings. Super Bowl win rates by seed were compared against historical NFL outcomes (1975–present). The simulator matches historical benchmarks closely — confirming the Elo engine, margin model, and HFA are well-calibrated.</p>
+      <div class="mc-table-wrap">
+        <table class="mc-table">
+          <thead>
+            <tr><th>Seed</th><th>Simulated win %</th><th>Historical range</th><th>Result</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td>47.0%</td><td>~35–40%</td><td class="mc-note">High — 2024 #1 seeds (Detroit 1711, KC 1631) were historically strong</td></tr>
+            <tr><td>2</td><td>25.3%</td><td>~20–25%</td><td class="mc-pass">✓ Match</td></tr>
+            <tr><td>3</td><td>14.0%</td><td>~10–15%</td><td class="mc-pass">✓ Match</td></tr>
+            <tr><td>4</td><td>3.0%</td><td>~8–10%</td><td class="mc-note">Low — Houston Texans (1511) were a weak 4-seed</td></tr>
+            <tr><td>5</td><td>3.6%</td><td>~5–8%</td><td class="mc-pass">✓ Match</td></tr>
+            <tr><td>6</td><td>4.2%</td><td>~3–5%</td><td class="mc-pass">✓ Match</td></tr>
+            <tr><td>7</td><td>2.9%</td><td>~1–2%</td><td class="mc-note">Slightly high — Denver Broncos (1616) were a strong 7-seed</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul class="method-params">
+        <li><strong>N = 100,000</strong> full bracket simulations</li>
+        <li>Deviations at seeds 1, 4, and 7 reflect this specific 2024 bracket, not model error — higher/lower Elos than typical for those seed positions</li>
+        <li>Adding HFA (+65) moved seeds 6 and 7 from significantly over-estimated into their historical bands</li>
+      </ul>
+    </div>
+
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-kicker">System architecture</div>
+      <h2 class="section-title">How it works</h2>
+    </div>
+  </div>
+
+  <div class="arch-pipeline">
+
+    <div class="arch-stage arch-stage--ingest">
+      <div class="arch-stage-badge">Layer 1 · Ingestion</div>
+      <svg class="arch-stage-icon" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <ellipse cx="16" cy="9" rx="10" ry="3.5" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M6 9v14c0 1.93 4.48 3.5 10 3.5s10-1.57 10-3.5V9" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M6 16c0 1.93 4.48 3.5 10 3.5s10-1.57 10-3.5" stroke="currentColor" stroke-width="1.5"/>
+      </svg>
+      <h3 class="arch-stage-title">Data Store</h3>
+      <ul class="arch-stage-steps">
+        <li>Fetch game data from ESPN API</li>
+        <li>Normalize scores &amp; metadata</li>
+        <li>Persist games to SQLite</li>
+        <li>Serve via <code>/games</code> endpoint</li>
+      </ul>
+      <div class="arch-stage-tech">
+        <span>FastAPI</span><span>SQLite</span><span>Python</span>
+      </div>
+    </div>
+
+    <div class="arch-connector" aria-hidden="true">
+      <svg viewBox="0 0 48 20" fill="none"><line x1="2" y1="10" x2="34" y2="10" stroke="currentColor" stroke-width="1.5"/><polyline points="27,4 40,10 27,16" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>
+    </div>
+
+    <div class="arch-stage arch-stage--analytics">
+      <div class="arch-stage-badge">Layer 2 · Analytics</div>
+      <svg class="arch-stage-icon" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <rect x="4" y="18" width="5" height="10" rx="1" stroke="currentColor" stroke-width="1.5"/>
+        <rect x="13.5" y="11" width="5" height="17" rx="1" stroke="currentColor" stroke-width="1.5"/>
+        <rect x="23" y="5" width="5" height="23" rx="1" stroke="currentColor" stroke-width="1.5"/>
+        <line x1="3" y1="28" x2="29" y2="28" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <h3 class="arch-stage-title">Elo Pipeline</h3>
+      <ul class="arch-stage-steps">
+        <li>Load all played games</li>
+        <li>Compute weekly Elo ratings</li>
+        <li>Apply MOV multiplier &amp; HFA</li>
+        <li>Fit OLS margin model</li>
+        <li>Build win-probability matrix</li>
+        <li>Export <code>elo_2024.json</code></li>
+      </ul>
+      <div class="arch-stage-tech">
+        <span>Python</span><span>Elo</span><span>OLS</span><span>JSON</span>
+      </div>
+    </div>
+
+    <div class="arch-connector" aria-hidden="true">
+      <svg viewBox="0 0 48 20" fill="none"><line x1="2" y1="10" x2="34" y2="10" stroke="currentColor" stroke-width="1.5"/><polyline points="27,4 40,10 27,16" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>
+    </div>
+
+    <div class="arch-stage arch-stage--delivery">
+      <div class="arch-stage-badge">Layer 3 · Delivery</div>
+      <svg class="arch-stage-icon" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <rect x="3" y="5" width="26" height="22" rx="3" stroke="currentColor" stroke-width="1.5"/>
+        <line x1="3" y1="12" x2="29" y2="12" stroke="currentColor" stroke-width="1.5"/>
+        <circle cx="8" cy="8.5" r="1.2" fill="currentColor"/>
+        <circle cx="13" cy="8.5" r="1.2" fill="currentColor"/>
+        <circle cx="18" cy="8.5" r="1.2" fill="currentColor"/>
+      </svg>
+      <h3 class="arch-stage-title">Static Site</h3>
+      <ul class="arch-stage-steps">
+        <li>Read Elo JSON artifact</li>
+        <li>Render Jinja2 templates</li>
+        <li>Team &amp; leaderboard pages</li>
+        <li>Matchup simulator</li>
+        <li>Playoff bracket tool</li>
+        <li>Output to <code>ui/dist/</code></li>
+      </ul>
+      <div class="arch-stage-tech">
+        <span>Jinja2</span><span>HTML</span><span>CSS</span><span>JS</span>
+      </div>
+    </div>
+
   </div>
 </section>
 

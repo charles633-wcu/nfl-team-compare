@@ -19,19 +19,22 @@
   <div class="site-frame">
     <header class="topbar">
       <div class="brand">
-        <div class="brand-kicker">Broadcast Premium</div>
         <div class="brand-title">
-          {% if active_page == "leaderboard" %}
+          {% if active_page == "home" %}
+            NFL Power Index
+          {% elif active_page == "leaderboard" %}
             NFL Power Index
           {% else %}
-            <a href="{{ base_path }}leaderboard/week-18.html" class="brandlink">NFL Power Index</a>
+            <a href="{{ base_path }}index.html" class="brandlink">NFL Power Index</a>
           {% endif %}
         </div>
-        <div class="brand-subtitle">2024 regular season Elo intelligence</div>
+        <div class="brand-subtitle">2024 NFL SEASON</div>
       </div>
 
       <nav class="nav" aria-label="Primary">
+        <a href="{{ base_path }}index.html" class="navlink {% if active_page == 'home' %}active{% endif %}">Home</a>
         <a href="{{ base_path }}leaderboard/week-18.html" class="navlink {% if active_page == 'leaderboard' %}active{% endif %}">Leaderboard</a>
+        <a href="{{ base_path }}matchup.html" class="navlink {% if active_page == 'matchup' %}active{% endif %}">Matchup</a>
         <a href="{{ base_path }}teams/index.html" class="navlink {% if active_page == 'teams' %}active{% endif %}">Teams</a>
         <a href="{{ base_path }}about.html" class="navlink {% if active_page == 'about' %}active{% endif %}">About</a>
         <a href="{{ base_path }}contact.html" class="navlink {% if active_page == 'contact' %}active{% endif %}">Contact</a>
@@ -43,20 +46,15 @@
     </main>
 
     <footer class="footer">
-      <div>
-        <div class="footer-label">System</div>
-        <div class="footer-value">Season {{ season }}</div>
-      </div>
-      <div>
-        <div class="footer-label">Project</div>
-        <div class="footer-value">NFL analytics platform</div>
-      </div>
       <div class="footer-links">
         <a class="footerlink" href="{{ base_path }}about.html">About</a>
         <a class="footerlink" href="{{ base_path }}contact.html">Contact</a>
-        <a class="footerlink" href="https://github.com/charles633-wcu/nfl-team-compare/tree/main/ui/build" target="_blank" rel="noopener">GitHub</a>
+        <a class="footerlink" href="https://github.com/charles633-wcu" target="_blank" rel="noopener">GitHub</a>
       </div>
     </footer>
   </div>
+  {% if page_name == "home" %}
+    <script defer src="{{ base_path }}static/js/homepage.js"></script>
+  {% endif %}
 </body>
 </html>
