@@ -5,9 +5,9 @@ services:
       dockerfile: data-api/Dockerfile
     container_name: nfl-data-api
     environment:
-      - DB_PATH=/data/nfl-season-2024.db
+      - DB_PATH=/data/nfl-games.db
     volumes:
-      - ./loader/data/nfl-season-2024.db:/data/nfl-season-2024.db:ro
+      - ./loader/data/nfl-games.db:/data/nfl-games.db:ro
     networks:
       - apisix-network
 
@@ -19,6 +19,7 @@ services:
     environment:
       - ELO_API_BASE=http://data-api:8000
       - ELO_JSON_PATH=/data/elo_2024.json
+      - ELO_DIR=/data
     depends_on:
       - data-api
     volumes:
