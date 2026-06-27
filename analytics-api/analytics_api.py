@@ -21,7 +21,24 @@ CFG = EloConfig()
 API_BASE = os.getenv("ELO_API_BASE") or os.getenv("API_BASE", "http://127.0.0.1:8000")
 ELO_JSON_PATH = Path(os.getenv("ELO_JSON_PATH", f"elo/elo_{CFG.season}.json"))
 ELO_DB_DIR = Path(os.getenv("ELO_DB_DIR", "database"))
-ELO_DB_PATH = Path(os.getenv("ELO_DB_PATH", str(ELO_DB_DIR / f"elo_{CFG.season}.db")))
+ELO_DB_PATH = Path(os.getenv("ELO_DB_PATH", str(ELO_DB_DIR / "nfl-elo.db")))
+
+# Multi-season serving: each season is broadcast from its own elo_{season}.json
+# under ELO_DIR (defaults to the directory of ELO_JSON_PATH, i.e. ./elo).
+LATEST_SEASON = 2025
+ELO_DIR = Path(os.getenv("ELO_DIR", str(ELO_JSON_PATH.parent)))
+
+
+def resolve_elo_json_path(season: int) -> Path:
+    return ELO_DIR / f"elo_{season}.json"
+
+
+def read_elo(season: int) -> Dict[str, Any]:
+    """Load a season's Elo broadcast; 404 if that season isn't available."""
+    p = resolve_elo_json_path(season)
+    if not p.exists():
+        raise HTTPException(status_code=404, detail=f"Elo not available for season {season} at {p}")
+    return json.loads(p.read_text(encoding="utf-8"))
 
 
 def load_elo_json() -> Dict[str, Any]:
@@ -119,13 +136,16 @@ def recompute() -> Dict[str, Any]:
 
 
 @app.get("/elo/all")
-def elo_all() -> Dict[str, Any]:
-    # Full artifact
-    return ensure_elo_json(force=False)
+def elo_all(
+    season: int = Query(default=LATEST_SEASON, description="Season to serve"),
+) -> Dict[str, Any]:
+    # Full artifact for the requested season
+    return read_elo(season)
 
 
 @app.get("/elo")
 def get_elo(
+    season: int = Query(default=LATEST_SEASON, description="Season to serve"),
     week: Optional[int] = Query(default=None, ge=0, le=18),
 ) -> Dict[str, Any]:
     """
@@ -133,7 +153,7 @@ def get_elo(
       - if week provided: returns team -> elo for that week
       - else: returns whole artifact
     """
-    data = ensure_elo_json(force=False)
+    data = read_elo(season)
     if week is None:
         return data
 
@@ -145,19 +165,25 @@ def get_elo(
 
 
 @app.get("/elo/{week}")
-def get_elo_week(week: int) -> Dict[str, Any]:
-    return get_elo(week=week)
+def get_elo_week(
+    week: int,
+    season: int = Query(default=LATEST_SEASON, description="Season to serve"),
+) -> Dict[str, Any]:
+    return get_elo(season=season, week=week)
 
 
 @app.get("/teams/{team_name}/elo")
-def team_elo(team_name: str) -> Dict[str, Any]:
+def team_elo(
+    team_name: str,
+    season: int = Query(default=LATEST_SEASON, description="Season to serve"),
+) -> Dict[str, Any]:
     """
     Team page:
       Returns weeks 0..18, and for each week includes:
         - final_elo (end-of-week int)
         - games: opponent, opponent_elo_pre, PF/PA, margin, elo_after_game
     """
-    data = ensure_elo_json(force=False)
+    data = read_elo(season)
 
     teams_blob = data.get("teams", {})
     if team_name not in teams_blob:
