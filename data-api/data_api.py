@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title="NFL Season 2024 API", version="1.0.0")
+app = FastAPI(title="NFL Games API (multi-season)", version="2.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -20,10 +20,12 @@ app.add_middleware(
 from pathlib import Path
 
 
-DB_PATH = Path(os.getenv("DB_PATH", "/data/nfl-season-2024.db"))
+DB_PATH = Path(os.getenv("DB_PATH", "/data/nfl-games.db"))
 
 
-CUTOFF_DATE = "2025-01-06"
+# Default season when a request omits ?season=. Postseason is excluded at load
+# time (the master DB holds regular-season games only), so no date cutoff here.
+LATEST_SEASON = 2025
 
 
 def get_conn() -> sqlite3.Connection:
@@ -50,15 +52,18 @@ def health() -> Dict[str, Any]:
 
 
 @app.get("/teams")
-def list_teams() -> Dict[str, Any]:
+def list_teams(
+    season: int = Query(default=LATEST_SEASON, description="Season to list teams for"),
+) -> Dict[str, Any]:
     with get_conn() as conn:
         rows = conn.execute(
             """
-            SELECT DISTINCT home_team AS team FROM games
+            SELECT DISTINCT home_team AS team FROM games WHERE season = ?
             UNION
-            SELECT DISTINCT away_team AS team FROM games
+            SELECT DISTINCT away_team AS team FROM games WHERE season = ?
             ORDER BY team;
-            """
+            """,
+            (season, season),
         ).fetchall()
 
     teams = [r["team"] for r in rows if r["team"] is not None]
@@ -67,6 +72,7 @@ def list_teams() -> Dict[str, Any]:
 
 @app.get("/games")
 def list_games(
+    season: int = Query(default=LATEST_SEASON, description="Season to query"),
     week: Optional[int] = Query(default=None, ge=1, description="Filter by week number"),
     team: Optional[str] = Query(default=None, description="Filter games where team is home or away"),
     played: Optional[bool] = Query(
@@ -77,8 +83,8 @@ def list_games(
     offset: int = Query(default=0, ge=0),
 ) -> Dict[str, Any]:
 
-    where: List[str] = []
-    params: List[Any] = []
+    where: List[str] = ["season = ?"]
+    params: List[Any] = [season]
 
     if week is not None:
         where.append("week = ?")
@@ -92,10 +98,6 @@ def list_games(
         where.append("(home_score IS NOT NULL AND away_score IS NOT NULL)")
     elif played is False:
         where.append("(home_score IS NULL OR away_score IS NULL)")
-
-    # Always exclude postseason games
-    where.append("game_date < ?")
-    params.append(CUTOFF_DATE)
 
     where_sql = f"WHERE {' AND '.join(where)}"
     sql = f"""
@@ -122,7 +124,10 @@ def list_games(
 
 
 @app.get("/teams/{team_name}/summary")
-def team_summary(team_name: str) -> Dict[str, Any]:
+def team_summary(
+    team_name: str,
+    season: int = Query(default=LATEST_SEASON, description="Season to summarize"),
+) -> Dict[str, Any]:
     """
     Computes:
       - points_for (PF)
@@ -133,8 +138,8 @@ def team_summary(team_name: str) -> Dict[str, Any]:
     with get_conn() as conn:
         # Ensure the team exists at least once
         exists = conn.execute(
-            "SELECT 1 FROM games WHERE home_team = ? OR away_team = ? LIMIT 1;",
-            (team_name, team_name),
+            "SELECT 1 FROM games WHERE season = ? AND (home_team = ? OR away_team = ?) LIMIT 1;",
+            (season, team_name, team_name),
         ).fetchone()
 
         if not exists:
@@ -161,7 +166,7 @@ def team_summary(team_name: str) -> Dict[str, Any]:
             FROM games
             WHERE
                 (home_team = ? OR away_team = ?)
-                AND game_date < ?
+                AND season = ?
                 AND home_score IS NOT NULL
                 AND away_score IS NOT NULL;
             """,
@@ -172,7 +177,7 @@ def team_summary(team_name: str) -> Dict[str, Any]:
                 team_name,
                 team_name,
                 team_name,
-                CUTOFF_DATE,
+                season,
             ),
         ).fetchone()
 
