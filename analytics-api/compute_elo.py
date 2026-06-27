@@ -69,9 +69,11 @@ def predict_margin(intercept: float, slope: float, elo_diff: float) -> float:
     return intercept + slope * elo_diff
 
 
-def fetch_played_games(api_base: str) -> List[Dict[str, Any]]:
+def fetch_played_games(api_base: str, season: int | None = None) -> List[Dict[str, Any]]:
     url = f"{api_base.rstrip('/')}/games"
-    params = {"played": "true", "limit": 5000}
+    params: Dict[str, Any] = {"played": "true", "limit": 5000}
+    if season is not None:
+        params["season"] = season
     r = requests.get(url, params=params, timeout=30)
     r.raise_for_status()
     payload = r.json()
@@ -391,14 +393,17 @@ def persist_elo_to_sqlite(
 
 
 def main() -> None:
-    cfg = EloConfig()
+    # Season is selected via ELO_SEASON (default 2024) so the same entrypoint
+    # builds any season's broadcast against the season-filtered games API.
+    season = int(os.getenv("ELO_SEASON", "2024"))
+    cfg = EloConfig(season=season)
     api_base = os.getenv("ELO_API_BASE", "http://127.0.0.1:8000")
     out_dir = Path(os.getenv("ELO_OUT_DIR", "elo"))
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    games = fetch_played_games(api_base)
+    games = fetch_played_games(api_base, season=season)
     if not games:
-        raise RuntimeError(f"No games returned from {api_base}/games?played=true")
+        raise RuntimeError(f"No games returned from {api_base}/games?played=true&season={season}")
 
     teams = collect_teams(games)
     result = compute_weekly_elo(games, teams, cfg)
@@ -407,8 +412,9 @@ def main() -> None:
     out_path.write_text(json.dumps(result, indent=2), encoding="utf-8")
     print(f"Wrote Elo JSON -> {out_path.resolve()}")
 
+    # Master multi-season Elo DB (rows are season-keyed); name overridable via env.
     db_dir = Path(os.getenv("ELO_DB_DIR", "database"))
-    db_path = Path(os.getenv("ELO_DB_PATH", str(db_dir / f"elo_{cfg.season}.db")))
+    db_path = Path(os.getenv("ELO_DB_PATH", str(db_dir / "nfl-elo.db")))
     persist_elo_to_sqlite(result=result, cfg=cfg, db_path=db_path)
     print(f"Wrote Elo SQLite -> {db_path.resolve()}")
 
