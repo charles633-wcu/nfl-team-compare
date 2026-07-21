@@ -2,15 +2,15 @@
 {% set active_page = "home" %}
 {% extends "_base.html" %}
 
-{% block title %}NFL Elo Home{% endblock %}
+{% block title %}{{ season }} NFL Season — Power Index{% endblock %}
 
 {% block content %}
 <section class="home-hero">
   <div class="home-hero__copy reveal-on-scroll reveal-on-scroll--fast">
-    <div class="eyebrow">NFL 2024 analytics desk</div>
-    <h1 class="home-hero__title">Discover every angle of the 2024 season.</h1>
+    <div class="eyebrow">{{ season }} NFL season</div>
+    <h1 class="home-hero__title">The {{ season }} season, every angle.</h1>
     <p class="home-hero__summary">
-      Follow the season through weekly rankings, team trajectories, and matchup forecasts that make every Elo shift easier to understand.
+      Weekly rankings, team trajectories, and matchup forecasts for {{ season }} — see how each result reshaped the picture, and how it all ended.
     </p>
     <div class="home-hero__actions">
       <a class="btn" href="{{ primary_cta_href }}">Start with Teams</a>
@@ -39,7 +39,7 @@
       {% endfor %}
     </div>
     <div class="home-hero__odds-card">
-      <span class="home-hero__odds-label">Eagles title odds</span>
+      <span class="home-hero__odds-label">Champion title odds</span>
       <strong>{{ season_pulse.odds_label }}</strong>
       <span>{{ season_pulse.simulation_label }}</span>
     </div>
@@ -47,48 +47,16 @@
   </div>
 </section>
 
-<section class="home-story reveal-on-scroll">
-  <div class="panel-kicker">Story</div>
-  <div class="home-story__grid">
-    <div>
-      <h2 class="section-title">A better way to study how the season unfolded.</h2>
-      <p class="body-copy">
-        This project is meant to help you investigate the 2024 NFL season with more context. It brings together rankings, team histories, and matchup tools so you can follow how each result changed the bigger picture and understand why teams ended up where they did.
-      </p>
-    </div>
-  </div>
-</section>
-
-<section class="home-feature-strip reveal-on-scroll">
-  <div class="panel-kicker">Features</div>
-  <div class="home-feature-strip__header">
-    <h2 class="section-title">Everything in one place.</h2>
-    <p class="body-copy">A quick guide to the features offered.</p>
-  </div>
-</section>
-
-<section class="home-features">
-  {% for feature in homepage_features %}
-    <article class="feature-card reveal-on-scroll" style="--feature-delay: {{ loop.index0 * 90 }}ms;">
-      <div class="feature-card__media">
-        <img src="{{ feature.image }}" alt="{{ feature.title }} preview" loading="lazy" />
-        <div class="feature-card__badge">{{ feature.accent }}</div>
-      </div>
-      <div class="feature-card__body">
-        <div class="feature-card__eyebrow">{{ feature.eyebrow }}</div>
-        <h3 class="feature-card__title">{{ feature.title }}</h3>
-        <p class="body-copy">{{ feature.description }}</p>
-        <a class="feature-card__link" href="{{ feature.href }}">Open page</a>
-      </div>
-    </article>
-  {% endfor %}
-</section>
-
 <section class="home-cta reveal-on-scroll">
   <div>
-    <div class="panel-kicker">What’s next?</div>
-    <h2 class="section-title">Use the site as your definitive season archive.</h2>
-    <p class="body-copy">The full toolkit is in the nav bar: track the race for the top spot, scout specific teams, build your own matchups, and replay the playoff picture to see how differently the season could have unfolded.</p>
+    <div class="panel-kicker">Explore the {{ season }} season</div>
+    <h2 class="section-title">Dive into the {{ season }} toolkit.</h2>
+    <p class="body-copy">Track the race for the top spot, scout specific teams, build your own matchups, and replay the playoff picture — all for {{ season }}.</p>
+    <div class="home-hero__actions">
+      <a class="btn" href="{{ rankings_cta_href }}">Weekly Leaderboard</a>
+      <a class="btn btn-secondary" href="{{ primary_cta_href }}">Teams</a>
+      <a class="btn btn-secondary" href="{{ secondary_cta_href }}">Matchup Simulator</a>
+    </div>
   </div>
 </section>
 {% endblock %}

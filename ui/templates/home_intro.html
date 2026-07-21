@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NFL Power Index — Every Season, Every Angle</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/app.css" />
+  <style>
+    /* Season scroller — horizontal, snap, scales to any number of seasons */
+    .season-scroller-section{margin:2.5rem 0 1rem}
+    .season-scroller{display:flex;gap:1.1rem;overflow-x:auto;scroll-snap-type:x mandatory;
+      padding:.5rem .2rem 1.4rem;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+    .season-scroller::-webkit-scrollbar{height:8px}
+    .season-scroller::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:999px}
+    .season-chip{flex:0 0 auto;scroll-snap-align:start;width:16rem;display:flex;flex-direction:column;
+      padding:1.5rem 1.4rem 1.3rem;border:1px solid rgba(255,255,255,.12);border-radius:1.1rem;
+      background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.02));
+      text-decoration:none;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+    .season-chip::before{content:"";position:absolute}
+    .season-chip:hover{transform:translateY(-5px);border-color:rgba(125,211,252,.55);
+      box-shadow:0 20px 46px -20px rgba(56,189,248,.5)}
+    .season-chip__year{font:800 3rem/1 "Barlow Condensed",sans-serif;color:#f8fafc;letter-spacing:.01em}
+    .season-chip__champ{margin-top:.7rem;font:400 .95rem/1.4 "Inter",sans-serif;color:rgba(226,232,240,.72)}
+    .season-chip__champ strong{color:#e2e8f0;font-weight:600}
+    .season-chip__enter{margin-top:1.1rem;font:700 .9rem/1 "Inter",sans-serif;color:#7dd3fc}
+    .season-chip:hover .season-chip__enter{color:#fff}
+    .season-scroller-hint{font:400 .85rem/1 "Inter",sans-serif;color:rgba(148,163,184,.6)}
+  </style>
+</head>
+<body class="broadcast-shell">
+  <div class="site-backdrop" aria-hidden="true">
+    <div class="site-glow site-glow-a"></div>
+    <div class="site-glow site-glow-b"></div>
+    <div class="site-grid"></div>
+  </div>
+
+  <div class="site-frame">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-title">NFL Power Index</div>
+        <div class="brand-subtitle">EVERY SEASON</div>
+      </div>
+      <nav class="nav" aria-label="Primary">
+        <a href="#features" class="navlink">Features</a>
+        <a href="#seasons" class="navlink">Seasons</a>
+      </nav>
+    </header>
+
+    <main class="container">
+      <section class="home-hero">
+        <div class="home-hero__copy reveal-on-scroll reveal-on-scroll--fast">
+          <div class="eyebrow">NFL analytics desk</div>
+          <h1 class="home-hero__title">Discover every angle of every season.</h1>
+          <p class="home-hero__summary">
+            Weekly Elo rankings, team trajectories, and playoff matchup forecasts — for every season in the archive. Explore the tools below, then pick a season to dive in.
+          </p>
+          <div class="home-hero__actions">
+            <a class="btn" href="#seasons">Pick a season</a>
+            <a class="btn btn-secondary" href="#features">See the features</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="home-story reveal-on-scroll">
+        <div class="panel-kicker">Story</div>
+        <div class="home-story__grid">
+          <div>
+            <h2 class="section-title">A better way to study how a season unfolded.</h2>
+            <p class="body-copy">
+              This project brings together rankings, team histories, and matchup tools so you can follow how each result reshaped the bigger picture — and understand why teams ended up where they did. The same toolkit applies to every season on file.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="features" class="home-feature-strip reveal-on-scroll">
+        <div class="panel-kicker">Features</div>
+        <div class="home-feature-strip__header">
+          <h2 class="section-title">Everything in one place.</h2>
+          <p class="body-copy">A quick guide to the tools — available for each season you pick.</p>
+        </div>
+      </section>
+
+      <section class="home-features">
+        {% for feature in features %}
+          <article class="feature-card reveal-on-scroll" style="--feature-delay: {{ loop.index0 * 90 }}ms;">
+            <div class="feature-card__media">
+              <img src="{{ feature.image }}" alt="{{ feature.title }} preview" loading="lazy" />
+              <div class="feature-card__badge">{{ feature.accent }}</div>
+            </div>
+            <div class="feature-card__body">
+              <div class="feature-card__eyebrow">{{ feature.eyebrow }}</div>
+              <h3 class="feature-card__title">{{ feature.title }}</h3>
+              <p class="body-copy">{{ feature.description }}</p>
+              <a class="feature-card__link" href="{{ feature.href }}">Pick a season &rarr;</a>
+            </div>
+          </article>
+        {% endfor %}
+      </section>
+
+      <section id="seasons" class="season-scroller-section reveal-on-scroll">
+        <div class="panel-kicker">Seasons</div>
+        <div class="home-feature-strip__header">
+          <h2 class="section-title">Choose a season to explore.</h2>
+          <p class="body-copy">Every season, fully broken down — scroll and pick one to open its rankings, teams, and playoff picture.</p>
+        </div>
+        <div class="season-scroller" role="list" aria-label="Available seasons">
+          {% for s in seasons %}
+          <a class="season-chip" role="listitem" href="{{ s.base_path }}index.html">
+            <span class="season-chip__year">{{ s.season }}</span>
+            <span class="season-chip__champ">Champion<br><strong>{{ s.champion }}</strong></span>
+            <span class="season-chip__enter">Enter {{ s.season }} &rarr;</span>
+          </a>
+          {% endfor %}
+        </div>
+        <p class="season-scroller-hint">More seasons are added as they are played.</p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-links">
+        <a class="footerlink" href="https://github.com/charles633-wcu" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </footer>
+  </div>
+  <script defer src="/static/js/homepage.js"></script>
+</body>
+</html>

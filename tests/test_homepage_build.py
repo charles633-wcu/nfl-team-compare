@@ -36,7 +36,7 @@ class HomepageBuildSmokeTests(unittest.TestCase):
         local_elo = json.loads((repo_root / "elo" / "elo_2024.json").read_text(encoding="utf-8"))
         teams_blob = local_elo["teams"]
 
-        def fake_fetch_team_timeline(_api_base: str, team: str, timeout_s: int = 20) -> dict:
+        def fake_fetch_team_timeline(_api_base: str, team: str, timeout_s: int = 20, season=None) -> dict:
             team_weeks = teams_blob[team]
             return {
                 "season": local_elo["season"],
@@ -58,13 +58,20 @@ class HomepageBuildSmokeTests(unittest.TestCase):
         ):
             build_site(SiteConfig(analytics_api_base="http://local-fixture"))
 
-        index_html = (self.dist_dir / "index.html").read_text(encoding="utf-8")
+        # New IA: dist/index.html is the season-agnostic intro (feature guide +
+        # season scroller); each season's story-first landing lives under
+        # dist/<season>/. Mock returns 2024 data, so assert against 2024.
+        picker_html = (self.dist_dir / "index.html").read_text(encoding="utf-8")
+        index_html = (self.dist_dir / "2024" / "index.html").read_text(encoding="utf-8")
 
+        # Intro carries the season-agnostic feature guide + the scroller
+        self.assertIn("Discover every angle of every season", picker_html)
+        self.assertIn("feature-card", picker_html)
+        self.assertIn("Choose a season to explore", picker_html)
+
+        # Season landing is a story-first pulse page, not a leaderboard shell
         self.assertIn("home-hero", index_html)
-        self.assertIn("Discover every angle of the 2024 season", index_html)
-        self.assertIn("feature-card", index_html)
-        self.assertIn("Matchup Simulator", index_html)
-        self.assertIn("Weekly Leaderboards", index_html)
+        self.assertIn("The 2024 season", index_html)
         self.assertIn("Super Bowl champion", index_html)
         self.assertIn("Super Bowl runner-up", index_html)
         self.assertIn("Highest-Elo conference championship runner-up", index_html)
@@ -74,11 +81,10 @@ class HomepageBuildSmokeTests(unittest.TestCase):
         self.assertIn("static/img/logos/philadelphia-eagles.png", index_html)
         self.assertIn("static/img/logos/kansas-city-chiefs.png", index_html)
         self.assertIn("static/img/logos/buffalo-bills.png", index_html)
-        self.assertIn("Eagles title odds", index_html)
+        self.assertIn("Champion title odds", index_html)
         self.assertIn("100,000 Elo playoff simulations", index_html)
-        self.assertIn("A quick guide to the features offered.", index_html)
-        self.assertIn("What’s next?", index_html)
-        self.assertIn("Use the site as your definitive season archive.", index_html)
+        # The feature guide belongs on the intro, not the season landing
+        self.assertNotIn("feature-card", index_html)
         self.assertNotIn("League leaderboard", index_html)
         self.assertNotIn("Matchup predictor", index_html)
 

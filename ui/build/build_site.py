@@ -173,6 +173,43 @@ PLAYOFF_HOME_FIELD_ADV = 65
 PLAYOFF_MARGIN_STD_DEV = 13.45
 PLAYOFF_SIMULATION_COUNT = 100_000
 PLAYOFF_SIMULATION_SEED = 42
+
+# Real 2025 playoffs (hardcoded, like 2024). Seeds reconstructed from the 2025
+# standings + the actual playoff host pattern; outcome from the postseason results
+# (Seattle beat New England in the Super Bowl).
+PLAYOFF_SEEDS_2025 = {
+    "AFC": [
+        {"seed": 1, "team": "Denver Broncos",           "bye": True},
+        {"seed": 2, "team": "New England Patriots",      "bye": False},
+        {"seed": 3, "team": "Jacksonville Jaguars",      "bye": False},
+        {"seed": 4, "team": "Pittsburgh Steelers",       "bye": False},
+        {"seed": 5, "team": "Houston Texans",            "bye": False},
+        {"seed": 6, "team": "Buffalo Bills",             "bye": False},
+        {"seed": 7, "team": "Los Angeles Chargers",      "bye": False},
+    ],
+    "NFC": [
+        {"seed": 1, "team": "Seattle Seahawks",          "bye": True},
+        {"seed": 2, "team": "Philadelphia Eagles",       "bye": False},
+        {"seed": 3, "team": "Chicago Bears",             "bye": False},
+        {"seed": 4, "team": "Carolina Panthers",         "bye": False},
+        {"seed": 5, "team": "Los Angeles Rams",          "bye": False},
+        {"seed": 6, "team": "Green Bay Packers",         "bye": False},
+        {"seed": 7, "team": "San Francisco 49ers",       "bye": False},
+    ],
+}
+
+PLAYOFF_OUTCOME_2025 = {
+    "champion": "Seattle Seahawks",
+    "runner_up": "New England Patriots",
+    "conference_championship_runners_up": ["Denver Broncos", "Los Angeles Rams"],
+}
+
+# Per-season playoff registry. Build order is latest-first (drives picker order).
+SEASON_PLAYOFFS: Dict[int, Dict[str, Any]] = {
+    2024: {"seeds": PLAYOFF_SEEDS_2024, "outcome": PLAYOFF_OUTCOME_2024},
+    2025: {"seeds": PLAYOFF_SEEDS_2025, "outcome": PLAYOFF_OUTCOME_2025},
+}
+BUILD_SEASONS: List[int] = [2025, 2024]
 _PLAYOFF_SIM_CACHE: Dict[Tuple[Tuple[str, int], int, int, float, float, int], Dict[str, Any]] = {}
 
 
@@ -181,6 +218,7 @@ def build_matchup_page(
     elo_all: Dict[str, Any],
     dist_dir: Path,
     season: Any,
+    playoff_seeds: Dict[str, Any],
 ) -> None:
     """Render matchup.html with all simulator data embedded as JSON."""
     weekly_elos = elo_all.get("elo", {})
@@ -198,7 +236,7 @@ def build_matchup_page(
         weekly_elos_json=json.dumps(weekly_elos, separators=(",", ":")),
         games_by_team_json=json.dumps(games_by_team, separators=(",", ":")),
         margin_model_json=json.dumps(margin_model, separators=(",", ":")),
-        playoff_seeds_json=json.dumps(PLAYOFF_SEEDS_2024, separators=(",", ":")),
+        playoff_seeds_json=json.dumps(playoff_seeds, separators=(",", ":")),
         k_factor=k_factor,
     )
     (dist_dir / "matchup.html").write_text(html, encoding="utf-8")
@@ -317,24 +355,25 @@ def simulate_playoff_bracket(
     margin_model: Dict[str, float],
     k_factor: int,
     rng: random.Random,
+    playoff_seeds: Dict[str, Any],
 ) -> str:
     elos = {
         seed["team"]: initial_elos.get(seed["team"], 1500)
-        for seeds in PLAYOFF_SEEDS_2024.values()
+        for seeds in playoff_seeds.values()
         for seed in seeds
     }
     original_seeds = {
         seed["team"]: seed["seed"]
-        for seeds in PLAYOFF_SEEDS_2024.values()
+        for seeds in playoff_seeds.values()
         for seed in seeds
     }
     bye_teams = {
         conf: next(seed["team"] for seed in seeds if seed["bye"])
-        for conf, seeds in PLAYOFF_SEEDS_2024.items()
+        for conf, seeds in playoff_seeds.items()
     }
 
     def seed_map(conf: str) -> Dict[int, str]:
-        return {seed["seed"]: seed["team"] for seed in PLAYOFF_SEEDS_2024[conf]}
+        return {seed["seed"]: seed["team"] for seed in playoff_seeds[conf]}
 
     def play(home: str, away: str, neutral: bool = False) -> str:
         hfa = 0 if neutral else PLAYOFF_HOME_FIELD_ADV
@@ -372,9 +411,13 @@ def run_playoff_monte_carlo(
     initial_elos: Dict[str, int],
     margin_model: Dict[str, float],
     k_factor: int,
+    playoff_seeds: Dict[str, Any],
     simulation_count: int = PLAYOFF_SIMULATION_COUNT,
     seed: int = PLAYOFF_SIMULATION_SEED,
 ) -> Dict[str, Any]:
+    seeds_sig = tuple(
+        (conf, tuple(s["team"] for s in seeds)) for conf, seeds in sorted(playoff_seeds.items())
+    )
     cache_key = (
         tuple(sorted(initial_elos.items())),
         k_factor,
@@ -382,6 +425,7 @@ def run_playoff_monte_carlo(
         margin_model["intercept"],
         margin_model["slope"],
         seed,
+        seeds_sig,
     )
     if cache_key in _PLAYOFF_SIM_CACHE:
         return _PLAYOFF_SIM_CACHE[cache_key]
@@ -389,7 +433,7 @@ def run_playoff_monte_carlo(
     rng = random.Random(seed)
     wins_by_team: Dict[str, int] = {}
     for _ in range(simulation_count):
-        champion = simulate_playoff_bracket(initial_elos, margin_model, k_factor, rng)
+        champion = simulate_playoff_bracket(initial_elos, margin_model, k_factor, rng, playoff_seeds)
         wins_by_team[champion] = wins_by_team.get(champion, 0) + 1
 
     result = {"simulation_count": simulation_count, "wins_by_team": wins_by_team}
@@ -397,7 +441,9 @@ def run_playoff_monte_carlo(
     return result
 
 
-def build_season_pulse(elo_all: Dict[str, Any]) -> Dict[str, Any]:
+def build_season_pulse(
+    elo_all: Dict[str, Any], outcome: Dict[str, Any], playoff_seeds: Dict[str, Any]
+) -> Dict[str, Any]:
     elos = latest_elo_map(elo_all)
     mm = elo_all.get("margin_model", {})
     margin_model = {
@@ -405,16 +451,16 @@ def build_season_pulse(elo_all: Dict[str, Any]) -> Dict[str, Any]:
         "slope": float(mm.get("slope", 0.0)),
     }
     k_factor = int(elo_all.get("k_factor", 25))
-    simulation = run_playoff_monte_carlo(elos, margin_model, k_factor)
+    simulation = run_playoff_monte_carlo(elos, margin_model, k_factor, playoff_seeds)
 
-    champion = PLAYOFF_OUTCOME_2024["champion"]
-    runner_up = PLAYOFF_OUTCOME_2024["runner_up"]
+    champion = outcome["champion"]
+    runner_up = outcome["runner_up"]
     third_place = max(
-        PLAYOFF_OUTCOME_2024["conference_championship_runners_up"],
+        outcome["conference_championship_runners_up"],
         key=lambda team: elos.get(team, 0),
     )
-    eagles_wins = simulation["wins_by_team"].get(champion, 0)
-    eagles_odds = eagles_wins / simulation["simulation_count"] * 100
+    champion_wins = simulation["wins_by_team"].get(champion, 0)
+    champion_odds = champion_wins / simulation["simulation_count"] * 100
 
     def card(rank: str, team: str, label: str) -> Dict[str, Any]:
         return {
@@ -431,7 +477,8 @@ def build_season_pulse(elo_all: Dict[str, Any]) -> Dict[str, Any]:
             card("Runner-up", runner_up, "Super Bowl runner-up"),
             card("Third", third_place, "Highest-Elo conference championship runner-up"),
         ],
-        "odds_label": f"{eagles_odds:.1f}%",
+        "champion": champion,
+        "odds_label": f"{champion_odds:.1f}%",
         "simulation_label": f"{simulation['simulation_count']:,} Elo playoff simulations",
     }
 
@@ -445,52 +492,56 @@ def resolve_homepage_features(latest_week: int) -> List[Dict[str, str]]:
     return features
 
 
-def build_site(cfg: SiteConfig) -> None:
-    here = Path(__file__).resolve()
-    ui_dir = here.parents[1]  # .../ui
-    templates_dir = ui_dir / "templates"
-    static_dir = ui_dir / "static"
-    dist_dir = resolve_dist_dir(here)
+def build_one_season(
+    env: "Environment",
+    analytics_api_base: str,
+    season: int,
+    season_dist_dir: Path,
+    base_path: str,
+    playoff: Dict[str, Any],
+    all_seasons: List[Dict[str, Any]],
+    static_dir: Path,
+    repo_root: Path,
+    cfg: SiteConfig,
+) -> Dict[str, Any]:
+    """Build a complete site for one season into season_dist_dir.
 
-    leaderboard_out_dir = dist_dir / "leaderboard"
-    teams_out_dir = dist_dir / "teams"
-    team_out_dir = dist_dir / "team"
-    elo_out_dir = dist_dir / "elo"
+    base_path (e.g. "/2025/") is exposed to every template as a Jinja global so
+    nav/asset links resolve within this season's subtree. Returns a small summary
+    (champion, top team) for the season-picker landing.
+    """
+    leaderboard_out_dir = season_dist_dir / "leaderboard"
+    teams_out_dir = season_dist_dir / "teams"
+    team_out_dir = season_dist_dir / "team"
+    elo_out_dir = season_dist_dir / "elo"
+    for d in (season_dist_dir, leaderboard_out_dir, teams_out_dir, team_out_dir, elo_out_dir):
+        d.mkdir(parents=True, exist_ok=True)
 
-    dist_dir.mkdir(parents=True, exist_ok=True)
-    leaderboard_out_dir.mkdir(parents=True, exist_ok=True)
-    teams_out_dir.mkdir(parents=True, exist_ok=True)
-    team_out_dir.mkdir(parents=True, exist_ok=True)
-    elo_out_dir.mkdir(parents=True, exist_ok=True)
+    # Season-scoped template context shared by every render (nav toggle + links).
+    env.globals["base_path"] = base_path
+    env.globals["current_season"] = season
+    env.globals["all_seasons"] = all_seasons
 
-    env = Environment(
-        loader=FileSystemLoader(str(templates_dir)),
-        autoescape=select_autoescape(["html", "xml"]),
-    )
-    env.filters["slug"] = slugify
-
-    # Fetch analytics once
-    analytics_api_base = resolve_analytics_api_base(cfg.analytics_api_base, timeout_s=cfg.timeout_s)
-    elo_all_url = f"{analytics_api_base.rstrip('/')}/elo/all"
+    # Fetch this season's analytics broadcast.
+    elo_all_url = f"{analytics_api_base.rstrip('/')}/elo/all?season={season}"
     elo_all = http_get_json(elo_all_url, timeout_s=cfg.timeout_s)
 
-    season = elo_all.get("season")
+    api_season = elo_all.get("season")
     baseline = elo_all.get("baseline")
     k_factor = elo_all.get("k_factor")
 
     weeks = parse_weeks_from_elo_all(elo_all)
     if not weeks:
         raise RuntimeError(f"No weeks found in {elo_all_url}. Got keys: {list(elo_all.keys())}")
-
     latest_week = max(weeks)
 
-    # Render index.html as the landing page
+    # Homepage
     index_tpl = env.get_template("index.html")
     latest_rows = leaderboard_rows_for_week(elo_all, latest_week)
     homepage_features = resolve_homepage_features(latest_week)
-    season_pulse = build_season_pulse(elo_all)
+    season_pulse = build_season_pulse(elo_all, playoff["outcome"], playoff["seeds"])
     index_html = index_tpl.render(
-        season=season,
+        season=api_season,
         baseline=baseline,
         k_factor=k_factor,
         current_week=latest_week,
@@ -502,119 +553,148 @@ def build_site(cfg: SiteConfig) -> None:
         secondary_cta_href="matchup.html",
         rankings_cta_href=f"leaderboard/week-{latest_week}.html",
     )
-    (dist_dir / "index.html").write_text(index_html, encoding="utf-8")
+    (season_dist_dir / "index.html").write_text(index_html, encoding="utf-8")
 
-    # Render about + contact pages at dist root
-    about_tpl = env.get_template("about.html")
-    about_html = about_tpl.render(
-        season=season,
-        baseline=baseline,
-        k_factor=k_factor,
-        current_week=latest_week,
-    )
-    (dist_dir / "about.html").write_text(about_html, encoding="utf-8")
+    # About + contact
+    for name in ("about", "contact"):
+        tpl = env.get_template(f"{name}.html")
+        (season_dist_dir / f"{name}.html").write_text(
+            tpl.render(season=api_season, baseline=baseline, k_factor=k_factor, current_week=latest_week),
+            encoding="utf-8",
+        )
 
-    contact_tpl = env.get_template("contact.html")
-    contact_html = contact_tpl.render(
-        season=season,
-        baseline=baseline,
-        k_factor=k_factor,
-        current_week=latest_week,
-    )
-    (dist_dir / "contact.html").write_text(contact_html, encoding="utf-8")
+    # Matchup simulator (season-specific playoff seeds)
+    build_matchup_page(env, elo_all, season_dist_dir, api_season, playoff["seeds"])
 
-    build_matchup_page(env, elo_all, dist_dir, season)
-
+    # Teams index
     teams_tpl = env.get_template("teams.html")
-    teams_html = teams_tpl.render(
-        season=season,
-        baseline=baseline,
-        k_factor=k_factor,
-        current_week=latest_week,
-        teams=sorted((team for team, _elo, _delta in latest_rows), key=str.lower),
+    (teams_out_dir / "index.html").write_text(
+        teams_tpl.render(
+            season=api_season, baseline=baseline, k_factor=k_factor, current_week=latest_week,
+            teams=sorted((team for team, _e, _d in latest_rows), key=str.lower),
+        ),
+        encoding="utf-8",
     )
-    (teams_out_dir / "index.html").write_text(teams_html, encoding="utf-8")
 
-    # Build TEAM pages (dist/team/<slug>.html)
+    # Team pages
     team_tpl = env.get_template("team.html")
-
     failures = []
     for team, _elo, _delta in latest_rows:
         try:
-            payload = fetch_team_timeline(analytics_api_base, team, timeout_s=cfg.timeout_s)
+            payload = fetch_team_timeline(analytics_api_base, team, timeout_s=cfg.timeout_s, season=season)
             weeks_data = enrich_weeks(payload)
             rank, current_elo = compute_rank_and_elo(latest_rows, team)
-
             html = team_tpl.render(
-                team=team,
-                season=payload.get("season"),
-                current_week=latest_week,
-                rank=rank,
-                current_elo=current_elo,
-                weeks=weeks_data,
-                baseline=baseline,
-                k_factor=k_factor,
+                team=team, season=payload.get("season"), current_week=latest_week,
+                rank=rank, current_elo=current_elo, weeks=weeks_data,
+                baseline=baseline, k_factor=k_factor,
             )
             (team_out_dir / f"{slugify(team)}.html").write_text(html, encoding="utf-8")
-
         except requests.exceptions.RequestException as e:
             failures.append((team, repr(e)))
             print(f"Team page skipped: {team} ({e})")
-
-        time.sleep(0.15)
+        time.sleep(0.05)
 
     if failures:
-        print("\n=== Team page failures ===")
+        print(f"\n=== Team page failures (season {season}) ===")
         for team, err in failures:
             print(f"- {team}: {err}")
 
-    # Loads division rivals mapping (repo-root /elo/division_rivals.json)
-    repo_root = here.parents[2]  # .../ui/build/build_site.py -> parents[2] is repo root
+    # Elo charts
     rivals_path = repo_root / "elo" / "division_rivals.json"
-
     division_rivals: Dict[str, List[str]] = {}
     if rivals_path.exists():
         division_rivals = json.loads(rivals_path.read_text(encoding="utf-8"))
-    else:
-        print(f"division_rivals.json not found at: {rivals_path} (charts will be single-line)")
-
-    # Build Elo CHART pages (dist/elo/<slug>.html)
-    teams = [team for team, _elo, _delta in latest_rows]
+    teams = [team for team, _e, _d in latest_rows]
     build_elo_chart_pages(
-        env=env,
-        dist_dir=dist_dir,
-        elo_all=elo_all,
-        teams=teams,
-        slugify=slugify,
-        division_rivals=division_rivals,
+        env=env, dist_dir=season_dist_dir, elo_all=elo_all, teams=teams,
+        slugify=slugify, division_rivals=division_rivals,
     )
 
-    # Render each week page (dist/leaderboard/week-<w>.html)
+    # Leaderboard week pages
     week_tpl = env.get_template("leaderboard_week.html")
     for w in weeks:
         rows = leaderboard_rows_for_week(elo_all, w)
-        html = week_tpl.render(
-            week=w,
-            season=season,
-            baseline=baseline,
-            k_factor=k_factor,
-            available_weeks=weeks,
-            rows=rows,
+        (leaderboard_out_dir / f"week-{w}.html").write_text(
+            week_tpl.render(week=w, season=api_season, baseline=baseline, k_factor=k_factor,
+                            available_weeks=weeks, rows=rows),
+            encoding="utf-8",
         )
-        (leaderboard_out_dir / f"week-{w}.html").write_text(html, encoding="utf-8")
 
-    # Copy static assets into dist/static
-    out_static_dir = dist_dir / "static"
+    # Static assets (copied per season so base_path-relative refs resolve)
+    out_static_dir = season_dist_dir / "static"
     if out_static_dir.exists():
         shutil.rmtree(out_static_dir)
     shutil.copytree(static_dir, out_static_dir)
 
-    print("Site built")
-    print(f"- index: {dist_dir / 'index.html'} (week {latest_week})")
-    print(f"- leaderboard: {leaderboard_out_dir} ({len(weeks)} pages)")
-    print(f"- teams: {team_out_dir} ({len(latest_rows)} pages)")
-    print(f"- elo charts: {elo_out_dir} ({len(teams)} pages)")
-    print(f"- static: {out_static_dir}")
+    print(f"Season {season}: built {len(weeks)} weeks, {len(teams)} teams -> {season_dist_dir}")
+
+    # Summary for the picker card
+    elos = latest_elo_map(elo_all)
+    top_team = max(elos, key=lambda t: elos.get(t, 0)) if elos else None
+    return {
+        "season": season,
+        "base_path": base_path,
+        "champion": playoff["outcome"]["champion"],
+        "runner_up": playoff["outcome"]["runner_up"],
+        "top_team": top_team,
+        "top_elo": elos.get(top_team, 0) if top_team else 0,
+    }
+
+
+def build_site(cfg: SiteConfig) -> None:
+    here = Path(__file__).resolve()
+    ui_dir = here.parents[1]  # .../ui
+    templates_dir = ui_dir / "templates"
+    static_dir = ui_dir / "static"
+    repo_root = here.parents[2]
+    dist_dir = resolve_dist_dir(here)
+    dist_dir.mkdir(parents=True, exist_ok=True)
+
+    env = Environment(
+        loader=FileSystemLoader(str(templates_dir)),
+        autoescape=select_autoescape(["html", "xml"]),
+    )
+    env.filters["slug"] = slugify
+
+    analytics_api_base = resolve_analytics_api_base(cfg.analytics_api_base, timeout_s=cfg.timeout_s)
+
+    # Nav season-toggle metadata (shared across every page of every season).
+    all_seasons = [{"season": s, "base_path": f"/{s}/", "label": str(s)} for s in BUILD_SEASONS]
+
+    summaries: List[Dict[str, Any]] = []
+    for s in BUILD_SEASONS:
+        playoff = SEASON_PLAYOFFS[s]
+        summaries.append(
+            build_one_season(
+                env=env, analytics_api_base=analytics_api_base, season=s,
+                season_dist_dir=dist_dir / str(s), base_path=f"/{s}/", playoff=playoff,
+                all_seasons=all_seasons, static_dir=static_dir, repo_root=repo_root, cfg=cfg,
+            )
+        )
+
+    # Root intro/home at dist/index.html: season-agnostic feature guide (funnels
+    # to the picker) + a "choose a season" scroller. Feature cards deep-link to
+    # the #seasons scroller rather than any one season.
+    env.globals["base_path"] = "/"
+    env.globals["current_season"] = None
+    env.globals["all_seasons"] = all_seasons
+    intro_features = [dict(f, href="#seasons") for f in HOMEPAGE_FEATURES]
+    intro_tpl = env.get_template("home_intro.html")
+    (dist_dir / "index.html").write_text(
+        intro_tpl.render(seasons=summaries, features=intro_features), encoding="utf-8"
+    )
+
+    # Static at root for the picker page
+    root_static = dist_dir / "static"
+    if root_static.exists():
+        shutil.rmtree(root_static)
+    shutil.copytree(static_dir, root_static)
+
+    print("\nMulti-season site built")
+    print(f"- picker: {dist_dir / 'index.html'}")
+    for s in BUILD_SEASONS:
+        print(f"- season {s}: {dist_dir / str(s) / 'index.html'}")
 
 
 def main() -> None:

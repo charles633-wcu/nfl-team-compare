@@ -62,7 +62,7 @@ def test_build_matchup_page_writes_file():
     )()
     dist = _make_test_dir("writes-file")
     try:
-        build_matchup_page(env, MINIMAL_ELO_ALL, dist, season=2024)
+        build_matchup_page(env, MINIMAL_ELO_ALL, dist, season=2024, playoff_seeds=PLAYOFF_SEEDS_2024)
         assert (dist / "matchup.html").exists()
     finally:
         shutil.rmtree(dist)
@@ -92,7 +92,7 @@ def test_margin_model_extracted_correctly():
     env = type("E", (), {"get_template": lambda self, n: FakeTemplate()})()
     dist = _make_test_dir("margin-model")
     try:
-        build_matchup_page(env, MINIMAL_ELO_ALL, dist, season=2024)
+        build_matchup_page(env, MINIMAL_ELO_ALL, dist, season=2024, playoff_seeds=PLAYOFF_SEEDS_2024)
     finally:
         shutil.rmtree(dist)
     mm = json.loads(captured["margin_model_json"])
@@ -106,7 +106,7 @@ def test_matchup_page_embeds_valid_score_simulation_helpers():
     env = Environment(loader=FileSystemLoader(str(templates_dir)))
     dist = _make_test_dir("score-helpers")
     try:
-        build_matchup_page(env, MINIMAL_ELO_ALL, dist, season=2024)
+        build_matchup_page(env, MINIMAL_ELO_ALL, dist, season=2024, playoff_seeds=PLAYOFF_SEEDS_2024)
         rendered = (dist / "matchup.html").read_text(encoding="utf-8")
     finally:
         shutil.rmtree(dist)

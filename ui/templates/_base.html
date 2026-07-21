@@ -8,6 +8,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{% block title %}NFL Elo{% endblock %}</title>
   <link rel="stylesheet" href="{{ base_path }}static/css/app.css" />
+  <style>
+    .season-switch{display:inline-flex;align-items:center;gap:.25rem;margin-left:1.25rem;
+      padding:.2rem;border:1px solid rgba(255,255,255,.14);border-radius:999px;
+      background:rgba(255,255,255,.04)}
+    .season-switch-home,.season-switch-opt{display:inline-flex;align-items:center;justify-content:center;
+      min-width:2.6rem;height:1.9rem;padding:0 .6rem;border-radius:999px;
+      font:600 .85rem/1 "Barlow Condensed",sans-serif;letter-spacing:.04em;
+      color:rgba(255,255,255,.72);text-decoration:none;transition:all .15s ease}
+    .season-switch-home{min-width:1.9rem;font-size:1rem}
+    .season-switch-opt:hover,.season-switch-home:hover{color:#fff;background:rgba(255,255,255,.08)}
+    .season-switch-opt.active{color:#0b1020;background:linear-gradient(135deg,#7dd3fc,#38bdf8);
+      box-shadow:0 2px 10px rgba(56,189,248,.35)}
+  </style>
 </head>
 <body class="broadcast-shell">
   <div class="site-backdrop" aria-hidden="true">
@@ -28,7 +41,7 @@
             <a href="{{ base_path }}index.html" class="brandlink">NFL Power Index</a>
           {% endif %}
         </div>
-        <div class="brand-subtitle">2024 NFL SEASON</div>
+        <div class="brand-subtitle">{{ current_season or "" }} NFL SEASON</div>
       </div>
 
       <nav class="nav" aria-label="Primary">
@@ -39,6 +52,17 @@
         <a href="{{ base_path }}about.html" class="navlink {% if active_page == 'about' %}active{% endif %}">About</a>
         <a href="{{ base_path }}contact.html" class="navlink {% if active_page == 'contact' %}active{% endif %}">Contact</a>
       </nav>
+
+      {% if all_seasons %}
+      <div class="season-switch" role="group" aria-label="Select season">
+        <a class="season-switch-home" href="/index.html" title="All seasons">⌂</a>
+        {% for s in all_seasons %}
+          <a href="{{ s.base_path }}index.html"
+             class="season-switch-opt {% if s.season == current_season %}active{% endif %}"
+             {% if s.season == current_season %}aria-current="true"{% endif %}>{{ s.label }}</a>
+        {% endfor %}
+      </div>
+      {% endif %}
     </header>
 
     <main class="container">

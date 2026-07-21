@@ -17,12 +17,13 @@ class GameRow:
 import time
 import requests
 
-def fetch_team_timeline(api_base: str, team: str, timeout_s: int = 20, retries: int = 3) -> dict:
+def fetch_team_timeline(api_base: str, team: str, timeout_s: int = 20, retries: int = 3, season: int | None = None) -> dict:
     url = f"{api_base.rstrip('/')}/teams/{quote(team)}/elo"
+    params = {"season": season} if season is not None else None
     last_err = None
     for attempt in range(1, retries + 1):
         try:
-            r = requests.get(url, timeout=timeout_s)
+            r = requests.get(url, timeout=timeout_s, params=params)
             r.raise_for_status()
             return r.json()
         except requests.exceptions.RequestException as e:

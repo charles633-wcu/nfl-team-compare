@@ -41,7 +41,7 @@ class UIBuildSmokeTests(unittest.TestCase):
         local_elo = json.loads((repo_root / "elo" / "elo_2024.json").read_text(encoding="utf-8"))
         teams_blob = local_elo["teams"]
 
-        def fake_fetch_team_timeline(_api_base: str, team: str, timeout_s: int = 20) -> dict:
+        def fake_fetch_team_timeline(_api_base: str, team: str, timeout_s: int = 20, season=None) -> dict:
             team_weeks = teams_blob[team]
             return {
                 "season": local_elo["season"],
@@ -63,29 +63,46 @@ class UIBuildSmokeTests(unittest.TestCase):
         ):
             build_site(SiteConfig(analytics_api_base="http://local-fixture"))
 
-        index_html = (self.dist_dir / "index.html").read_text(encoding="utf-8")
-        week_html = (self.dist_dir / "leaderboard" / "week-18.html").read_text(encoding="utf-8")
-        about_html = (self.dist_dir / "about.html").read_text(encoding="utf-8")
-        contact_html = (self.dist_dir / "contact.html").read_text(encoding="utf-8")
-        matchup_html = (self.dist_dir / "matchup.html").read_text(encoding="utf-8")
-        teams_html = (self.dist_dir / "teams" / "index.html").read_text(encoding="utf-8")
-        team_html = (self.dist_dir / "team" / "philadelphia-eagles.html").read_text(encoding="utf-8")
-        chart_html = (self.dist_dir / "elo" / "philadelphia-eagles.html").read_text(encoding="utf-8")
-        app_css = (self.dist_dir / "static" / "css" / "app.css").read_text(encoding="utf-8")
+        # Multi-season layout: dist/index.html is the season picker; each season's
+        # site lives under dist/<season>/. The mock returns 2024 data for every
+        # season, so we assert page content against the 2024 subtree.
+        s = self.dist_dir / "2024"
+        picker_html = (self.dist_dir / "index.html").read_text(encoding="utf-8")
+        index_html = (s / "index.html").read_text(encoding="utf-8")
+        week_html = (s / "leaderboard" / "week-18.html").read_text(encoding="utf-8")
+        about_html = (s / "about.html").read_text(encoding="utf-8")
+        contact_html = (s / "contact.html").read_text(encoding="utf-8")
+        matchup_html = (s / "matchup.html").read_text(encoding="utf-8")
+        teams_html = (s / "teams" / "index.html").read_text(encoding="utf-8")
+        team_html = (s / "team" / "philadelphia-eagles.html").read_text(encoding="utf-8")
+        chart_html = (s / "elo" / "philadelphia-eagles.html").read_text(encoding="utf-8")
+        app_css = (s / "static" / "css" / "app.css").read_text(encoding="utf-8")
 
+        # Root intro: season-agnostic feature guide + "choose a season" scroller
+        self.assertIn("Discover every angle of every season", picker_html)
+        self.assertIn("Choose a season to explore", picker_html)
+        self.assertIn("feature-card", picker_html)
+        self.assertIn("static/img/homepage/leaderboard.png", picker_html)
+        self.assertIn("/2024/index.html", picker_html)
+        self.assertIn("/2025/index.html", picker_html)
+
+        # Season landing: season pulse, NOT the feature guide (that lives on the intro)
         self.assertIn("broadcast-shell", index_html)
         self.assertIn("home-hero", index_html)
-        self.assertIn("Discover every angle of the 2024 season", index_html)
-        self.assertIn("Weekly Leaderboards", index_html)
+        self.assertIn("The 2024 season", index_html)
+        self.assertIn("Super Bowl champion", index_html)
+        self.assertIn("Weekly Leaderboard", index_html)
         self.assertIn("Matchup Simulator", index_html)
         self.assertIn("2024 NFL SEASON", index_html)
+        self.assertIn("season-switch", index_html)
+        self.assertNotIn("feature-card", index_html)
+        self.assertNotIn("img/homepage", index_html)
         self.assertIn("Week 18", week_html)
         self.assertNotIn("Browse every ranking window", week_html)
         self.assertIn("wk-picker-eyebrow-label", week_html)
         self.assertIn("Team directory", teams_html)
         self.assertIn("Profile", teams_html)
         self.assertIn("Chart", teams_html)
-        self.assertIn("static/img/homepage/leaderboard.png", index_html)
         self.assertIn("As a fan, this project came from the same questions fans ask all season", about_html)
         self.assertIn("Source Code", contact_html)
         self.assertIn("https://github.com/charles633-wcu", contact_html)
