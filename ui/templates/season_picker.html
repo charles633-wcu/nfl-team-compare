@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NFL Power Index — Choose a Season</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/app.css" />
+  <style>
+    .picker-shell{min-height:100vh;display:flex;flex-direction:column;align-items:center;
+      justify-content:center;padding:5vh 1.5rem;position:relative;z-index:1}
+    .picker-eyebrow{font:700 .8rem/1 "Barlow Condensed",sans-serif;letter-spacing:.35em;
+      text-transform:uppercase;color:#38bdf8;margin-bottom:.9rem}
+    .picker-title{font:800 clamp(2.6rem,6vw,4.6rem)/0.95 "Barlow Condensed",sans-serif;
+      letter-spacing:.01em;color:#f8fafc;text-align:center;margin:0 0 .6rem}
+    .picker-sub{font:400 1.05rem/1.5 "Inter",sans-serif;color:rgba(226,232,240,.7);
+      text-align:center;max-width:34rem;margin:0 0 3rem}
+    .picker-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+      gap:1.5rem;width:100%;max-width:54rem}
+    .season-card{position:relative;display:flex;flex-direction:column;overflow:hidden;
+      border:1px solid rgba(255,255,255,.12);border-radius:1.25rem;padding:2rem 1.9rem 1.8rem;
+      background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.02));
+      text-decoration:none;transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
+    .season-card:hover{transform:translateY(-6px);border-color:rgba(125,211,252,.55);
+      box-shadow:0 24px 60px -22px rgba(56,189,248,.5)}
+    .season-card::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;
+      background:linear-gradient(90deg,#7dd3fc,#38bdf8,#818cf8)}
+    .season-year{font:800 3.4rem/1 "Barlow Condensed",sans-serif;color:#f8fafc;letter-spacing:.01em}
+    .season-tag{align-self:flex-start;margin-top:.4rem;padding:.2rem .7rem;border-radius:999px;
+      font:700 .72rem/1 "Barlow Condensed",sans-serif;letter-spacing:.18em;text-transform:uppercase;
+      color:#0b1020;background:linear-gradient(135deg,#7dd3fc,#38bdf8)}
+    .season-stats{margin:1.6rem 0 1.8rem;display:flex;flex-direction:column;gap:1rem}
+    .stat-row{display:flex;flex-direction:column;gap:.15rem}
+    .stat-label{font:700 .72rem/1 "Barlow Condensed",sans-serif;letter-spacing:.2em;
+      text-transform:uppercase;color:rgba(148,163,184,.85)}
+    .stat-value{font:600 1.15rem/1.2 "Inter",sans-serif;color:#e2e8f0}
+    .stat-value .elo{color:#7dd3fc;font-weight:700;margin-left:.4rem}
+    .season-enter{margin-top:auto;display:inline-flex;align-items:center;gap:.5rem;
+      font:700 .95rem/1 "Inter",sans-serif;color:#7dd3fc}
+    .season-card:hover .season-enter{color:#fff}
+    .picker-foot{margin-top:3rem;font:400 .85rem/1.4 "Inter",sans-serif;color:rgba(148,163,184,.6)}
+  </style>
+</head>
+<body class="broadcast-shell">
+  <div class="site-backdrop" aria-hidden="true">
+    <div class="site-glow site-glow-a"></div>
+    <div class="site-glow site-glow-b"></div>
+    <div class="site-grid"></div>
+  </div>
+
+  <div class="picker-shell">
+    <div class="picker-eyebrow">NFL Power Index</div>
+    <h1 class="picker-title">Choose a Season</h1>
+    <p class="picker-sub">Week-by-week Elo ratings, leaderboards, team trajectories, and a playoff matchup simulator — pick a season to explore.</p>
+
+    <div class="picker-grid">
+      {% for s in seasons %}
+      <a class="season-card" href="{{ s.base_path }}index.html">
+        <div class="season-year">{{ s.season }}</div>
+        <span class="season-tag">Season</span>
+        <div class="season-stats">
+          <div class="stat-row">
+            <span class="stat-label">Champion</span>
+            <span class="stat-value">{{ s.champion }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Top Elo (Final)</span>
+            <span class="stat-value">{{ s.top_team }}<span class="elo">{{ s.top_elo }}</span></span>
+          </div>
+        </div>
+        <span class="season-enter">Enter {{ s.season }} season &rarr;</span>
+      </a>
+      {% endfor %}
+    </div>
+
+    <p class="picker-foot">Elo model: K=25, HFA +55, MOV-adjusted &middot; regular season weeks 1&ndash;18</p>
+  </div>
+</body>
+</html>
