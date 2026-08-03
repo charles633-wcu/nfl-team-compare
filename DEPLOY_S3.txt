@@ -1,0 +1,232 @@
+===============================================================================
+ NFL ELO ANALYTICS PLATFORM - S3 / CLOUDFRONT DEPLOYMENT INSTRUCTIONS
+===============================================================================
+
+ Live site:   https://d2dlhuu2z9gv8p.cloudfront.net
+ Bucket:      <YOUR-BUCKET>          (fill in)
+ Distribution: <YOUR-DIST-ID>        (fill in, looks like E1A2B3C4D5E6F7)
+
+ Fill those two values in below before running anything.
+
+
+===============================================================================
+ 0. THE ONE THING TO GET RIGHT
+===============================================================================
+
+ Upload the CONTENTS of ui/dist/ to the BUCKET ROOT.
+ Do NOT upload the "dist" folder itself, and do NOT upload the "ui" folder.
+
+   RIGHT ->  s3://YOUR-BUCKET/index.html
+   WRONG ->  s3://YOUR-BUCKET/dist/index.html
+   WRONG ->  s3://YOUR-BUCKET/ui/dist/index.html
+
+ If you get this wrong, every page 404s because CloudFront's default root
+ object is "index.html" at the bucket root.
+
+
+===============================================================================
+ 1. WHERE THE FILES LIVE ON YOUR MACHINE
+===============================================================================
+
+ Everything you upload comes from exactly one directory:
+
+   C:\Users\czw53\Downloads\projects\nfl-team-compare\ui\dist\
+
+ That directory is generated output. It is gitignored and is NOT in the
+ GitHub repo - you build it locally, then upload it. Nothing else in the
+ repository gets deployed. The FastAPI services, the loader, and the SQLite
+ databases are build-time and local-development only; nothing runs in AWS.
+
+ If ui/dist/ is missing or stale, rebuild it (section 2). Otherwise skip
+ straight to section 3.
+
+
+===============================================================================
+ 2. REBUILD ui/dist (ONLY IF SOURCE CHANGED)
+===============================================================================
+
+ The builder pulls its data from the Analytics API at build time and bakes
+ it into the HTML, so the API must be running BEFORE you build.
+
+ Terminal 1 - start the Analytics API, leave it running:
+
+   cd C:\Users\czw53\Downloads\projects\nfl-team-compare
+   set ELO_DIR=C:\Users\czw53\Downloads\projects\nfl-team-compare\elo
+   py -m uvicorn analytics_api:app --host 127.0.0.1 --port 8001 --app-dir analytics-api
+
+ Terminal 2 - build the site:
+
+   cd C:\Users\czw53\Downloads\projects\nfl-team-compare
+   set ANALYTICS_API_BASE=http://127.0.0.1:8001
+   py ui\build\build_site.py
+
+ Expected output (the numbers matter - 19 weeks, 32 teams, both seasons):
+
+   Season 2025: built 19 weeks, 32 teams -> ...\ui\dist\2025
+   Season 2024: built 19 weeks, 32 teams -> ...\ui\dist\2024
+   Multi-season site built
+
+ You can stop the API (Terminal 1) once the build finishes. It is not needed
+ for the upload and it is not needed in production.
+
+ Optional sanity check before uploading - serve it locally:
+
+   cd C:\Users\czw53\Downloads\projects\nfl-team-compare\ui\dist
+   py -m http.server 8080
+   ...then open http://127.0.0.1:8080/
+
+ IMPORTANT: check it through http://127.0.0.1:8080/ , NOT by double-clicking
+ index.html. Opened as a file:// URL the season picker loads unstyled,
+ because it references /static/css/app.css with an absolute path. That is a
+ local-preview artifact only - it is correct on S3, where the site is served
+ from the bucket root.
+
+
+===============================================================================
+ 3. UPLOAD ORDER
+===============================================================================
+
+ Use a single "aws s3 sync". It handles ordering, only uploads changed
+ files, and sets Content-Type from the file extension automatically.
+
+ STEP 1 - Dry run. Changes nothing. Review the add/remove list.
+
+   cd C:\Users\czw53\Downloads\projects\nfl-team-compare
+   aws s3 sync ui\dist s3://YOUR-BUCKET --delete --dryrun
+
+ STEP 2 - Execute.
+
+   aws s3 sync ui\dist s3://YOUR-BUCKET --delete
+
+ STEP 3 - Invalidate the CloudFront cache. REQUIRED.
+          index.html changes on every deploy and is already cached.
+
+   aws cloudfront create-invalidation --distribution-id YOUR-DIST-ID --paths "/*"
+
+ If step 3 fails with AccessDenied, use the AWS Console instead:
+   CloudFront -> your distribution -> Invalidations -> Create invalidation
+   -> enter  /*  -> Create.
+ (The IAM user czw5377 was denied cloudfront:ListDistributions, so it may
+ not have invalidation rights either.)
+
+
+ ---------------------------------------------------------------------------
+ ABOUT --delete
+ ---------------------------------------------------------------------------
+
+ "aws s3 sync" by default only ADDS and OVERWRITES. It never removes
+ anything already in the bucket. "--delete" additionally removes objects in
+ the bucket that no longer exist locally.
+
+ It matters here because the site was RESTRUCTURED. The old layout had
+ pages at the bucket root; they now live under /2025/ and /2024/.
+
+ WITHOUT --delete, these 87 old files stay live forever, orphaned:
+   about.html, contact.html, matchup.html, teams/index.html,
+   team/*.html (32), elo/*.html (32), leaderboard/*.html (19)
+
+ They form a complete, self-navigating copy of the OLD 2024-only site.
+ Their nav links point at each other, so anyone arriving from an old search
+ result can browse the entire stale site and never see the season picker.
+
+ WITH --delete, they are removed and those URLs start returning 403. The
+ advertised root URL is unaffected.
+
+ Recommendation: use --delete. Run the dry run first so you see the list.
+
+
+===============================================================================
+ 4. WHAT THE BUCKET SHOULD LOOK LIKE AFTER UPLOAD
+===============================================================================
+
+ s3://YOUR-BUCKET/
+ |
+ +-- index.html                  <- SEASON PICKER. The landing page.
+ |                                  CloudFront default root object.
+ +-- static/                     <- assets for the picker page
+ |   +-- css/app.css
+ |   +-- js/homepage.js
+ |   +-- img/
+ |       +-- logos/*.png         (32 team logos)
+ |       +-- homepage/*.png
+ |
+ +-- 2025/                       <- COMPLETE SITE for the 2025 season
+ |   +-- index.html                 season homepage
+ |   +-- about.html                 methodology
+ |   +-- contact.html
+ |   +-- matchup.html               simulator + playoff bracket
+ |   +-- static/                    full copy of assets (intentional)
+ |   +-- teams/
+ |   |   +-- index.html             team directory
+ |   +-- team/
+ |   |   +-- arizona-cardinals.html ... (32 files)
+ |   +-- elo/
+ |   |   +-- arizona-cardinals.html ... (32 files)
+ |   +-- leaderboard/
+ |       +-- week-0.html ... week-18.html   (19 files)
+ |
+ +-- 2024/                       <- COMPLETE SITE for the 2024 season
+     +-- (identical structure to 2025/)
+
+ Totals: 177 HTML pages - 1 picker + 88 per season.
+
+ Each season subtree is fully self-contained and carries its own copy of
+ static/. That duplication is deliberate: every season URL is independently
+ linkable and cacheable, and no page depends on another season's assets.
+
+
+===============================================================================
+ 5. VERIFY THE DEPLOY
+===============================================================================
+
+   curl -s https://d2dlhuu2z9gv8p.cloudfront.net/ | findstr "<title>"
+
+ Expect:  <title>NFL Power Index - Every Season, Every Angle</title>
+ If it still says "NFL Elo Home", the invalidation has not propagated yet.
+ Wait a minute and retry.
+
+ Then check both seasons return 200:
+
+   curl -s -o NUL -w "%{http_code}\n" https://d2dlhuu2z9gv8p.cloudfront.net/2025/index.html
+   curl -s -o NUL -w "%{http_code}\n" https://d2dlhuu2z9gv8p.cloudfront.net/2024/index.html
+
+ Finally open the site and confirm:
+   - the picker shows two season cards (2025 -> Seahawks, 2024 -> Eagles)
+   - clicking a card enters that season
+   - the season toggle in the nav switches between 2025 and 2024
+   - pages are styled (CSS loaded)
+
+
+===============================================================================
+ 6. EXPECTED QUIRKS - NOT BUGS
+===============================================================================
+
+ * A bare directory URL 403s.
+     https://.../2025/            -> 403
+     https://.../2025/index.html  -> 200
+   The distribution uses a REST/OAC S3 origin, which does not resolve
+   directory index documents. Only the bucket root gets a default root
+   object. This does not affect the site, because every internal link is a
+   full explicit .html path. It is also pre-existing - /leaderboard/ already
+   behaved this way on the old site.
+
+   To make bare directory URLs work you would need either an S3 static
+   website endpoint as the origin, or a CloudFront Function that rewrites
+   requests ending in "/" to append "index.html". Neither is required.
+
+ * Old deep URLs 403 after a --delete sync. Expected - those pages moved
+   into /2025/ and /2024/.
+
+
+===============================================================================
+ 7. QUICK REFERENCE
+===============================================================================
+
+ Source of truth:  C:\Users\czw53\Downloads\projects\nfl-team-compare\ui\dist\
+ Upload target:    s3://YOUR-BUCKET/           (bucket ROOT, contents only)
+
+   aws s3 sync ui\dist s3://YOUR-BUCKET --delete --dryrun
+   aws s3 sync ui\dist s3://YOUR-BUCKET --delete
+   aws cloudfront create-invalidation --distribution-id YOUR-DIST-ID --paths "/*"
+
+===============================================================================
