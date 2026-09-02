@@ -23,7 +23,7 @@ ui/.test-dist-*/
 ui/.test-build-*/
 *.log
 
-# claude tooling
+# local tooling
 .claude/
 .claudeignore
 CLAUDE.md
