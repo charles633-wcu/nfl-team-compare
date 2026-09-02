@@ -134,7 +134,7 @@ A full build produces **177 HTML pages** — the picker plus 88 pages per season
 | Data Loader | `loader/loader.py` | pre-processing | Normalizes NFL fixtures/results into the master `games` table, tagged by season. |
 | SQLite Data Store | `loader/data/nfl-games.db` | file | Master game database, keyed `(season, match_number)`. Mounted into the Data API container. |
 | Data API | `data-api/data_api.py` | 8000 internal, 9080 `/api/*` via APISIX | Serves teams, games, and team summaries over SQLite, filtered by `season`. |
-| Elo Batch Pipeline | `analytics-api/compute_elo.py` | batch job | Computes weekly Elo ratings, per-game Elo records, OLS margin model, and persisted artifacts for one season per run. |
+| Elo Batch Pipeline | `analytics-api/compute_elo.py` | batch job | Computes weekly Elo ratings, per-game Elo records, OLS margin model, season score model, and persisted artifacts for one season per run. |
 | Elo Artifact Store | `elo/elo_<SEASON>.json` | file | Per-season JSON artifact consumed by the Analytics API and static site builder. |
 | Analytics API | `analytics-api/analytics_api.py` | 8001 internal, 9080 `/analytics/*` via APISIX | Serves Elo data, metadata, team timelines, and a manual recompute hook, per season. |
 | UI Static Builder | `ui/build/build_site.py` | build time | Pulls analytics data for every season in `BUILD_SEASONS` and renders all HTML pages into `ui/dist/`. |
@@ -162,7 +162,7 @@ Fixture feed / CSV
   -> S3 + CloudFront
 ```
 
-The static site embeds the data needed for the interactive tools at build time. For example, each season's `matchup.html` receives weekly Elo snapshots, team game histories, margin model parameters, playoff seeds, and the K-factor as inline JSON. That lets the browser run the simulator with no runtime API calls.
+The static site embeds the data needed for the interactive tools at build time. For example, each season's `matchup.html` receives weekly Elo snapshots, team game histories, margin model parameters, score-simulation parameters, playoff seeds, and the K-factor as inline JSON. That lets the browser run the simulator with no runtime API calls.
 
 ---
 
@@ -343,6 +343,12 @@ Elo is computed one season per run, selected by `ELO_SEASON`:
 ELO_SEASON=2025 py analytics-api/compute_elo.py
 ```
 
+In Windows PowerShell, set the variable separately:
+
+```powershell
+$env:ELO_SEASON="2025"; py analytics-api/compute_elo.py
+```
+
 This writes `elo/elo_2025.json` and updates the season-keyed Elo SQLite artifact.
 
 ### 4. Start the Docker Stack
@@ -476,7 +482,7 @@ Run the full test suite:
 py -m pytest
 ```
 
-The suite currently reports **27 passed**.
+The suite currently reports **29 passed**.
 
 Useful targeted runs:
 
@@ -502,6 +508,7 @@ The tests check things like:
 - worktree builds resolve output paths correctly
 - master DB schema and season ingest are correct, and seasons are disjoint
 - both APIs honor `?season=` and default to the latest season
+- score simulation parameters are season-specific and reach the rendered matchup page
 - **2024 Elo output still matches the committed baseline exactly** (regression guard)
 
 ---
