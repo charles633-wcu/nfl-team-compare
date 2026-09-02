@@ -5,6 +5,7 @@ endpoints.txt
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.pytest-tmp/
 .venv/
 
 # IDE/editor state
@@ -35,6 +36,7 @@ docs/superpowers/specs
 
 # Local context / memory (human-readable working notes — not for the repo)
 context/
+context.txt
 
 # Local-only notes and raw data sources (CSV in loader/data is the source of record)
 interviewquestions.txt
