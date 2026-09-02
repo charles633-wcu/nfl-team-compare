@@ -20,6 +20,8 @@ class EloConfig:
     baseline: int = 1500
     k_factor: int = 25
     weeks: int = 18
+    margin_std_dev: float = 13.45
+    total_points_std_dev: float = 10.0
     hfa: int = 55  # Elo points added to home team before computing expected score
                    # Equivalent to ~3–4 pp win-prob boost for even matchups.
                    # Source: FiveThirtyEight NFL Elo methodology (Glickman & Jones 1999)
@@ -209,6 +211,7 @@ def compute_weekly_elo(games: List[Dict[str, Any]], teams: List[str], cfg: EloCo
             out["teams"][t][str(week)]["final_elo"] = int(out["elo"][str(week)][t])
 
     a, b = fit_ols(x_elo_diff, y_margin)
+    total_points = [int(g["home_score"]) + int(g["away_score"]) for g in games]
     out["margin_model"] = {
         "type": "ols",
         "feature": "elo_diff_pre",
@@ -216,6 +219,13 @@ def compute_weekly_elo(games: List[Dict[str, Any]], teams: List[str], cfg: EloCo
         "intercept": a,
         "slope": b,
         "n_samples": len(x_elo_diff),
+    }
+    out["score_model"] = {
+        "type": "normal_score_simulation",
+        "margin_std_dev": cfg.margin_std_dev,
+        "total_points_mean": sum(total_points) / len(total_points) if total_points else 43.5,
+        "total_points_std_dev": cfg.total_points_std_dev,
+        "n_samples": len(total_points),
     }
 
     for team, weeks_blob in out["teams"].items():

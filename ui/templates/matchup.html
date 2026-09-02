@@ -149,6 +149,7 @@
 const WEEKLY_ELOS    = {{ weekly_elos_json | safe }};
 const GAMES_BY_TEAM  = {{ games_by_team_json | safe }};
 const MARGIN_MODEL   = {{ margin_model_json | safe }};
+const SCORE_MODEL    = {{ score_model_json | safe }};
 const PLAYOFF_SEEDS  = {{ playoff_seeds_json | safe }};
 const K_FACTOR       = {{ k_factor }};
 </script>
@@ -246,21 +247,23 @@ function compareTuple(a, b) {
  * simulateScore — FiveThirtyEight-style NFL game simulation
  *
  * Method:
+ *   Runtime parameters come from SCORE_MODEL, which is embedded per season by
+ *   the static site builder.
  *   1. expectedMargin from Elo-calibrated linear model (computeMargin).
- *   2. simulatedMargin ~ N(expectedMargin, σ=13.45).
- *      σ=13.45 is the historical std dev of NFL final-score margins after
+ *   2. simulatedMargin ~ N(expectedMargin, SCORE_MODEL.marginStdDev).
+ *      marginStdDev is the historical std dev of NFL final-score margins after
  *      controlling for Elo-predicted spread (FiveThirtyEight, "How Our NFL
  *      Predictions Work", 2023; Glickman & Stern, JASA 1998 §4).
- *   3. totalPts ~ N(μ=43.5, σ=10), floor 21.
- *      μ=43.5 matches 2024 NFL season average (NFL.com Stats).
+ *   3. totalPts ~ N(SCORE_MODEL.totalPointsMean, SCORE_MODEL.totalPointsStdDev), floor 21.
+ *      totalPointsMean is computed from the selected season's regular-season games.
  *   4. winnerScore = (total + |margin|) / 2, loserScore = total − winner.
  *
  * Returns { winner: 'A'|'B', scoreA, scoreB }
  */
 function simulateScore(eloA, eloB) {
   const expectedMargin = computeMargin(eloA, eloB);
-  const simMargin = normalRandom(expectedMargin, 13.45);
-  const totalPts  = Math.max(21, Math.round(normalRandom(43.5, 10)));
+  const simMargin = normalRandom(expectedMargin, SCORE_MODEL.marginStdDev);
+  const totalPts  = Math.max(21, Math.round(normalRandom(SCORE_MODEL.totalPointsMean, SCORE_MODEL.totalPointsStdDev)));
   const [winSc, losSc] = chooseScorePair(totalPts, Math.abs(simMargin));
   const winner    = simMargin >= 0 ? 'A' : 'B';
   return {

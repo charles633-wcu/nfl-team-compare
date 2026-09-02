@@ -11317,6 +11317,13 @@
     "slope": 0.0479463066863698,
     "n_samples": 272
   },
+  "score_model": {
+    "type": "normal_score_simulation",
+    "margin_std_dev": 13.45,
+    "total_points_mean": 46.025735294117645,
+    "total_points_std_dev": 10.0,
+    "n_samples": 272
+  },
   "matchup_matrix": {
     "Arizona Cardinals": {
       "Atlanta Falcons": {

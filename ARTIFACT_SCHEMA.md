@@ -19,5 +19,14 @@ The analytics API is a read-only view over this artifact.
   "k_factor": 25,
   "weeks": 18,
   "elo": { "...": "..." },
-  "teams": { "...": "..." }
+  "teams": { "...": "..." },
+  "margin_model": { "...": "..." },
+  "score_model": {
+    "type": "normal_score_simulation",
+    "margin_std_dev": 13.45,
+    "total_points_mean": 45.82720588235294,
+    "total_points_std_dev": 10.0,
+    "n_samples": 272
+  }
 }
+```

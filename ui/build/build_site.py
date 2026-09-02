@@ -142,6 +142,15 @@ def compute_matchup_matrix(elo_all: Dict[str, Any]) -> Dict[str, Any]:
     return matrix
 
 
+def score_model_for_site(elo_all: Dict[str, Any]) -> Dict[str, float]:
+    sm = elo_all.get("score_model", {})
+    return {
+        "totalPointsMean": float(sm.get("total_points_mean", 43.5)),
+        "totalPointsStdDev": float(sm.get("total_points_std_dev", 10.0)),
+        "marginStdDev": float(sm.get("margin_std_dev", PLAYOFF_MARGIN_STD_DEV)),
+    }
+
+
 PLAYOFF_SEEDS_2024 = {
     "AFC": [
         {"seed": 1, "team": "Kansas City Chiefs",      "bye": True},
@@ -228,6 +237,7 @@ def build_matchup_page(
         "intercept": float(mm.get("intercept", 0.0)),
         "slope": float(mm.get("slope", 0.0)),
     }
+    score_model = score_model_for_site(elo_all)
     k_factor = int(elo_all.get("k_factor", 25))
 
     tpl = env.get_template("matchup.html")
@@ -236,6 +246,7 @@ def build_matchup_page(
         weekly_elos_json=json.dumps(weekly_elos, separators=(",", ":")),
         games_by_team_json=json.dumps(games_by_team, separators=(",", ":")),
         margin_model_json=json.dumps(margin_model, separators=(",", ":")),
+        score_model_json=json.dumps(score_model, separators=(",", ":")),
         playoff_seeds_json=json.dumps(playoff_seeds, separators=(",", ":")),
         k_factor=k_factor,
     )
@@ -534,6 +545,7 @@ def build_one_season(
     if not weeks:
         raise RuntimeError(f"No weeks found in {elo_all_url}. Got keys: {list(elo_all.keys())}")
     latest_week = max(weeks)
+    score_model = score_model_for_site(elo_all)
 
     # Homepage
     index_tpl = env.get_template("index.html")
@@ -559,7 +571,13 @@ def build_one_season(
     for name in ("about", "contact"):
         tpl = env.get_template(f"{name}.html")
         (season_dist_dir / f"{name}.html").write_text(
-            tpl.render(season=api_season, baseline=baseline, k_factor=k_factor, current_week=latest_week),
+            tpl.render(
+                season=api_season,
+                baseline=baseline,
+                k_factor=k_factor,
+                current_week=latest_week,
+                score_model=score_model,
+            ),
             encoding="utf-8",
         )
 

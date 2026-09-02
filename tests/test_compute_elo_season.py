@@ -71,3 +71,15 @@ def test_2025_elo_has_all_18_weeks(tmp_path):
     assert all(str(w) in result["elo"] for w in range(0, 19))
     assert len(result["teams"]) == 32
     assert result["margin_model"]["n_samples"] == 272
+
+
+def test_score_model_uses_season_average_total_points(tmp_path):
+    games = _played_games(_build_master(tmp_path), 2025)
+    cfg = ce.EloConfig(season=2025)
+    result = ce.compute_weekly_elo(games, ce.collect_teams(games), cfg)
+
+    score_model = result["score_model"]
+    assert score_model["total_points_mean"] == 46.025735294117645
+    assert score_model["total_points_std_dev"] == 10
+    assert score_model["margin_std_dev"] == 13.45
+    assert score_model["n_samples"] == 272

@@ -249,8 +249,10 @@ The matchup and playoff tools simulate final scores by sampling margin and total
 
 ```text
 margin ~ Normal(predicted_margin, 13.45)
-total  ~ Normal(43.5, 10)
+total  ~ Normal(season_average_combined_score, 10)
 ```
+
+The total-points mean is stored in each season's `score_model` and is computed from that season's regular-season games.
 
 Then scores are derived from:
 

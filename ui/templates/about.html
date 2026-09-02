@@ -161,20 +161,20 @@
       <ul class="method-params">
         <li><strong>\(\alpha\):</strong> intercept (home-field bias in margins)</li>
         <li><strong>\(\beta\):</strong> slope ≈ points per 100 Elo difference</li>
-        <li>Fit on all 2024 regular-season games (n ≈ 272)</li>
+        <li>Fit on all {{ season }} regular-season games (n ≈ 272)</li>
       </ul>
     </div>
 
     <div class="method-card">
       <div class="method-label">Game Simulation</div>
       <h3 class="method-title">Score Simulation</h3>
-      <p class="method-desc">To simulate a final score, the expected margin is used as the mean of a Normal distribution (σ = 13.45, the historical NFL game margin std dev). Total points are drawn from a separate Normal (μ = 43.5, σ = 10). Random draws use the Box-Muller transform for true Normal sampling.</p>
+      <p class="method-desc">To simulate a final score, the expected margin is used as the mean of a Normal distribution (σ = 13.45, the historical NFL game margin std dev). Total points are drawn from a separate Normal using that season's average combined score as μ and σ = 10. Random draws use the Box-Muller transform for true Normal sampling.</p>
       <div class="formula-block">
         \[
           \text{margin} \sim \mathcal{N}(\hat{m},\; \sigma_m = 13.45)
         \]
         \[
-          \text{total} \sim \mathcal{N}(43.5,\; \sigma_t = 10)
+          \text{total} \sim \mathcal{N}({{ "%.1f"|format(score_model.totalPointsMean) }},\; \sigma_t = 10)
         \]
         \[
           Z = \sqrt{-2\ln u_1}\,\cos(2\pi u_2), \quad u_1, u_2 \sim U(0,1)
@@ -182,7 +182,7 @@
       </div>
       <ul class="method-params">
         <li><strong>\(\sigma_m = 13.45\):</strong> historical NFL margin standard deviation</li>
-        <li><strong>43.5 pts total:</strong> 2024 season average combined score</li>
+        <li><strong>{{ "%.1f"|format(score_model.totalPointsMean) }} pts total:</strong> {{ season }} season average combined score</li>
         <li>Box-Muller: transforms two uniform random numbers into one Normal variate</li>
       </ul>
     </div>

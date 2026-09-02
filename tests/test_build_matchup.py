@@ -51,6 +51,12 @@ MINIMAL_ELO_ALL = {
         },
     },
     "margin_model": {"intercept": 1.835, "slope": 0.049, "type": "ols"},
+    "score_model": {
+        "total_points_mean": 46.025735294117645,
+        "total_points_std_dev": 10,
+        "margin_std_dev": 13.45,
+        "n_samples": 272,
+    },
 }
 
 
@@ -101,6 +107,30 @@ def test_margin_model_extracted_correctly():
     assert mm["slope"] == 0.049
 
 
+def test_score_model_extracted_correctly():
+    """build_matchup_page should pass season-specific score simulation parameters."""
+    captured = {}
+
+    class FakeTemplate:
+        def render(self, **kw):
+            captured.update(kw)
+            return "<html/>"
+
+    env = type("E", (), {"get_template": lambda self, n: FakeTemplate()})()
+    dist = _make_test_dir("score-model")
+    try:
+        build_matchup_page(env, MINIMAL_ELO_ALL, dist, season=2025, playoff_seeds=PLAYOFF_SEEDS_2024)
+    finally:
+        shutil.rmtree(dist)
+
+    score_model = json.loads(captured["score_model_json"])
+    assert score_model == {
+        "totalPointsMean": 46.025735294117645,
+        "totalPointsStdDev": 10.0,
+        "marginStdDev": 13.45,
+    }
+
+
 def test_matchup_page_embeds_valid_score_simulation_helpers():
     templates_dir = Path(__file__).parents[1] / "ui" / "templates"
     env = Environment(loader=FileSystemLoader(str(templates_dir)))
@@ -113,3 +143,5 @@ def test_matchup_page_embeds_valid_score_simulation_helpers():
 
     assert "VALID_NFL_SCORES" in rendered
     assert "chooseScorePair" in rendered
+    assert "const SCORE_MODEL" in rendered
+    assert "normalRandom(SCORE_MODEL.totalPointsMean, SCORE_MODEL.totalPointsStdDev)" in rendered
