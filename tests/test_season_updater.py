@@ -455,10 +455,10 @@ def test_end_to_end_update_from_saved_feed(tmp_path, capsys):
     paths.elo_dir.mkdir()
     for name in ("elo_2024.json", "elo_2025.json"):
         shutil.copy(ROOT / "elo" / name, paths.elo_dir / name)
-    shutil.copy(ROOT / "loader" / "data" / "nfl-season-2026.csv", paths.csv)  # hand-made, week 6
+    # No saved CSV (first run): the repo's live CSV advances every week, so it can't be the baseline.
 
     raw = us.load_feed(2026, FIXTURE_FEED)
-    assert us.update(2026, raw, paths=paths, accept_changes=True) == us.EXIT_OK
+    assert us.update(2026, raw, paths=paths) == us.EXIT_OK
 
     elo = json.loads((paths.elo_dir / "elo_2026.json").read_text(encoding="utf-8"))
     assert elo["weeks"] == 8
