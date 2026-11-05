@@ -23,10 +23,16 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
+import shutil
+import socket
+import subprocess
 import sys
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, List, Optional
+from urllib.request import urlopen
 
 REPO_ROOT = Path(__file__).resolve().parent
 for _sub in ("loader", "ui/build"):
@@ -40,6 +46,7 @@ from build_site import resolve_dist_dir  # noqa: E402
 
 FEED_URL = "https://fixturedownload.com/feed/json/nfl-{season}"
 FEED_TIMEOUT_S = 30
+HEALTH_TIMEOUT_S = 20
 # loader.build_master knows how to ingest these seasons from CSV.
 LIVE_SEASONS = {2026}
 CSV_COLUMNS = ["match_number", "week", "game_date", "home_team", "away_team",
@@ -204,6 +211,116 @@ def update(season: int, raw: Any, *, paths: Paths, accept_changes: bool = False,
 
     print(top_five(paths.elo_dir / f"elo_{season}.json"))
     return EXIT_OK
+
+
+# --- Processes ---------------------------------------------------------------
+
+def free_port() -> int:
+    """An unused localhost port (the OS picks it), so we never collide with other servers."""
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        return s.getsockname()[1]
+
+
+def log_tail(log_path: Path, lines: int = 20) -> str:
+    """Last lines of a step's log, for error messages."""
+    try:
+        return "\n".join(log_path.read_text(encoding="utf-8", errors="replace").splitlines()[-lines:])
+    except OSError:
+        return "(no log)"
+
+
+class Servers:
+    """
+    Owns every background server a run starts and always stops them on exit,
+    whether the run succeeded or failed. Each server logs to <log_dir>/<name>.log.
+    """
+
+    def __init__(self, log_dir: Path):
+        self.log_dir = Path(log_dir)
+        self.procs: List[tuple] = []
+
+    def __enter__(self) -> "Servers":
+        return self
+
+    def __exit__(self, *exc) -> bool:
+        self.stop_all()
+        return False  # never swallow the error
+
+    def spawn(self, name: str, cmd: List[str], env: dict) -> subprocess.Popen:
+        """Start a server from the repo root with extra env vars; output goes to its log."""
+        log = open(self.log_dir / f"{name}.log", "w", encoding="utf-8")
+        proc = subprocess.Popen(cmd, cwd=REPO_ROOT, env={**os.environ, **env},
+                                stdout=log, stderr=subprocess.STDOUT)
+        self.procs.append((proc, log))
+        return proc
+
+    def stop_all(self) -> None:
+        """terminate(), then kill() after a 5 s grace period."""
+        for proc, log in self.procs:
+            if proc.poll() is None:
+                proc.terminate()
+                try:
+                    proc.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    proc.kill()
+                    proc.wait()
+            log.close()
+        self.procs.clear()
+
+
+def wait_healthy(name: str, url: str, proc: subprocess.Popen, log_path: Path,
+                 timeout_s: float = HEALTH_TIMEOUT_S) -> None:
+    """Poll a /health URL until it says status ok; fail fast if the process dies."""
+    deadline = time.monotonic() + timeout_s
+    while time.monotonic() < deadline and proc.poll() is None:
+        try:
+            with urlopen(url, timeout=2) as resp:
+                if json.loads(resp.read()).get("status") == "ok":
+                    return
+        except (OSError, ValueError):
+            pass  # not up yet
+        time.sleep(0.25)
+    raise PipelineError(f"{name} did not become healthy at {url}\n"
+                        f"--- last lines of {log_path} ---\n{log_tail(log_path)}")
+
+
+def run_step(name: str, cmd: List[str], env: dict, log_dir: Path) -> None:
+    """Run one pipeline command to completion; PipelineError with its log on failure."""
+    log_path = Path(log_dir) / f"{name}.log"
+    with open(log_path, "w", encoding="utf-8") as log:
+        code = subprocess.run(cmd, cwd=REPO_ROOT, env={**os.environ, **env},
+                              stdout=log, stderr=subprocess.STDOUT).returncode
+    if code != 0:
+        raise PipelineError(f"{name} failed (exit {code})\n"
+                            f"--- last lines of {log_path} ---\n{log_tail(log_path)}")
+
+
+def build_and_swap(cmd: List[str], env: dict, dist_dir: Path, log_dir: Path) -> None:
+    """Build into <dist>.staging, then swap it in; a failed build leaves dist untouched."""
+    dist_dir = Path(dist_dir)
+    staging = dist_dir.with_name(dist_dir.name + ".staging")
+    old = dist_dir.with_name(dist_dir.name + ".old")
+    shutil.rmtree(staging, ignore_errors=True)
+    try:
+        run_step("build", cmd, {**env, "UI_DIST_DIR": str(staging)}, log_dir)
+    except BaseException:
+        shutil.rmtree(staging, ignore_errors=True)
+        raise
+
+    # Swap: dist -> dist.old, staging -> dist, drop dist.old. Roll back if a rename fails.
+    shutil.rmtree(old, ignore_errors=True)
+    try:
+        if dist_dir.exists():
+            dist_dir.rename(old)
+        staging.rename(dist_dir)
+    except OSError as e:
+        if old.exists() and not dist_dir.exists():
+            old.rename(dist_dir)
+        shutil.rmtree(staging, ignore_errors=True)
+        raise PipelineError(f"Could not replace {dist_dir} ({e}). Is a preview server running "
+                            "from inside it? Stop it (or use http.server --directory) and rerun.") from e
+    shutil.rmtree(old, ignore_errors=True)
 
 
 def run_pipeline(season: int, paths: Paths) -> None:

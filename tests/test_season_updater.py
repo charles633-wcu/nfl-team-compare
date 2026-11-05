@@ -379,3 +379,67 @@ def test_cli_reports_bad_feed_file(tmp_path, capsys):
     bad.write_text("not json", encoding="utf-8")
     assert us.main(["2026", "--from-file", str(bad)]) == us.EXIT_ERROR
     assert "not valid JSON" in capsys.readouterr().err
+
+
+# --- update_season: process handling and the dist swap --------------------
+
+SLEEP = [sys.executable, "-c", "import time; time.sleep(60)"]
+WRITE_SITE = ("import os, pathlib; p = pathlib.Path(os.environ['UI_DIST_DIR']); "
+              "p.mkdir(parents=True, exist_ok=True); (p / 'index.html').write_text('new')")
+
+
+def test_servers_are_stopped_even_when_a_step_fails(tmp_path):
+    with pytest.raises(RuntimeError):
+        with us.Servers(tmp_path) as servers:
+            proc = servers.spawn("sleeper", SLEEP, {})
+            raise RuntimeError("compute_elo failed")
+    assert proc.poll() is not None
+
+
+def test_server_that_dies_fails_fast_with_its_log(tmp_path):
+    crash = [sys.executable, "-c", "print('boom: address already in use'); raise SystemExit(1)"]
+    with us.Servers(tmp_path) as servers:
+        proc = servers.spawn("broken", crash, {})
+        with pytest.raises(us.PipelineError, match="boom: address already in use"):
+            us.wait_healthy("Broken API", f"http://127.0.0.1:{us.free_port()}/health",
+                            proc, tmp_path / "broken.log", timeout_s=15)
+
+
+def test_server_that_never_answers_times_out(tmp_path):
+    with us.Servers(tmp_path) as servers:
+        proc = servers.spawn("silent", SLEEP, {})
+        with pytest.raises(us.PipelineError, match="did not become healthy"):
+            us.wait_healthy("Silent API", f"http://127.0.0.1:{us.free_port()}/health",
+                            proc, tmp_path / "silent.log", timeout_s=1)
+
+
+def test_failed_step_raises_with_its_log(tmp_path):
+    fail = [sys.executable, "-c", "print('No games returned'); raise SystemExit(1)"]
+    with pytest.raises(us.PipelineError, match="No games returned"):
+        us.run_step("compute-elo", fail, {}, tmp_path)
+
+
+def test_failed_build_leaves_the_existing_site_untouched(tmp_path):
+    dist = tmp_path / "dist"
+    dist.mkdir()
+    (dist / "index.html").write_text("old")
+    with pytest.raises(us.PipelineError, match="build"):
+        us.build_and_swap([sys.executable, "-c", "raise SystemExit(3)"], {}, dist, tmp_path)
+    assert (dist / "index.html").read_text() == "old"
+    assert not (tmp_path / "dist.staging").exists()
+
+
+def test_successful_build_replaces_the_site(tmp_path):
+    dist = tmp_path / "dist"
+    dist.mkdir()
+    (dist / "index.html").write_text("old")
+    us.build_and_swap([sys.executable, "-c", WRITE_SITE], {}, dist, tmp_path)
+    assert (dist / "index.html").read_text() == "new"
+    assert not (tmp_path / "dist.staging").exists() and not (tmp_path / "dist.old").exists()
+
+
+def test_free_port_is_an_open_local_port():
+    import socket
+    port = us.free_port()
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", port))
