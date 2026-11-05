@@ -158,3 +158,58 @@ def test_unstarted_next_week_is_not_reported_as_blocked():
 def test_nothing_played_is_week_zero():
     cut = feed.complete_through_week([_row(1, 1), _row(2, 2)])
     assert cut.week == 0 and cut.blocked == []
+
+
+# --- feed.diff_snapshots: new scores vs. suspicious changes ---------------
+
+def test_diff_reports_only_new_scores():
+    old = [_row(1, 1, 20, 10), _row(2, 2)]
+    new = [_row(1, 1, 20, 10), _row(2, 2, 14, 13)]
+    d = feed.diff_snapshots(old, new)
+    assert [r["match_number"] for r in d.new_scores] == [2] and d.problems == []
+
+
+def test_identical_snapshots_are_up_to_date():
+    rows = [_row(1, 1, 20, 10), _row(2, 2)]
+    d = feed.diff_snapshots(rows, [dict(r) for r in rows])
+    assert d.new_scores == [] and d.problems == []
+
+
+def test_changed_final_score_is_suspicious():
+    d = feed.diff_snapshots([_row(1, 1, 20, 10)], [_row(1, 1, 20, 13)])
+    assert d.problems == ["Week 1 Miami Dolphins @ Buffalo Bills: 10-20 -> 13-20"]
+
+
+def test_lost_score_is_suspicious():
+    d = feed.diff_snapshots([_row(1, 1, 20, 10)], [_row(1, 1)])
+    assert d.problems == ["Week 1 Miami Dolphins @ Buffalo Bills: 10-20 -> (no score)"]
+
+
+def test_game_removed_from_schedule_is_suspicious():
+    d = feed.diff_snapshots([_row(1, 1, 20, 10), _row(2, 2)], [_row(1, 1, 20, 10)])
+    assert any(p.startswith("Removed from schedule") for p in d.problems)
+
+
+def test_game_added_to_schedule_is_suspicious():
+    d = feed.diff_snapshots([_row(1, 1, 20, 10)], [_row(1, 1, 20, 10), _row(2, 2)])
+    assert any(p.startswith("New on schedule") for p in d.problems)
+
+
+@pytest.mark.parametrize("changed", [
+    {"home_team": "New York Jets"},
+    {"week": 2},
+])
+def test_same_match_number_with_different_game_is_suspicious(changed):
+    d = feed.diff_snapshots([_row(1, 1)], [{**_row(1, 1), **changed}])
+    assert any(p.startswith("Match 1 changed") for p in d.problems)
+
+
+def test_date_change_alone_is_not_suspicious():
+    # Flexed kickoffs move dates; that is normal.
+    d = feed.diff_snapshots([_row(1, 2)], [_row(1, 2, date="2026-09-21")])
+    assert d.problems == []
+
+
+def test_first_run_counts_every_score_as_new():
+    d = feed.diff_snapshots([], [_row(1, 1, 20, 10), _row(2, 2)])
+    assert [r["match_number"] for r in d.new_scores] == [1] and d.problems == []

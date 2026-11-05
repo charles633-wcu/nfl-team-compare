@@ -107,3 +107,42 @@ def complete_through_week(rows: List[Row]) -> Cut:
     cut_rows = [r if r["week"] <= week else {**r, "home_score": None, "away_score": None}
                 for r in rows]
     return Cut(week=week, rows=cut_rows, blocked=blocked)
+
+
+@dataclass
+class Diff:
+    """What changed between the saved snapshot and the new one."""
+
+    new_scores: List[Row] = field(default_factory=list)  # blank before, scored now
+    problems: List[str] = field(default_factory=list)    # need --accept-changes
+
+
+def diff_snapshots(old: List[Row], new: List[Row]) -> Diff:
+    """Compare two cut snapshots by match number; date-only changes are ignored."""
+    old_by = {r["match_number"]: r for r in old}
+    new_by = {r["match_number"]: r for r in new}
+    diff = Diff()
+
+    # First run: nothing to compare against, every score is new.
+    if not old_by:
+        diff.new_scores = [r for r in new if r["home_score"] is not None]
+        return diff
+
+    # Schedule membership.
+    for m in sorted(old_by.keys() - new_by.keys()):
+        diff.problems.append(f"Removed from schedule: {label(old_by[m])}")
+    for m in sorted(new_by.keys() - old_by.keys()):
+        diff.problems.append(f"New on schedule: {label(new_by[m])}")
+
+    # Same match number: identity first, then scores.
+    for m in sorted(old_by.keys() & new_by.keys()):
+        o, n = old_by[m], new_by[m]
+        if (o["week"], o["home_team"], o["away_team"]) != (n["week"], n["home_team"], n["away_team"]):
+            diff.problems.append(f"Match {m} changed: {label(o)} -> {label(n)}")
+            continue
+        if o["home_score"] is None:
+            if n["home_score"] is not None:
+                diff.new_scores.append(n)
+        elif (o["home_score"], o["away_score"]) != (n["home_score"], n["away_score"]):
+            diff.problems.append(f"{label(n)}: {score_text(o)} -> {score_text(n)}")
+    return diff
