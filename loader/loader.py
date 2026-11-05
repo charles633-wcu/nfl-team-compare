@@ -17,7 +17,7 @@ for future seasons that ship as a live feed.
 import csv
 import json
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from urllib.request import urlopen, Request
 
@@ -40,14 +40,22 @@ REGULAR_SEASON_WEEKS = range(1, 19)
 
 # --- Source: fixturedownload JSON feed (kept for future live-feed seasons) ---
 
-def fetch_games(url: str):
+# fixturedownload kickoffs are UTC; late games cross midnight. A fixed UTC-5 offset
+# puts every kickoff (earliest ~13:30 UTC, latest ~01:15 UTC) on its US game day.
+FEED_UTC_OFFSET = timedelta(hours=-5)
+
+
+def fetch_games(url: str, timeout: float = 30):
+    """Download a fixturedownload JSON feed; raises OSError on network failure or timeout."""
     req = Request(url, headers={"User-Agent": "nfl-loader"})
-    with urlopen(req) as resp:
+    with urlopen(req, timeout=timeout) as resp:
         return json.loads(resp.read().decode("utf-8"))
 
 
 def to_date_only(date_utc: str) -> str:
-    return datetime.strptime(date_utc, "%Y-%m-%d %H:%M:%SZ").date().isoformat()
+    """Kickoff timestamp -> US local game date (YYYY-MM-DD)."""
+    kickoff = datetime.strptime(date_utc, "%Y-%m-%d %H:%M:%SZ") + FEED_UTC_OFFSET
+    return kickoff.date().isoformat()
 
 
 def rows_from_feed(games, season: int):
