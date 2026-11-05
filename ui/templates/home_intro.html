@@ -111,7 +111,7 @@
           {% for s in seasons %}
           <a class="season-chip" role="listitem" href="{{ s.base_path }}index.html">
             <span class="season-chip__year">{{ s.season }}</span>
-            <span class="season-chip__champ">Champion<br><strong>{{ s.champion }}</strong></span>
+            <span class="season-chip__champ">{{ s.champion_label|default('Champion') }}<br><strong>{{ s.champion }}</strong></span>
             <span class="season-chip__enter">Enter {{ s.season }} &rarr;</span>
           </a>
           {% endfor %}

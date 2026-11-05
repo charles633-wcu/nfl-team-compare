@@ -6,6 +6,7 @@ Builds the master NFL games database (multi-season).
 Sources, in order of trust:
   - 2024: migrated offline from the existing single-season DB (loader/data/nfl-season-2024.db)
   - 2025: the cleaned CSV (loader/data/nfl-season-2025.csv), already in games-column shape
+  - 2026: in-progress CSV (loader/data/nfl-season-2026.csv); unplayed games have blank scores
 
 Every row is tagged with a `season`. Only regular-season games (weeks 1-18) are
 stored; postseason is excluded here so downstream services never have to filter it.
@@ -31,6 +32,7 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 MASTER_DB_PATH = DATA_DIR / "nfl-games.db"
 LEGACY_2024_DB = DATA_DIR / "nfl-season-2024.db"
 CSV_2025 = DATA_DIR / "nfl-season-2025.csv"
+CSV_2026 = DATA_DIR / "nfl-season-2026.csv"
 
 # Regular season only — postseason is intentionally not ingested.
 REGULAR_SEASON_WEEKS = range(1, 19)
@@ -162,8 +164,8 @@ def write_games(conn: sqlite3.Connection, rows) -> int:
 
 # --- Orchestration ---
 
-def build_master(master_path, csv_2025, legacy_2024_db) -> None:
-    """Build the master games DB: migrate 2024 offline, ingest 2025 from CSV."""
+def build_master(master_path, csv_2025, legacy_2024_db, csv_2026=None) -> None:
+    """Build the master games DB: migrate 2024 offline, ingest 2025 (and 2026 if given) from CSV."""
     master_path = Path(master_path)
     master_path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(str(master_path))
@@ -172,8 +174,11 @@ def build_master(master_path, csv_2025, legacy_2024_db) -> None:
         if legacy_2024_db and Path(legacy_2024_db).exists():
             write_games(conn, rows_from_sqlite(legacy_2024_db, season=2024))
         write_games(conn, rows_from_csv(csv_2025, season=2025))
+        # 2026 is still being played; blank scores load as NULL and are skipped by ?played=true.
+        if csv_2026 and Path(csv_2026).exists():
+            write_games(conn, rows_from_csv(csv_2026, season=2026))
         conn.commit()
-        for s in (2024, 2025):
+        for s in (2024, 2025, 2026):
             n = conn.execute(
                 "SELECT COUNT(*) FROM games WHERE season=?", (s,)
             ).fetchone()[0]
@@ -183,7 +188,7 @@ def build_master(master_path, csv_2025, legacy_2024_db) -> None:
 
 
 def main() -> None:
-    build_master(MASTER_DB_PATH, CSV_2025, LEGACY_2024_DB)
+    build_master(MASTER_DB_PATH, CSV_2025, LEGACY_2024_DB, csv_2026=CSV_2026)
     print(f"DB ready: {MASTER_DB_PATH}")
 
 

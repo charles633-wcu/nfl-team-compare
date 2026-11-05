@@ -189,8 +189,9 @@ def team_elo(
     if team_name not in teams_blob:
         raise HTTPException(status_code=404, detail=f"Team not found: {team_name}")
 
+    # Follow the artifact's own week count: an in-progress season stops early.
     weeks_out = []
-    for w in range(0, CFG.weeks + 1):
+    for w in range(0, int(data.get("weeks", CFG.weeks)) + 1):
         wk = str(w)
         wk_obj = teams_blob[team_name].get(wk)
         if wk_obj is None:

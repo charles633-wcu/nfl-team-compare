@@ -46,7 +46,7 @@
 
       <nav class="nav" aria-label="Primary">
         <a href="{{ base_path }}index.html" class="navlink {% if active_page == 'home' %}active{% endif %}">Home</a>
-        <a href="{{ base_path }}leaderboard/week-18.html" class="navlink {% if active_page == 'leaderboard' %}active{% endif %}">Leaderboard</a>
+        <a href="{{ base_path }}leaderboard/week-{{ latest_week|default(18) }}.html" class="navlink {% if active_page == 'leaderboard' %}active{% endif %}">Leaderboard</a>
         <a href="{{ base_path }}matchup.html" class="navlink {% if active_page == 'matchup' %}active{% endif %}">Matchup</a>
         <a href="{{ base_path }}teams/index.html" class="navlink {% if active_page == 'teams' %}active{% endif %}">Teams</a>
         <a href="{{ base_path }}about.html" class="navlink {% if active_page == 'about' %}active{% endif %}">About</a>

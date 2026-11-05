@@ -82,6 +82,19 @@ def fetch_played_games(api_base: str, season: int | None = None) -> List[Dict[st
     return payload.get("games", [])
 
 
+def played_through_week(games: List[Dict[str, Any]], max_weeks: int = 18) -> int:
+    """Last regular-season week that has a played game.
+
+    A finished season returns 18. An in-progress season returns the latest week
+    with a final score, so Elo isn't padded with empty future weeks that would
+    just repeat the current ratings.
+    """
+    weeks = [int(g["week"]) for g in games if 1 <= int(g["week"]) <= max_weeks]
+    if not weeks:
+        raise ValueError("No regular-season games with scores to compute Elo from")
+    return max(weeks)
+
+
 def collect_teams(games: List[Dict[str, Any]]) -> List[str]:
     teams = set()
     for g in games:
@@ -415,6 +428,8 @@ def main() -> None:
     if not games:
         raise RuntimeError(f"No games returned from {api_base}/games?played=true&season={season}")
 
+    # Size the season to what has been played (18 for finished seasons).
+    cfg = EloConfig(season=season, weeks=played_through_week(games, cfg.weeks))
     teams = collect_teams(games)
     result = compute_weekly_elo(games, teams, cfg)
 

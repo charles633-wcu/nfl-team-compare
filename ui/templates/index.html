@@ -21,7 +21,7 @@
   <div class="home-hero__board reveal-on-scroll">
     <div class="home-hero__board-header">
       <span class="scoreboard-label">Season pulse</span>
-      <span class="scoreboard-week">Here’s how it ended. The rest is yours to unpack.</span>
+      <span class="scoreboard-week">{% if season_pulse.in_progress %}Through Week {{ current_week }}. Here’s who the model likes — so far.{% else %}Here’s how it ended. The rest is yours to unpack.{% endif %}</span>
     </div>
     <div class="home-hero__board-grid">
       {% for item in season_pulse.cards %}
@@ -39,7 +39,7 @@
       {% endfor %}
     </div>
     <div class="home-hero__odds-card">
-      <span class="home-hero__odds-label">Champion title odds</span>
+      <span class="home-hero__odds-label">{% if season_pulse.in_progress %}Favorite’s title odds{% else %}Champion title odds{% endif %}</span>
       <strong>{{ season_pulse.odds_label }}</strong>
       <span>{{ season_pulse.simulation_label }}</span>
     </div>

@@ -62,11 +62,11 @@
         <span class="season-tag">Season</span>
         <div class="season-stats">
           <div class="stat-row">
-            <span class="stat-label">Champion</span>
+            <span class="stat-label">{{ s.champion_label|default('Champion') }}</span>
             <span class="stat-value">{{ s.champion }}</span>
           </div>
           <div class="stat-row">
-            <span class="stat-label">Top Elo (Final)</span>
+            <span class="stat-label">{{ s.elo_label|default('Top Elo (Final)') }}</span>
             <span class="stat-value">{{ s.top_team }}<span class="elo">{{ s.top_elo }}</span></span>
           </div>
         </div>

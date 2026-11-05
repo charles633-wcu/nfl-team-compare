@@ -217,8 +217,31 @@ PLAYOFF_OUTCOME_2025 = {
 SEASON_PLAYOFFS: Dict[int, Dict[str, Any]] = {
     2024: {"seeds": PLAYOFF_SEEDS_2024, "outcome": PLAYOFF_OUTCOME_2024},
     2025: {"seeds": PLAYOFF_SEEDS_2025, "outcome": PLAYOFF_OUTCOME_2025},
+    # In progress: seeds are projected from current standings at build time and
+    # there is no champion yet. An explicit None, so a season can't drift into
+    # "in progress" by accident -- unregistered seasons still raise KeyError.
+    2026: {"seeds": None, "outcome": None},
 }
-BUILD_SEASONS: List[int] = [2025, 2024]
+BUILD_SEASONS: List[int] = [2026, 2025, 2024]
+
+# Conference membership. Divisions come from elo/division_rivals.json; that file
+# has no conference, which projecting playoff seeds needs.
+_AFC_TEAMS = [
+    "Baltimore Ravens", "Cincinnati Bengals", "Cleveland Browns", "Pittsburgh Steelers",
+    "Buffalo Bills", "Miami Dolphins", "New England Patriots", "New York Jets",
+    "Houston Texans", "Indianapolis Colts", "Jacksonville Jaguars", "Tennessee Titans",
+    "Denver Broncos", "Kansas City Chiefs", "Las Vegas Raiders", "Los Angeles Chargers",
+]
+_NFC_TEAMS = [
+    "Chicago Bears", "Detroit Lions", "Green Bay Packers", "Minnesota Vikings",
+    "Dallas Cowboys", "New York Giants", "Philadelphia Eagles", "Washington Commanders",
+    "Atlanta Falcons", "Carolina Panthers", "New Orleans Saints", "Tampa Bay Buccaneers",
+    "Arizona Cardinals", "Los Angeles Rams", "San Francisco 49ers", "Seattle Seahawks",
+]
+CONFERENCE_OF: Dict[str, str] = {
+    **{t: "AFC" for t in _AFC_TEAMS},
+    **{t: "NFC" for t in _NFC_TEAMS},
+}
 _PLAYOFF_SIM_CACHE: Dict[Tuple[Tuple[str, int], int, int, float, float, int], Dict[str, Any]] = {}
 
 
@@ -452,6 +475,54 @@ def run_playoff_monte_carlo(
     return result
 
 
+def team_records(elo_all: Dict[str, Any]) -> Dict[str, Tuple[int, int, int]]:
+    """(wins, losses, ties) per team from the per-game records in an Elo artifact."""
+    records: Dict[str, Tuple[int, int, int]] = {}
+    for team, weeks_blob in elo_all.get("teams", {}).items():
+        w = l = t = 0
+        for wk_obj in weeks_blob.values():
+            for g in wk_obj.get("games", []):
+                if g["points_for"] > g["points_against"]:
+                    w += 1
+                elif g["points_for"] < g["points_against"]:
+                    l += 1
+                else:
+                    t += 1
+        records[team] = (w, l, t)
+    return records
+
+
+def project_playoff_seeds(
+    elo_all: Dict[str, Any], division_rivals: Dict[str, List[str]]
+) -> Dict[str, List[Dict[str, Any]]]:
+    """'If the season ended today' seeds, in the same shape as PLAYOFF_SEEDS_*.
+
+    Seeds 1-4 are division leaders and 5-7 the best remaining records. Ties use
+    current Elo, then name -- a stand-in for the NFL's real tiebreakers
+    (head-to-head, division record, ...), which this deliberately skips.
+    """
+    records = team_records(elo_all)
+    elos = latest_elo_map(elo_all)
+
+    def rank_key(team: str):
+        w, l, t = records.get(team, (0, 0, 0))
+        played = w + l + t
+        pct = (w + 0.5 * t) / played if played else 0.0
+        return (-pct, -elos.get(team, 0), team)
+
+    seeds: Dict[str, List[Dict[str, Any]]] = {}
+    for conf in ("AFC", "NFC"):
+        conf_teams = [t for t, c in CONFERENCE_OF.items() if c == conf]
+        divisions = {frozenset([t, *division_rivals[t]]) for t in conf_teams}
+        leaders = sorted((min(d, key=rank_key) for d in divisions), key=rank_key)
+        wild_cards = sorted((t for t in conf_teams if t not in leaders), key=rank_key)[:3]
+        seeds[conf] = [
+            {"seed": i, "team": team, "bye": i == 1}
+            for i, team in enumerate(leaders + wild_cards, start=1)
+        ]
+    return seeds
+
+
 def build_season_pulse(
     elo_all: Dict[str, Any], outcome: Dict[str, Any], playoff_seeds: Dict[str, Any]
 ) -> Dict[str, Any]:
@@ -464,15 +535,6 @@ def build_season_pulse(
     k_factor = int(elo_all.get("k_factor", 25))
     simulation = run_playoff_monte_carlo(elos, margin_model, k_factor, playoff_seeds)
 
-    champion = outcome["champion"]
-    runner_up = outcome["runner_up"]
-    third_place = max(
-        outcome["conference_championship_runners_up"],
-        key=lambda team: elos.get(team, 0),
-    )
-    champion_wins = simulation["wins_by_team"].get(champion, 0)
-    champion_odds = champion_wins / simulation["simulation_count"] * 100
-
     def card(rank: str, team: str, label: str) -> Dict[str, Any]:
         return {
             "rank": rank,
@@ -481,6 +543,31 @@ def build_season_pulse(
             "elo": elos.get(team, 1500),
             "logo": f"static/img/logos/{slugify(team)}.png",
         }
+
+    if outcome is None:
+        # Season still being played: no champion, so show the simulation's favorites.
+        n = simulation["simulation_count"]
+        ranked = sorted(simulation["wins_by_team"].items(), key=lambda kv: (-kv[1], kv[0]))[:3]
+        cards = [
+            card(rank, team, f"{wins / n * 100:.1f}% projected title odds")
+            for rank, (team, wins) in zip(("Favorite", "2nd", "3rd"), ranked)
+        ]
+        return {
+            "cards": cards,
+            "champion": None,
+            "in_progress": True,
+            "odds_label": f"{ranked[0][1] / n * 100:.1f}%",
+            "simulation_label": f"{n:,} Elo playoff simulations from current standings",
+        }
+
+    champion = outcome["champion"]
+    runner_up = outcome["runner_up"]
+    third_place = max(
+        outcome["conference_championship_runners_up"],
+        key=lambda team: elos.get(team, 0),
+    )
+    champion_wins = simulation["wins_by_team"].get(champion, 0)
+    champion_odds = champion_wins / simulation["simulation_count"] * 100
 
     return {
         "cards": [
@@ -545,13 +632,24 @@ def build_one_season(
     if not weeks:
         raise RuntimeError(f"No weeks found in {elo_all_url}. Got keys: {list(elo_all.keys())}")
     latest_week = max(weeks)
+    # Nav "Leaderboard" links to the newest week this season actually has.
+    env.globals["latest_week"] = latest_week
     score_model = score_model_for_site(elo_all)
 
     # Homepage
     index_tpl = env.get_template("index.html")
     latest_rows = leaderboard_rows_for_week(elo_all, latest_week)
     homepage_features = resolve_homepage_features(latest_week)
-    season_pulse = build_season_pulse(elo_all, playoff["outcome"], playoff["seeds"])
+    # Division map: used for projected seeds here and for the Elo chart rivals below.
+    rivals_path = repo_root / "elo" / "division_rivals.json"
+    division_rivals: Dict[str, List[str]] = {}
+    if rivals_path.exists():
+        division_rivals = json.loads(rivals_path.read_text(encoding="utf-8"))
+
+    # An in-progress season has no real seeds yet; project them from current standings.
+    in_progress = playoff["outcome"] is None
+    playoff_seeds = playoff["seeds"] or project_playoff_seeds(elo_all, division_rivals)
+    season_pulse = build_season_pulse(elo_all, playoff["outcome"], playoff_seeds)
     index_html = index_tpl.render(
         season=api_season,
         baseline=baseline,
@@ -582,7 +680,7 @@ def build_one_season(
         )
 
     # Matchup simulator (season-specific playoff seeds)
-    build_matchup_page(env, elo_all, season_dist_dir, api_season, playoff["seeds"])
+    build_matchup_page(env, elo_all, season_dist_dir, api_season, playoff_seeds)
 
     # Teams index
     teams_tpl = env.get_template("teams.html")
@@ -619,10 +717,6 @@ def build_one_season(
             print(f"- {team}: {err}")
 
     # Elo charts
-    rivals_path = repo_root / "elo" / "division_rivals.json"
-    division_rivals: Dict[str, List[str]] = {}
-    if rivals_path.exists():
-        division_rivals = json.loads(rivals_path.read_text(encoding="utf-8"))
     teams = [team for team, _e, _d in latest_rows]
     build_elo_chart_pages(
         env=env, dist_dir=season_dist_dir, elo_all=elo_all, teams=teams,
@@ -653,8 +747,10 @@ def build_one_season(
     return {
         "season": season,
         "base_path": base_path,
-        "champion": playoff["outcome"]["champion"],
-        "runner_up": playoff["outcome"]["runner_up"],
+        "champion": f"In progress · Week {latest_week}" if in_progress else playoff["outcome"]["champion"],
+        "runner_up": None if in_progress else playoff["outcome"]["runner_up"],
+        "champion_label": "Status" if in_progress else "Champion",
+        "elo_label": "Top Elo (Current)" if in_progress else "Top Elo (Final)",
         "top_team": top_team,
         "top_elo": elos.get(top_team, 0) if top_team else 0,
     }
