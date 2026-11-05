@@ -91,6 +91,28 @@ Playoff seeds and champions are real-world facts that cannot be derived from an 
 
 The templates themselves are season-generic: `home_intro.html` loops over whatever seasons the builder provides.
 
+### Updating an in-progress season
+
+A season that is still being played (2026) is refreshed with one command from the repo root:
+
+```bash
+python update_season.py 2026 --dry-run   # show what would change; write nothing
+python update_season.py 2026             # update the CSV and rebuild the site
+```
+
+It downloads the fixturedownload feed, keeps only **complete** weeks (every scheduled game scored), compares the result with `loader/data/nfl-season-2026.csv`, then runs the whole pipeline (loader, Data API, `compute_elo.py`, Analytics API, `build_site.py`) on real local servers using free ports. The servers are always shut down. Nothing is deployed to S3.
+
+| Situation | What happens | Exit code |
+|---|---|---|
+| New complete week(s) | CSV saved, Elo recomputed, site rebuilt, top 5 printed | 0 |
+| Nothing new | "Already up to date through Week N", no rebuild | 0 |
+| A final score changed, a score vanished, or a game was added/removed/changed | Lists the changes, saves nothing; rerun with `--accept-changes` if they are real corrections | 1 |
+| Malformed feed (unknown team, bad score, empty or non-JSON feed) | Refused, even with `--accept-changes` | 2 |
+| Feed unreachable | Suggests retrying or `--from-file saved-feed.json` | 2 |
+| A server, Elo or the build fails | Previous CSV restored, `ui/dist` untouched, log tail printed | 2 |
+
+A postponed game holds the site at the previous week, and the report names the game. The new site is built in a staging folder and swapped into `ui/dist` only on success. A preview server started from *inside* `ui/dist` blocks that swap on Windows, so serve with `--directory` (below).
+
 ---
 
 ## What the Site Shows
@@ -457,11 +479,10 @@ Option 1: use the included Node static server:
 node ui/serve-dist.mjs
 ```
 
-Option 2: use Python from the generated output folder:
+Option 2: use Python's built-in server from the repo root:
 
 ```bash
-cd ui/dist
-py -m http.server 8080
+py -m http.server 8080 --directory ui/dist
 ```
 
 Then open:
