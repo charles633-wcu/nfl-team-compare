@@ -21,6 +21,7 @@ for p in (ROOT, ROOT / "loader", ROOT / "ui" / "build"):
 
 import loader  # noqa: E402
 import feed  # noqa: E402
+import update_season as us  # noqa: E402
 
 
 def _feed_game(match, week, date_utc, hs=None, as_=None,
@@ -213,3 +214,168 @@ def test_date_change_alone_is_not_suspicious():
 def test_first_run_counts_every_score_as_new():
     d = feed.diff_snapshots([], [_row(1, 1, 20, 10), _row(2, 2)])
     assert [r["match_number"] for r in d.new_scores] == [1] and d.problems == []
+
+
+# --- update_season: feed loading -------------------------------------------
+
+def test_feed_timeout_suggests_from_file(monkeypatch):
+    def boom(url, timeout=30):
+        raise TimeoutError("timed out")
+    monkeypatch.setattr(us.loader, "fetch_games", boom)
+    with pytest.raises(us.UpdateError, match="--from-file"):
+        us.load_feed(2026)
+
+
+def test_network_error_suggests_from_file(monkeypatch):
+    from urllib.error import URLError
+
+    def boom(url, timeout=30):
+        raise URLError("no route")
+    monkeypatch.setattr(us.loader, "fetch_games", boom)
+    with pytest.raises(us.UpdateError, match="--from-file"):
+        us.load_feed(2026)
+
+
+def test_feed_file_that_is_not_json_is_refused(tmp_path):
+    bad = tmp_path / "feed.json"
+    bad.write_text("<html>maintenance</html>", encoding="utf-8")
+    with pytest.raises(us.UpdateError, match="not valid JSON"):
+        us.load_feed(2026, bad)
+
+
+def test_missing_feed_file_is_reported(tmp_path):
+    with pytest.raises(us.UpdateError, match="Cannot read"):
+        us.load_feed(2026, tmp_path / "nope.json")
+
+
+@pytest.mark.parametrize("raw", [{"error": "x"}, [{"MatchNumber": 1}]])
+def test_unexpected_feed_shape_is_refused(raw):
+    with pytest.raises(us.UpdateError, match="Feed format changed"):
+        us.normalize(raw, 2026)
+
+
+# --- update_season.update: the flow, with a fake pipeline -----------------
+
+def _paths(tmp_path):
+    return us.Paths(csv=tmp_path / "nfl-season-2026.csv", master_db=tmp_path / "nfl-games.db",
+                    elo_dir=tmp_path / "elo", elo_db=tmp_path / "nfl-elo.db",
+                    dist_dir=tmp_path / "dist")
+
+
+def _raw(week1_away=10, week2=(24, 3)):
+    """Tiny valid feed: two week-1 games, one week-2 game."""
+    return [
+        _feed_game(1, 1, "2026-09-13 17:00:00Z", 20, week1_away),
+        _feed_game(2, 1, "2026-09-13 17:00:00Z", 17, 14, "New York Jets", "New England Patriots"),
+        _feed_game(3, 2, "2026-09-20 17:00:00Z", *week2),
+    ]
+
+
+def _fake_pipeline(calls, fail=False):
+    """Stands in for run_pipeline: records the call and writes a tiny Elo artifact."""
+    def run(season, paths):
+        calls.append(season)
+        if fail:
+            raise us.PipelineError("Analytics API did not become healthy")
+        paths.elo_dir.mkdir(parents=True, exist_ok=True)
+        (paths.elo_dir / f"elo_{season}.json").write_text(json.dumps(
+            {"weeks": 2, "elo": {"2": {"Buffalo Bills": 1550, "Miami Dolphins": 1450}}}))
+    return run
+
+
+def test_first_run_saves_csv_runs_pipeline_and_reports(tmp_path, capsys):
+    paths, calls = _paths(tmp_path), []
+    assert us.update(2026, _raw(), paths=paths, pipeline=_fake_pipeline(calls)) == us.EXIT_OK
+    assert calls == [2026]
+    saved = loader.rows_from_csv(paths.csv, 2026)
+    assert [(r["match_number"], r["game_date"], r["home_score"]) for r in saved] == [
+        (1, "2026-09-13", 20), (2, "2026-09-13", 17), (3, "2026-09-20", 24)]
+    assert b"\r\n" not in paths.csv.read_bytes()  # LF, like the hand-made CSV
+    out = capsys.readouterr().out
+    assert "Through Week 2 (+3 games)" in out
+    assert "Top 5: Buffalo Bills 1550, Miami Dolphins 1450" in out
+
+
+def test_second_identical_run_is_up_to_date(tmp_path, capsys):
+    paths, calls = _paths(tmp_path), []
+    us.update(2026, _raw(), paths=paths, pipeline=_fake_pipeline(calls))
+    assert us.update(2026, _raw(), paths=paths, pipeline=_fake_pipeline(calls)) == us.EXIT_OK
+    assert calls == [2026]  # no rebuild the second time
+    assert "Already up to date through Week 2" in capsys.readouterr().out
+
+
+def test_dry_run_writes_nothing(tmp_path):
+    paths, calls = _paths(tmp_path), []
+    us.update(2026, _raw(week2=(None, None)), paths=paths, pipeline=_fake_pipeline(calls))
+    before = paths.csv.stat().st_mtime_ns, paths.csv.read_bytes()
+    assert us.update(2026, _raw(), paths=paths, dry_run=True,
+                     pipeline=_fake_pipeline(calls)) == us.EXIT_OK
+    assert (paths.csv.stat().st_mtime_ns, paths.csv.read_bytes()) == before
+    assert calls == [2026]
+
+
+def test_suspicious_change_stops_without_saving(tmp_path, capsys):
+    paths, calls = _paths(tmp_path), []
+    us.update(2026, _raw(), paths=paths, pipeline=_fake_pipeline(calls))
+    before = paths.csv.read_bytes()
+    code = us.update(2026, _raw(week1_away=13), paths=paths, pipeline=_fake_pipeline(calls))
+    assert code == us.EXIT_REVIEW
+    assert paths.csv.read_bytes() == before and calls == [2026]
+    out = capsys.readouterr().out
+    assert "10-20 -> 13-20" in out and "--accept-changes" in out
+
+
+def test_accept_changes_applies_the_correction(tmp_path):
+    paths, calls = _paths(tmp_path), []
+    us.update(2026, _raw(), paths=paths, pipeline=_fake_pipeline(calls))
+    assert us.update(2026, _raw(week1_away=13), paths=paths, accept_changes=True,
+                     pipeline=_fake_pipeline(calls)) == us.EXIT_OK
+    assert loader.rows_from_csv(paths.csv, 2026)[0]["away_score"] == 13
+
+
+def test_malformed_feed_is_refused_even_with_accept_changes(tmp_path, capsys):
+    paths, calls = _paths(tmp_path), []
+    raw = _raw()
+    raw[0]["HomeTeam"] = "Buffalo Bils"
+    assert us.update(2026, raw, paths=paths, accept_changes=True,
+                     pipeline=_fake_pipeline(calls)) == us.EXIT_ERROR
+    assert not paths.csv.exists() and calls == []
+    assert "Buffalo Bils" in capsys.readouterr().out
+
+
+def test_blocked_week_is_explained(tmp_path, capsys):
+    raw = _raw() + [_feed_game(4, 2, "2026-09-21 00:20:00Z", None, None,
+                               "Kansas City Chiefs", "Denver Broncos")]
+    us.update(2026, raw, paths=_paths(tmp_path), pipeline=_fake_pipeline([]))
+    out = capsys.readouterr().out
+    assert "Through Week 1" in out
+    assert ("Week 2 blocked: 1 game without a score "
+            "(Denver Broncos @ Kansas City Chiefs, 2026-09-20)") in out
+
+
+def test_pipeline_failure_restores_previous_csv(tmp_path):
+    paths = _paths(tmp_path)
+    us.update(2026, _raw(week2=(None, None)), paths=paths, pipeline=_fake_pipeline([]))
+    before = paths.csv.read_bytes()
+    with pytest.raises(us.PipelineError):
+        us.update(2026, _raw(), paths=paths, pipeline=_fake_pipeline([], fail=True))
+    assert paths.csv.read_bytes() == before
+
+
+def test_first_run_pipeline_failure_removes_the_new_csv(tmp_path):
+    paths = _paths(tmp_path)
+    with pytest.raises(us.PipelineError):
+        us.update(2026, _raw(), paths=paths, pipeline=_fake_pipeline([], fail=True))
+    assert not paths.csv.exists()
+
+
+def test_cli_rejects_a_season_without_a_live_feed(capsys):
+    assert us.main(["2025"]) == us.EXIT_ERROR
+    assert "no live feed" in capsys.readouterr().err
+
+
+def test_cli_reports_bad_feed_file(tmp_path, capsys):
+    bad = tmp_path / "feed.json"
+    bad.write_text("not json", encoding="utf-8")
+    assert us.main(["2026", "--from-file", str(bad)]) == us.EXIT_ERROR
+    assert "not valid JSON" in capsys.readouterr().err
