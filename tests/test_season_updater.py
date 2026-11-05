@@ -443,3 +443,27 @@ def test_free_port_is_an_open_local_port():
     port = us.free_port()
     with socket.socket() as s:
         s.bind(("127.0.0.1", port))
+
+
+# --- End to end: real servers, saved feed, everything in temp folders -----
+
+FIXTURE_FEED = ROOT / "tests" / "fixtures" / "nfl-2026-feed.json"
+
+
+def test_end_to_end_update_from_saved_feed(tmp_path, capsys):
+    paths = _paths(tmp_path)
+    paths.elo_dir.mkdir()
+    for name in ("elo_2024.json", "elo_2025.json"):
+        shutil.copy(ROOT / "elo" / name, paths.elo_dir / name)
+    shutil.copy(ROOT / "loader" / "data" / "nfl-season-2026.csv", paths.csv)  # hand-made, week 6
+
+    raw = us.load_feed(2026, FIXTURE_FEED)
+    assert us.update(2026, raw, paths=paths, accept_changes=True) == us.EXIT_OK
+
+    elo = json.loads((paths.elo_dir / "elo_2026.json").read_text(encoding="utf-8"))
+    assert elo["weeks"] == 8
+    home = (paths.dist_dir / "2026" / "index.html").read_text(encoding="utf-8")
+    assert "Through Week 8" in home
+    assert (paths.dist_dir / "2024" / "index.html").exists()
+    assert (paths.dist_dir / "2025" / "index.html").exists()
+    assert "Top 5:" in capsys.readouterr().out

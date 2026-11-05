@@ -28,6 +28,7 @@ import shutil
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -323,9 +324,42 @@ def build_and_swap(cmd: List[str], env: dict, dist_dir: Path, log_dir: Path) -> 
     shutil.rmtree(old, ignore_errors=True)
 
 
-def run_pipeline(season: int, paths: Paths) -> None:
-    """Placeholder until Task 7."""
-    raise PipelineError("pipeline not implemented yet")
+def run_pipeline(season: int, paths: Paths, python: str = sys.executable) -> None:
+    """loader -> Data API -> compute_elo -> Analytics API -> build, on free local ports."""
+    log_dir = Path(tempfile.mkdtemp(prefix=f"update_season_{season}_"))
+    print(f"Logs: {log_dir}")
+
+    # 1. Master games DB from the CSVs (2024 and 2025 are rebuilt unchanged).
+    loader.build_master(paths.master_db, loader.CSV_2025, loader.LEGACY_2024_DB,
+                        csv_2026=paths.csv)
+
+    with Servers(log_dir) as servers:
+        # 2. Data API over the fresh DB.
+        data_port = free_port()
+        data_base = f"http://127.0.0.1:{data_port}"
+        data = servers.spawn("data-api", [python, "-m", "uvicorn", "data_api:app", "--host",
+                                          "127.0.0.1", "--port", str(data_port),
+                                          "--app-dir", "data-api"],
+                             {"DB_PATH": str(paths.master_db)})
+        wait_healthy("Data API", f"{data_base}/health", data, log_dir / "data-api.log")
+
+        # 3. Elo for this season only.
+        run_step("compute-elo", [python, "analytics-api/compute_elo.py"],
+                 {"ELO_SEASON": str(season), "ELO_API_BASE": data_base,
+                  "ELO_OUT_DIR": str(paths.elo_dir), "ELO_DB_PATH": str(paths.elo_db)}, log_dir)
+
+        # 4. Analytics API over every season's artifact.
+        an_port = free_port()
+        an_base = f"http://127.0.0.1:{an_port}"
+        analytics = servers.spawn("analytics-api", [python, "-m", "uvicorn", "analytics_api:app",
+                                                    "--host", "127.0.0.1", "--port", str(an_port),
+                                                    "--app-dir", "analytics-api"],
+                                  {"ELO_DIR": str(paths.elo_dir)})
+        wait_healthy("Analytics API", f"{an_base}/health", analytics, log_dir / "analytics-api.log")
+
+        # 5. Static site, swapped in only on success.
+        build_and_swap([python, "ui/build/build_site.py"], {"ANALYTICS_API_BASE": an_base},
+                       paths.dist_dir, log_dir)
 
 
 # --- CLI ---------------------------------------------------------------------
