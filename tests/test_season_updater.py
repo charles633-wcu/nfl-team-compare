@@ -122,3 +122,39 @@ def test_postseason_rows_are_ignored_and_dropped():
     rows = [_row(1, 1, 20, 10), playoff]
     assert feed.validate_rows(rows, TEAMS) == []
     assert feed.regular_season(rows) == [rows[0]]
+
+
+# --- feed.complete_through_week: only fully-scored weeks count ------------
+
+def test_cut_keeps_complete_weeks_and_blanks_later_scores():
+    rows = [_row(1, 1, 20, 10), _row(2, 1, 7, 3), _row(3, 2, 14, 13), _row(4, 2)]
+    cut = feed.complete_through_week(rows)
+    assert cut.week == 1
+    assert [(r["home_score"], r["away_score"]) for r in cut.rows] == [
+        (20, 10), (7, 3), (None, None), (None, None)]
+    assert rows[2]["home_score"] == 14  # input is not mutated
+
+
+def test_bye_week_does_not_block_completion():
+    # Week 2 schedules only one game (everyone else on bye) and it is scored.
+    rows = [_row(1, 1, 20, 10), _row(2, 1, 7, 3), _row(3, 2, 14, 13)]
+    assert feed.complete_through_week(rows).week == 2
+
+
+def test_postponed_game_blocks_its_week_and_is_named():
+    late = _row(4, 2, home="New York Jets", away="New England Patriots", date="2026-09-20")
+    rows = [_row(1, 1, 20, 10), _row(3, 2, 14, 13), late, _row(5, 3, 21, 17)]
+    cut = feed.complete_through_week(rows)
+    assert cut.week == 1
+    assert cut.blocked == [late]
+    assert cut.rows[3]["home_score"] is None  # week 3 waits behind week 2
+
+
+def test_unstarted_next_week_is_not_reported_as_blocked():
+    cut = feed.complete_through_week([_row(1, 1, 20, 10), _row(2, 2)])
+    assert cut.week == 1 and cut.blocked == []
+
+
+def test_nothing_played_is_week_zero():
+    cut = feed.complete_through_week([_row(1, 1), _row(2, 2)])
+    assert cut.week == 0 and cut.blocked == []

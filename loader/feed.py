@@ -77,3 +77,33 @@ def validate_rows(rows: List[Row], teams: Iterable[str]) -> List[str]:
 def regular_season(rows: List[Row]) -> List[Row]:
     """Drop postseason rows; call after validate_rows so every week is an int."""
     return [r for r in rows if r["week"] <= LAST_REGULAR_WEEK]
+
+
+@dataclass
+class Cut:
+    """A snapshot cut back to its last complete week."""
+
+    week: int                 # last week where every scheduled game is scored (0 = none)
+    rows: List[Row]           # all games; scores after `week` blanked
+    blocked: List[Row]        # unscored games in week+1 when that week has started
+
+
+def complete_through_week(rows: List[Row]) -> Cut:
+    """Keep scores only for the unbroken run of fully-scored weeks starting at week 1."""
+    by_week: Dict[int, List[Row]] = {}
+    for r in rows:
+        by_week.setdefault(r["week"], []).append(r)
+
+    # Walk forward while the next week exists and every game in it has a score.
+    week = 0
+    while week + 1 in by_week and all(g["home_score"] is not None for g in by_week[week + 1]):
+        week += 1
+
+    # A started-but-unfinished next week is "blocked"; a week nobody has played yet is not.
+    nxt = by_week.get(week + 1, [])
+    started = any(g["home_score"] is not None for g in nxt)
+    blocked = [g for g in nxt if g["home_score"] is None] if started else []
+
+    cut_rows = [r if r["week"] <= week else {**r, "home_score": None, "away_score": None}
+                for r in rows]
+    return Cut(week=week, rows=cut_rows, blocked=blocked)
