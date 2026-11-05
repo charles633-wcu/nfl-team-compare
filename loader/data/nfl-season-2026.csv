@@ -92,34 +92,34 @@ match_number,week,game_date,home_team,away_team,home_score,away_score
 91,6,2026-10-18,Las Vegas Raiders,Buffalo Bills,30,33
 92,6,2026-10-18,Green Bay Packers,Dallas Cowboys,23,13
 93,6,2026-10-19,San Francisco 49ers,Washington Commanders,23,17
-94,7,2026-10-22,Chicago Bears,New England Patriots,,
-95,7,2026-10-25,New Orleans Saints,Pittsburgh Steelers,,
-96,7,2026-10-25,Atlanta Falcons,San Francisco 49ers,,
-97,7,2026-10-25,Baltimore Ravens,Cincinnati Bengals,,
-98,7,2026-10-25,Carolina Panthers,Tampa Bay Buccaneers,,
-99,7,2026-10-25,Houston Texans,New York Giants,,
-100,7,2026-10-25,Minnesota Vikings,Indianapolis Colts,,
-101,7,2026-10-25,New York Jets,Miami Dolphins,,
-102,7,2026-10-25,Tennessee Titans,Cleveland Browns,,
-103,7,2026-10-25,Arizona Cardinals,Denver Broncos,,
-104,7,2026-10-25,Detroit Lions,Green Bay Packers,,
-105,7,2026-10-25,Las Vegas Raiders,Los Angeles Rams,,
-106,7,2026-10-25,Seattle Seahawks,Kansas City Chiefs,,
-107,7,2026-10-26,Philadelphia Eagles,Dallas Cowboys,,
-108,8,2026-10-29,Green Bay Packers,Carolina Panthers,,
-109,8,2026-11-01,Buffalo Bills,Baltimore Ravens,,
-110,8,2026-11-01,Cincinnati Bengals,Tennessee Titans,,
-111,8,2026-11-01,Dallas Cowboys,Arizona Cardinals,,
-112,8,2026-11-01,Detroit Lions,Minnesota Vikings,,
-113,8,2026-11-01,Jacksonville Jaguars,Indianapolis Colts,,
-114,8,2026-11-01,New York Jets,Las Vegas Raiders,,
-115,8,2026-11-01,Pittsburgh Steelers,Cleveland Browns,,
-116,8,2026-11-01,Tampa Bay Buccaneers,Atlanta Falcons,,
-117,8,2026-11-01,Los Angeles Rams,Los Angeles Chargers,,
-118,8,2026-11-01,Denver Broncos,Kansas City Chiefs,,
-119,8,2026-11-01,Miami Dolphins,New England Patriots,,
-120,8,2026-11-01,Washington Commanders,Philadelphia Eagles,,
-121,8,2026-11-02,Seattle Seahawks,Chicago Bears,,
+94,7,2026-10-22,Chicago Bears,New England Patriots,30,24
+95,7,2026-10-25,New Orleans Saints,Pittsburgh Steelers,10,16
+96,7,2026-10-25,Atlanta Falcons,San Francisco 49ers,29,20
+97,7,2026-10-25,Baltimore Ravens,Cincinnati Bengals,13,35
+98,7,2026-10-25,Carolina Panthers,Tampa Bay Buccaneers,13,43
+99,7,2026-10-25,Houston Texans,New York Giants,21,27
+100,7,2026-10-25,Minnesota Vikings,Indianapolis Colts,16,10
+101,7,2026-10-25,New York Jets,Miami Dolphins,25,28
+102,7,2026-10-25,Tennessee Titans,Cleveland Browns,24,27
+103,7,2026-10-25,Arizona Cardinals,Denver Broncos,16,30
+104,7,2026-10-25,Detroit Lions,Green Bay Packers,20,17
+105,7,2026-10-25,Las Vegas Raiders,Los Angeles Rams,21,35
+106,7,2026-10-25,Seattle Seahawks,Kansas City Chiefs,20,3
+107,7,2026-10-26,Philadelphia Eagles,Dallas Cowboys,21,38
+108,8,2026-10-29,Green Bay Packers,Carolina Panthers,27,19
+109,8,2026-11-01,Buffalo Bills,Baltimore Ravens,36,10
+110,8,2026-11-01,Cincinnati Bengals,Tennessee Titans,43,36
+111,8,2026-11-01,Dallas Cowboys,Arizona Cardinals,30,33
+112,8,2026-11-01,Detroit Lions,Minnesota Vikings,19,15
+113,8,2026-11-01,Jacksonville Jaguars,Indianapolis Colts,42,7
+114,8,2026-11-01,New York Jets,Las Vegas Raiders,33,38
+115,8,2026-11-01,Pittsburgh Steelers,Cleveland Browns,27,6
+116,8,2026-11-01,Tampa Bay Buccaneers,Atlanta Falcons,16,0
+117,8,2026-11-01,Los Angeles Rams,Los Angeles Chargers,24,9
+118,8,2026-11-01,Denver Broncos,Kansas City Chiefs,28,24
+119,8,2026-11-01,Miami Dolphins,New England Patriots,19,24
+120,8,2026-11-01,Washington Commanders,Philadelphia Eagles,27,10
+121,8,2026-11-02,Seattle Seahawks,Chicago Bears,17,34
 122,9,2026-11-05,Baltimore Ravens,Jacksonville Jaguars,,
 123,9,2026-11-08,Atlanta Falcons,Cincinnati Bengals,,
 124,9,2026-11-08,Carolina Panthers,Denver Broncos,,
