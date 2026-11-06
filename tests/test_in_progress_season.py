@@ -192,3 +192,40 @@ def test_nav_leaderboard_link_points_at_latest_built_week():
     html = env.get_template("_base.html").render()
     assert "leaderboard/week-6.html" in html
     assert "leaderboard/week-18.html" not in html
+
+
+# --- Season home page copy ------------------------------------------------
+
+def _render_season_home(in_progress: bool, season: int) -> str:
+    from jinja2 import Environment, FileSystemLoader
+
+    env = Environment(loader=FileSystemLoader(str(ROOT / "ui" / "templates")))
+    env.filters["slug"] = bs.slugify
+    env.globals.update(base_path=f"/{season}/", current_season=season, all_seasons=[],
+                       latest_week=8)
+    return env.get_template("index.html").render(
+        season=season, current_week=8, features=[],
+        season_pulse={"in_progress": in_progress, "cards": []})
+
+
+SUBTITLE = ("Get the weekly scoop on who's hot, who's sliding, and how every single "
+            "matchup shakes out all season long—right up to the final whistle!")
+
+
+@pytest.mark.parametrize("in_progress, season", [(True, 2026), (False, 2025)])
+def test_season_home_subtitle_is_the_same_for_every_season(in_progress, season):
+    html = _render_season_home(in_progress, season)
+    assert SUBTITLE in html
+    assert "reshaped the picture" not in html
+
+
+def test_in_progress_pulse_caption():
+    html = _render_season_home(True, 2026)
+    assert "Through Week 8. Here's who the model likes... so far." in html
+    assert "likes —" not in html
+
+
+def test_finished_pulse_caption():
+    html = _render_season_home(False, 2025)
+    assert "Here's how it ended. Let's see how they got there." in html
+    assert "yours to unpack" not in html

@@ -10,7 +10,7 @@
     <div class="eyebrow">{{ season }} NFL season</div>
     <h1 class="home-hero__title">The {{ season }} season, every angle.</h1>
     <p class="home-hero__summary">
-      Weekly rankings, team trajectories, and matchup forecasts for {{ season }} — see how each result reshaped the picture, and how it all ended.
+      Get the weekly scoop on who's hot, who's sliding, and how every single matchup shakes out all season long—right up to the final whistle!
     </p>
     <div class="home-hero__actions">
       <a class="btn" href="{{ primary_cta_href }}">Start with Teams</a>
@@ -21,7 +21,7 @@
   <div class="home-hero__board reveal-on-scroll">
     <div class="home-hero__board-header">
       <span class="scoreboard-label">Season pulse</span>
-      <span class="scoreboard-week">{% if season_pulse.in_progress %}Through Week {{ current_week }}. Here’s who the model likes — so far.{% else %}Here’s how it ended. The rest is yours to unpack.{% endif %}</span>
+      <span class="scoreboard-week">{% if season_pulse.in_progress %}Through Week {{ current_week }}. Here's who the model likes... so far.{% else %}Here's how it ended. Let's see how they got there.{% endif %}</span>
     </div>
     <div class="home-hero__board-grid">
       {% for item in season_pulse.cards %}
