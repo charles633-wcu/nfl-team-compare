@@ -229,3 +229,26 @@ def test_finished_pulse_caption():
     html = _render_season_home(False, 2025)
     assert "Here's how it ended. Let's see how they got there." in html
     assert "yours to unpack" not in html
+
+
+def test_features_blurb_has_no_em_dash():
+    html = _render_season_home(True, 2026)
+    assert "replay the playoff picture, all for 2026." in html
+    assert "picture —" not in html
+
+
+@pytest.mark.parametrize("season", [2025, 2026])
+def test_matchup_page_names_its_own_season(tmp_path, season):
+    from jinja2 import Environment, FileSystemLoader
+
+    env = Environment(loader=FileSystemLoader(str(ROOT / "ui" / "templates")))
+    env.filters["slug"] = bs.slugify
+    env.globals.update(base_path=f"/{season}/", current_season=season, all_seasons=[],
+                       latest_week=8)
+    elo_all = json.loads((ROOT / "elo" / f"elo_{season}.json").read_text(encoding="utf-8"))
+    seeds = bs.SEASON_PLAYOFFS[season]["seeds"] or bs.project_playoff_seeds(elo_all, RIVALS)
+    bs.build_matchup_page(env, elo_all, tmp_path, season, seeds)
+    html = (tmp_path / "matchup.html").read_text(encoding="utf-8")
+    assert f"simulate the full {season} playoff bracket." in html
+    assert f"{season} playoffs</div>" in html
+    assert "2024 playoff" not in html
