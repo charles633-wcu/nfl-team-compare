@@ -251,8 +251,12 @@ def build_matchup_page(
     dist_dir: Path,
     season: Any,
     playoff_seeds: Dict[str, Any],
+    projected: bool = False,
 ) -> None:
-    """Render matchup.html with all simulator data embedded as JSON."""
+    """Render matchup.html with all simulator data embedded as JSON.
+
+    projected=True labels the bracket as projected (in-progress season, seeds from current standings).
+    """
     weekly_elos = elo_all.get("elo", {})
     games_by_team = elo_all.get("teams", {})
     mm = elo_all.get("margin_model", {})
@@ -272,6 +276,7 @@ def build_matchup_page(
         score_model_json=json.dumps(score_model, separators=(",", ":")),
         playoff_seeds_json=json.dumps(playoff_seeds, separators=(",", ":")),
         k_factor=k_factor,
+        projected=projected,
     )
     (dist_dir / "matchup.html").write_text(html, encoding="utf-8")
 
@@ -680,7 +685,7 @@ def build_one_season(
         )
 
     # Matchup simulator (season-specific playoff seeds)
-    build_matchup_page(env, elo_all, season_dist_dir, api_season, playoff_seeds)
+    build_matchup_page(env, elo_all, season_dist_dir, api_season, playoff_seeds, projected=in_progress)
 
     # Teams index
     teams_tpl = env.get_template("teams.html")

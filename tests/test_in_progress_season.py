@@ -252,3 +252,40 @@ def test_matchup_page_names_its_own_season(tmp_path, season):
     assert f"simulate the full {season} playoff bracket." in html
     assert f"{season} playoffs</div>" in html
     assert "2024 playoff" not in html
+
+
+def _render_matchup(tmp_path, season, projected):
+    from jinja2 import Environment, FileSystemLoader
+
+    env = Environment(loader=FileSystemLoader(str(ROOT / "ui" / "templates")))
+    env.filters["slug"] = bs.slugify
+    env.globals.update(base_path=f"/{season}/", current_season=season, all_seasons=[],
+                       latest_week=8)
+    elo_all = json.loads((ROOT / "elo" / f"elo_{season}.json").read_text(encoding="utf-8"))
+    seeds = bs.SEASON_PLAYOFFS[season]["seeds"] or bs.project_playoff_seeds(elo_all, RIVALS)
+    bs.build_matchup_page(env, elo_all, tmp_path, season, seeds, projected=projected)
+    return (tmp_path / "matchup.html").read_text(encoding="utf-8")
+
+
+def test_in_progress_bracket_is_labeled_projected(tmp_path):
+    html = _render_matchup(tmp_path, 2026, projected=True)
+    assert "2026 playoffs (projected)</div>" in html
+
+
+def test_finished_bracket_is_not_labeled_projected(tmp_path):
+    html = _render_matchup(tmp_path, 2025, projected=False)
+    assert "2025 playoffs</div>" in html
+    assert "(projected)" not in html
+
+
+@pytest.mark.parametrize("season", [2024, 2025, 2026])
+def test_about_pipeline_exports_its_own_season_artifact(season):
+    from jinja2 import Environment, FileSystemLoader
+
+    env = Environment(loader=FileSystemLoader(str(ROOT / "ui" / "templates")))
+    env.filters["slug"] = bs.slugify
+    env.globals.update(base_path=f"/{season}/", current_season=season, all_seasons=[],
+                       latest_week=8)
+    html = env.get_template("about.html").render(
+        season=season, current_week=8, score_model={"totalPointsMean": 44.0})
+    assert f"Export <code>elo_{season}.json</code>" in html
