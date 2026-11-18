@@ -1,40 +1,28 @@
 # NFL Elo Analytics Platform (2024 + 2025 Seasons)
 
-Live demo: https://d2dlhuu2z9gv8p.cloudfront.net
+Live demo: https://nflelodashboard.com/
 
 ## Overview
 
-This project is a full-stack NFL analytics platform covering the 2024 and 2025 seasons. It ingests game data, stores it in SQLite, exposes raw data through a FastAPI service, computes weekly Elo ratings through a separate analytics pipeline, and generates a multi-season static website that can be deployed to S3 and CloudFront.
+This project is a full-stack analytics tool covering recent NFL seasons. It takes and stores in game data, exposes it through an API which allows computation of Elo ratings (based weekly) through a separate analytics pipeline, and generates a website to visualize the analytics. It is hosted on AWS.
 
-The project is designed to show the full path from data ingestion to analytics modeling to production-style delivery:
+The project demonstrates the full path from data ingestion to analytics modeling and finally to production-style delivery:
 
 - **ETL pipeline** that normalizes NFL game data into a single master SQLite database keyed by season.
-- **Data API** built with FastAPI over the game database, with a `?season=` selector.
-- **Analytics API** built with FastAPI over per-season Elo artifacts, with a `?season=` selector.
+- **Data API** built with FastAPI over the game database, with a season selector.
+- **Analytics API** built with FastAPI that computes various analytics figures.
 - **Batch Elo engine** with home-field advantage, margin-of-victory scaling, OLS margin prediction, and per-game Elo history.
-- **Multi-season static frontend** — a season picker at the root plus a complete, self-contained site per season.
-- **Interactive static frontend** generated with Jinja2 and powered by embedded analytics data.
-- **Matchup simulator** for any two teams at any week of a season.
-- **Playoff bracket simulator** using real playoff seeds, Elo probabilities, score simulation, and round-by-round Elo updates.
-- **Chart.js trend pages** comparing each team against division rivals.
+- **Multi-season frontend**: a season picker at the root plus a complete, self-contained site for each season.
+- **Matchup simulator** to compare any two teams at any week of a given season.
+- **Playoff bracket simulator** using real playoff seed rules, game probabilities using ELO based score simulation, which updates itself round-by-round.
+- **Trend Pages** comparing each team against division rivals.
 - **Docker Compose + APISIX** for local multi-service orchestration.
-- **AWS deployment path** using EC2 for APIs and S3/CloudFront for the static site.
+- **AWS** using EC2 for APIs and S3/CloudFront for the static site.
 
 ### Runtime architecture: the deployed site is static only
 
-There is **no API running in production**. The APIs are a build-time and local-development concern. `ui/build/build_site.py` calls the Analytics API during the build and bakes the results directly into the HTML as inline JavaScript constants, so the browser makes zero runtime requests. S3 and CloudFront serve plain files.
+TO save on costs, the APIs are used locally in the generation of websites, but are not live on an EC2. The APIs are a build-time and local-development concern. `build_site.py` calls the Analytics API during the build and bakes the results directly into the HTML as inline JavaScript constants, so the browser makes zero runtime requests. S3 and CloudFront serve website files.
 
-## Why This Project Matters
-
-This is not a CRUD app with a chart on top. The core engineering work is the separation of concerns:
-
-1. Raw NFL game data is loaded and stored once.
-2. A data service exposes normalized game records.
-3. A batch analytics service computes reusable Elo artifacts.
-4. A static site generator turns those artifacts into a deployable web experience.
-5. The browser runs interactive simulations without needing a live backend at runtime.
-
-That architecture lets the site behave like an interactive analytics product while still being cheap and simple to host as static files.
 
 ---
 
@@ -71,25 +59,6 @@ ui/dist/
 └── 2024/             <- full site for the 2024 season
 ```
 
-Each season subtree is independent — it has its own copy of `static/` and its own embedded data, so every season URL is separately linkable and cacheable. Every internal link is an explicit `.html` path, so the site needs no directory-index resolution from the web server.
-
-### Adding a season
-
-Adding a season is a code change, not a data drop. Two constants in `ui/build/build_site.py` control which seasons exist:
-
-- `BUILD_SEASONS` - build order and the nav season-toggle list. Latest first; it drives picker order.
-- `SEASON_PLAYOFFS` - maps each season to its playoff seeds and outcome.
-
-To add season `N`:
-
-1. Load the data into the master games DB and compute `elo/elo_N.json` (see "Compute Elo").
-2. Define `PLAYOFF_SEEDS_N` and `PLAYOFF_OUTCOME_N`.
-3. Register them in `SEASON_PLAYOFFS[N]`.
-4. Add `N` to `BUILD_SEASONS`.
-
-Playoff seeds and champions are real-world facts that cannot be derived from an Elo artifact, which is why seasons are registered explicitly rather than discovered from `elo/*.json`. If a season is listed in `BUILD_SEASONS` but missing from `SEASON_PLAYOFFS`, the build fails immediately with a `KeyError` — deliberate, so a season page can never ship with a blank champion.
-
-The templates themselves are season-generic: `home_intro.html` loops over whatever seasons the builder provides.
 
 ### Updating an in-progress season
 
@@ -115,7 +84,7 @@ A postponed game holds the site at the previous week, and the report names the g
 
 ---
 
-## What the Site Shows
+## What is on the site
 
 - **Season Picker** - root landing page; choose a season and enter its site.
 - **Season Homepage** - per-season landing page with summary cards, feature previews, and links into that season.
@@ -127,25 +96,6 @@ A postponed game holds the site at the previous week, and the report names the g
 - **Playoff Bracket Simulator** - run that season's playoff bracket round by round using real seeds, Elo probabilities, home-field advantage, simulated final scores, and Elo updates after each game.
 - **Methodology Page** - formulas and modeling notes for Elo, HFA, margin-of-victory scaling, OLS margin prediction, score simulation, and Monte Carlo validation.
 
----
-
-## Available Pages
-
-`<SEASON>` is `2024` or `2025`.
-
-| Page | Local/generated path | Purpose |
-|------|----------------------|---------|
-| Season Picker | `ui/dist/index.html` | Root landing page; choose a season. |
-| Season Homepage | `ui/dist/<SEASON>/index.html` | Per-season landing page and feature hub. |
-| Weekly Leaderboard | `ui/dist/<SEASON>/leaderboard/week-<WEEK>.html` | Elo rankings for a specific week. |
-| Team Directory | `ui/dist/<SEASON>/teams/index.html` | Browse every team and jump to profile or chart views. |
-| Team Profile | `ui/dist/<SEASON>/team/<TEAM>.html` | Team overview, weekly game history, Elo movement, and predicted margins. |
-| Elo Trend Page | `ui/dist/<SEASON>/elo/<TEAM>.html` | Chart.js Elo trend with division rival overlays. |
-| Matchup Simulator | `ui/dist/<SEASON>/matchup.html` | Head-to-head team comparison and playoff bracket simulator. |
-| About / Methodology | `ui/dist/<SEASON>/about.html` | Project explanation, architecture, and formulas. |
-| Contact | `ui/dist/<SEASON>/contact.html` | Source code, GitHub, LinkedIn, and email links. |
-
-A full build produces **177 HTML pages** — the picker plus 88 pages per season.
 
 ---
 
@@ -163,13 +113,8 @@ A full build produces **177 HTML pages** — the picker plus 88 pages per season
 | Static Site | `ui/dist/` | static files | Deployable output for S3/CloudFront or local static serving. |
 | Gateway | APISIX + etcd | 9080 public, 9180 admin | Routes `/api/*` to Data API and `/analytics/*` to Analytics API. |
 
-### Season Selection
 
-Both services accept a `season` query parameter defaulting to `LATEST_SEASON = 2025`. Any earlier season is still served explicitly with `?season=2024`.
-
-The 2024 Elo output is frozen: `tests/test_compute_elo_season.py` asserts parsed equality against the committed `elo/elo_2024.json` baseline. If that test fails, debug the data path — **never** regenerate the baseline to force it green, since the artifact is the proof that 2024 behavior is unchanged.
-
-### Data Flow
+### Flow of data
 
 ```text
 Fixture feed / CSV
@@ -599,18 +544,11 @@ aws cloudfront create-invalidation --distribution-id YOUR-DIST-ID --paths "/*"
 
 CloudFront sits in front of the S3 bucket for HTTPS and CDN caching. The default root object is `index.html`.
 
-Two notes specific to this setup:
-
-- The distribution uses a REST/OAC S3 origin, which does **not** resolve directory index documents. `/2025/index.html` works; a bare `/2025/` returns 403. This does not affect navigation, because every internal link in the generated site is an explicit `.html` path.
-- An invalidation is required after each deploy, since `index.html` changes and is already cached.
-
-This split keeps the public website static and cheap to serve while the backend remains available for rebuilds, recomputes, and API inspection.
-
 ---
 
 ## Future Improvements
 
-The next improvements that would add the most value:
+Possible improvements include: 
 
 - **Backtest/evaluation harness** — Brier score and log-loss for the model against de-vigged closing lines, plus a calibration curve. Measuring the model honestly matters more than squeezing out raw accuracy.
 - Multi-season Elo carry-forward instead of resetting all teams to 1500.
